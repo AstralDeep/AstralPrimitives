@@ -1,0 +1,33 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "astralprims"
+version = "0.1.0"
+description = "Composable, serializable UI primitives for Python"
+readme = "README.md"
+requires-python = ">=3.9"
+license = "Apache-2.0"
+authors = [{ name = "Sam Armstrong", email = "admin@example.com" }]
+keywords = ["ui", "primitives", "components", "json", "serialization"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Typing :: Typed",
+]
+dependencies = ["pydantic>=2"]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0"]
+
+[project.urls]
+Homepage = "https://github.com/AstralDeep/Astral-Primitives"
+Issues = "https://github.com/AstralDeep/Astral-Primitives/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/astralprims"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
