@@ -10,6 +10,7 @@ from .base import CSS, Primitive
 from .primitives import (
     Alert,
     Audio,
+    Badge,
     BarChart,
     Button,
     Card,
@@ -23,8 +24,10 @@ from .primitives import (
     FileUpload,
     Grid,
     Grids,
+    Hero,
     Image,
     Input,
+    KeyValue,
     LineChart,
     List_,
     MetricCard,
@@ -32,11 +35,13 @@ from .primitives import (
     PieChart,
     PlotlyChart,
     ProgressBar,
+    Rating,
     Table,
     Tabs,
     TabItem,
     Text,
     ThemeApply,
+    Timeline,
 )
 from .response import create_ui_response
 
@@ -46,7 +51,7 @@ from pydantic import Field as _Field, TypeAdapter
 
 from .base import _REGISTRY
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 
 def _build_union():
@@ -109,6 +114,12 @@ __all__ = [
     "Audio",
     "FileUpload",
     "FileDownload",
+    # Dashboard & status
+    "Badge",
+    "Hero",
+    "KeyValue",
+    "Timeline",
+    "Rating",
     # Theming
     "ColorPicker",
     "ThemeApply",

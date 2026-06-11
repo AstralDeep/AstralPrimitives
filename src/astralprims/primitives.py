@@ -343,6 +343,86 @@ class FileDownload(Primitive):
 
 
 # ---------------------------------------------------------------------------
+# Dashboard & status
+# ---------------------------------------------------------------------------
+
+
+class Badge(Primitive):
+    """A small inline status chip.
+
+    ``variant`` is one of default, success, warning, error, info, or accent.
+    """
+
+    type: Literal["badge"] = "badge"
+    label: str = ""
+    variant: str = "default"
+    icon: Optional[str] = None
+
+
+class Hero(Primitive):
+    """A page-level header band: eyebrow, title, subtitle, optional badges.
+
+    Gives dashboards and reports an anchoring masthead. ``variant`` is one of
+    default, gradient, or subtle.
+    """
+
+    type: Literal["hero"] = "hero"
+    title: str = ""
+    subtitle: Optional[str] = None
+    eyebrow: Optional[str] = None
+    icon: Optional[str] = None
+    variant: str = "default"
+    badges: List[str] = Field(default_factory=list)
+
+
+class KeyValue(Primitive):
+    """A compact label/value fact sheet.
+
+    Each entry in ``items`` is a dict of the shape::
+
+        {"label": "Owner", "value": "Paws & Bubbles", "hint": "since 2021"}
+
+    ``hint`` is optional. ``columns`` controls how many label/value pairs sit
+    side by side (1-4).
+    """
+
+    type: Literal["keyvalue"] = "keyvalue"
+    title: Optional[str] = None
+    items: List[Dict[str, Any]] = Field(default_factory=list)
+    columns: int = 2
+
+
+class Timeline(Primitive):
+    """A vertical sequence of events, appointments, or steps.
+
+    Each entry in ``items`` is a dict of the shape::
+
+        {"time": "9:00 AM", "title": "Bella — Full Groom",
+         "description": "Golden Retriever, de-shed add-on",
+         "variant": "success"}
+
+    ``time``, ``description`` and ``variant`` (default | success | warning |
+    error | info) are optional.
+    """
+
+    type: Literal["timeline"] = "timeline"
+    title: Optional[str] = None
+    items: List[Dict[str, Any]] = Field(default_factory=list)
+    variant: str = "default"
+
+
+class Rating(Primitive):
+    """A star-rating readout (e.g. customer satisfaction)."""
+
+    type: Literal["rating"] = "rating"
+    value: float = 0.0
+    max_value: int = 5
+    label: Optional[str] = None
+    subtitle: Optional[str] = None
+    show_value: bool = True
+
+
+# ---------------------------------------------------------------------------
 # Theming
 # ---------------------------------------------------------------------------
 

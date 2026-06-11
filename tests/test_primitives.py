@@ -5,19 +5,24 @@ from pydantic import ValidationError
 
 from astralprims import (
     Audio,
+    Badge,
     BarChart,
     Button,
     Card,
     Collapsible,
     Container,
     Grids,
+    Hero,
+    KeyValue,
     ParamPicker,
     Primitive,
     ProgressBar,
+    Rating,
     Table,
     TabItem,
     Tabs,
     Text,
+    Timeline,
     create_ui_response,
     primitive_adapter,
 )
@@ -130,6 +135,51 @@ def test_bar_chart():
     assert out["datasets"][0]["data"] == [1, 2]
 
 
+def test_badge_shape():
+    out = Badge(label="Confirmed", variant="success").to_dict()
+    assert out["type"] == "badge"
+    assert out["label"] == "Confirmed"
+    assert out["variant"] == "success"
+    assert "icon" not in out  # None dropped
+
+
+def test_hero_shape():
+    out = Hero(title="Paws & Bubbles", eyebrow="Dashboard",
+               subtitle="Today at a glance", badges=["Open", "8 bookings"]).to_dict()
+    assert out["type"] == "hero"
+    assert out["title"] == "Paws & Bubbles"
+    assert out["eyebrow"] == "Dashboard"
+    assert out["badges"] == ["Open", "8 bookings"]
+    assert "icon" not in out
+
+
+def test_keyvalue_shape():
+    out = KeyValue(title="Business facts",
+                   items=[{"label": "Owner", "value": "Sam", "hint": "since 2021"}],
+                   columns=3).to_dict()
+    assert out["type"] == "keyvalue"
+    assert out["columns"] == 3
+    assert out["items"][0]["label"] == "Owner"
+    assert "title" in out
+
+
+def test_timeline_shape():
+    out = Timeline(items=[{"time": "9:00 AM", "title": "Bella — Full Groom",
+                           "variant": "success"}]).to_dict()
+    assert out["type"] == "timeline"
+    assert out["items"][0]["time"] == "9:00 AM"
+    assert "title" not in out  # None dropped
+
+
+def test_rating_shape():
+    out = Rating(value=4.8, label="Customer satisfaction").to_dict()
+    assert out["type"] == "rating"
+    assert out["value"] == 4.8
+    assert out["max_value"] == 5
+    assert out["show_value"] is True
+    assert "subtitle" not in out
+
+
 # -- from_dict round-trips ----------------------------------------------
 
 
@@ -157,6 +207,19 @@ def test_from_dict_tabs_roundtrip():
     restored = Primitive.from_dict(tabs.to_dict())
     assert isinstance(restored, Tabs)
     assert restored.to_dict() == tabs.to_dict()
+
+
+def test_from_dict_dashboard_types_roundtrip():
+    for prim in (
+        Badge(label="New", variant="info"),
+        Hero(title="Report", subtitle="Q2", badges=["draft"]),
+        KeyValue(items=[{"label": "a", "value": "1"}]),
+        Timeline(title="Today", items=[{"time": "9:00", "title": "Open"}]),
+        Rating(value=3.5, label="Avg"),
+    ):
+        restored = Primitive.from_dict(prim.to_dict())
+        assert type(restored) is type(prim)
+        assert restored.to_dict() == prim.to_dict()
 
 
 # -- response envelope ---------------------------------------------------
@@ -194,6 +257,17 @@ def test_adapter_validates_to_concrete_type():
 def test_adapter_rejects_unknown_type():
     with pytest.raises(ValidationError):
         primitive_adapter.validate_python({"type": "definitely-not-real"})
+
+
+def test_adapter_validates_dashboard_types():
+    for payload, cls in (
+        ({"type": "badge", "label": "x"}, Badge),
+        ({"type": "hero", "title": "x"}, Hero),
+        ({"type": "keyvalue", "items": [{"label": "a", "value": "1"}]}, KeyValue),
+        ({"type": "timeline", "items": [{"title": "x"}]}, Timeline),
+        ({"type": "rating", "value": 4}, Rating),
+    ):
+        assert isinstance(primitive_adapter.validate_python(payload), cls)
 
 
 def test_adapter_validates_nested_tree():

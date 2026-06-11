@@ -83,6 +83,7 @@ directly.
 | Content   | `Text`, `Button`, `Input`, `ParamPicker`, `Image`, `CodeBlock`, `Alert`, `ProgressBar`, `MetricCard`, `List_`, `Table` |
 | Charts    | `BarChart`, `LineChart`, `PieChart`, `PlotlyChart` (+ `ChartDataset`)      |
 | Media/IO  | `Audio`, `FileUpload`, `FileDownload`                                      |
+| Dashboard | `Badge`, `Hero`, `KeyValue`, `Timeline`, `Rating`                          |
 | Theming   | `ColorPicker`, `ThemeApply`                                                |
 
 Every primitive also accepts `css`, `id`, `class_name` (serialized as `class`),
@@ -90,18 +91,20 @@ Every primitive also accepts `css`, `id`, `class_name` (serialized as `class`),
 
 ## Defining your own primitive
 
-Subclassing auto-registers the new `type` for `from_dict` — no manual map:
+Primitives are pydantic models; declare the wire `type` as a `Literal` default
+and subclassing auto-registers it for `from_dict` — no manual map. Pick a type
+string that does not collide with a built-in:
 
 ```python
-from dataclasses import dataclass
-from typing import ClassVar, Optional
-from astralprims import Primitive
+from typing import Literal, Optional
+from astralprims import Primitive, rebuild_primitive_union
 
-@dataclass
-class Badge(Primitive):
-    type: ClassVar[str] = "badge"   # registered automatically
+class Ribbon(Primitive):
+    type: Literal["ribbon"] = "ribbon"   # registered automatically
     label: str = ""
     count: Optional[int] = None
+
+rebuild_primitive_union()  # refresh AnyPrimitive/primitive_adapter
 ```
 
 ## Tests
