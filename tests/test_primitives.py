@@ -9,6 +9,7 @@ from astralprims import (
     BarChart,
     Button,
     Card,
+    ChatHistory,
     Collapsible,
     Container,
     Grids,
@@ -178,6 +179,30 @@ def test_rating_shape():
     assert out["max_value"] == 5
     assert out["show_value"] is True
     assert "subtitle" not in out
+
+
+def test_chat_history_shape():
+    out = ChatHistory(items=[
+        {"chat_id": "c1", "title": "Weather this weekend",
+         "preview": "Saturday looks clear…", "time": "2h",
+         "icon": "🌤️", "saved": True},
+    ]).to_dict()
+    assert out["type"] == "chat_history"
+    assert out["title"] == "Recent chats"  # default heading
+    assert out["items"][0]["chat_id"] == "c1"
+    assert out["items"][0]["saved"] is True
+
+
+def test_chat_history_defaults_to_empty_list():
+    out = ChatHistory().to_dict()
+    assert out["type"] == "chat_history"
+    assert out["items"] == []
+
+
+def test_chat_history_from_dict_roundtrips():
+    src = {"type": "chat_history", "title": "Recent chats",
+           "items": [{"chat_id": "x", "title": "Hi"}]}
+    assert Primitive.from_dict(src).to_dict() == src
 
 
 # -- from_dict round-trips ----------------------------------------------
