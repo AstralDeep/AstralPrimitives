@@ -422,6 +422,28 @@ class Rating(Primitive):
     show_value: bool = True
 
 
+class ChatHistory(Primitive):
+    """A scannable list of recent conversations the user can reopen.
+
+    Each entry in ``items`` is a dict of the shape::
+
+        {"chat_id": "c1", "title": "Weather this weekend",
+         "preview": "Saturday looks clear, high of 81°F…", "time": "2h",
+         "icon": "🌤️", "saved": True}
+
+    Only ``chat_id`` and ``title`` are required to render an openable row;
+    ``preview`` (a last-message snippet), ``time`` (a pre-formatted relative
+    time such as ``"2h"``/``"3d"``), ``icon`` (a decorative per-agent glyph) and
+    ``saved`` (truthy → a saved-components marker) are optional. Selecting a row
+    dispatches a ``load_chat`` action carrying ``{"chat_id": …}``. With no items
+    the surface shows an empty state. ``title`` is the surface heading.
+    """
+
+    type: Literal["chat_history"] = "chat_history"
+    title: Optional[str] = "Recent chats"
+    items: List[Dict[str, Any]] = Field(default_factory=list)
+
+
 # ---------------------------------------------------------------------------
 # Theming
 # ---------------------------------------------------------------------------

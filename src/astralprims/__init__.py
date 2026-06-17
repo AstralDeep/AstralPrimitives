@@ -15,6 +15,7 @@ from .primitives import (
     Button,
     Card,
     ChartDataset,
+    ChatHistory,
     CodeBlock,
     Collapsible,
     ColorPicker,
@@ -51,7 +52,7 @@ from pydantic import Field as _Field, TypeAdapter
 
 from .base import _REGISTRY
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"
 
 
 def _build_union():
@@ -120,6 +121,7 @@ __all__ = [
     "KeyValue",
     "Timeline",
     "Rating",
+    "ChatHistory",
     # Theming
     "ColorPicker",
     "ThemeApply",
