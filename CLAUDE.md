@@ -4,7 +4,7 @@
 pydantic-v2 model that validates on construction and serializes to a plain wire dict. JSON
 is the wire format; pydantic is only the authoring layer.
 
-This package is the **"define" stage** of [AstralBody](https://github.com/AstralDeep)'s
+This package is the **"define" stage** of [AstralDeep](https://github.com/AstralDeep)'s
 server-driven UI: *astralprims defines → the orchestrator renders → ROTE adapts per device.*
 It is consumed there as an ordinary pip dependency, and it releases on its own train.
 
@@ -41,11 +41,11 @@ Two consequences that bite:
 - **`version` in `pyproject.toml` is the sole release marker.** There are no git tags.
   Merging a primitive does not ship it — the bump does. Bump in the same PR that adds it.
 - **CI never runs the tests.** A green PyPI release is not evidence `pytest` passes. Run it
-  locally before merging; this repo has none of AstralBody's drift guards.
+  locally before merging; this repo has none of AstralDeep's drift guards.
 
-AstralBody pins a version *floor* (`astralprims>=0.2.0` in `backend/requirements.txt`), so
+AstralDeep pins a version *floor* (`astralprims>=0.2.0` in `backend/requirements.txt`), so
 its container image can lag this repo's HEAD. New component types therefore often have
-renderers in AstralBody before the class exists here, and agents emit them as plain dicts in
+renderers in AstralDeep before the class exists here, and agents emit them as plain dicts in
 the meantime. That is the normal pattern, not a bug.
 
 ## Serialization contract
@@ -81,9 +81,9 @@ writes `_REGISTRY[default] = cls`. So:
   replaces** the built-in in the registry.
 - The union snapshots `_REGISTRY` at import time. After defining a custom primitive, call
   `rebuild_primitive_union()` or `primitive_adapter` will not see it.
-- Adding a primitive to the AstralBody vocabulary additionally requires Constitution VIII
+- Adding a primitive to the AstralDeep vocabulary additionally requires Constitution VIII
   approval, documentation, and a same-PR edit to `backend/shared/ui_protocol.json` — four
-  drift guards fail otherwise. Those guards live in the AstralBody repo, not this one.
+  drift guards fail otherwise. Those guards live in the AstralDeep repo, not this one.
 - Update the primitive table in `README.md`. It has drifted before.
 
 ## Knowledge graph
@@ -116,7 +116,7 @@ When triggered, follow the vault's `Operation: SESSION CHECKPOINT`:
 3. Append a `log.md` entry, update `index.md` if pages were added or renamed.
 4. Commit the vault repo.
 
-A useful cross-check when the vocabulary changes — the class list against AstralBody's wire
+A useful cross-check when the vocabulary changes — the class list against AstralDeep's wire
 manifest:
 
 Absolute paths on purpose — the two halves live in different repos, and a wrong cwd makes
@@ -125,7 +125,7 @@ error.
 
 ```bash
 P=/Users/sam/Desktop/Work/Astral-Primitives
-A=/Users/sam/Desktop/Work/AstralBody
+A=/Users/sam/Desktop/Work/AstralDeep
 
 grep -oE 'type: Literal\["[a-z_]+"\]' "$P/src/astralprims/primitives.py" \
   | sed 's/.*\["//;s/"\]//' | sort > /tmp/prims.txt
