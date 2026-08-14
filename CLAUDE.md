@@ -1,4 +1,4 @@
-# Astral-Primitives — working notes
+# AstralPrimitives — working notes
 
 `astralprims`: composable, serializable UI primitives for Python. Each primitive is a
 pydantic-v2 model that validates on construction and serializes to a plain wire dict. JSON
@@ -124,7 +124,7 @@ Absolute paths on purpose — the two halves live in different repos, and a wron
 error.
 
 ```bash
-P=/Users/sam/Desktop/Work/Astral-Primitives
+P=/Users/sam/Desktop/Work/AstralPrimitives
 A=/Users/sam/Desktop/Work/AstralDeep
 
 grep -oE 'type: Literal\["[a-z_]+"\]' "$P/src/astralprims/primitives.py" \

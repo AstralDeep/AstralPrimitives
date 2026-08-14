@@ -23,8 +23,8 @@ dependencies = ["pydantic>=2"]
 dev = ["pytest>=7.0"]
 
 [project.urls]
-Homepage = "https://github.com/AstralDeep/Astral-Primitives"
-Issues = "https://github.com/AstralDeep/Astral-Primitives/issues"
+Homepage = "https://github.com/AstralDeep/AstralPrimitives"
+Issues = "https://github.com/AstralDeep/AstralPrimitives/issues"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/astralprims"]
