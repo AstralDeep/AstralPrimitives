@@ -48,12 +48,15 @@ def _assert_actions_are_approved(text: str) -> None:
         )
 
 
-def test_pull_requests_run_locked_quality_compatibility_and_package_gates() -> None:
+def test_main_and_pull_requests_run_locked_quality_compatibility_and_package_gates() -> None:
     text = (WORKFLOWS / "ci.yml").read_text(encoding="utf-8")
 
     assert _job_ids(text) == {"quality-package", "compatibility", "gates"}
-    assert "pull_request:" in text and "branches: [main]" in text
-    assert "push:" not in text and "workflow_dispatch:" not in text
+    assert re.search(
+        r"(?m)^on:\n  pull_request:\n    branches: \[main\]\n  push:\n    branches: \[main\]$",
+        text,
+    )
+    assert "workflow_dispatch:" not in text
     assert re.search(r"(?m)^permissions:\n  contents: read$", text)
     assert "id-token:" not in text
     assert "continue-on-error:" not in text
