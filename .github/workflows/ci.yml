@@ -1,0 +1,99 @@
+name: Pull request qualification
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  quality-package:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6.0.2
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v7.6.0
+        with:
+          version: "0.11.26"
+          python-version: "3.11"
+          enable-cache: true
+      - name: Verify lock
+        run: uv lock --check
+      - name: Install locked CI tools
+        run: uv sync --frozen --group ci
+      - name: Lint
+        run: uv run --frozen --group ci ruff check .
+      - name: Test with branch coverage
+        run: >-
+          uv run --frozen --group ci pytest -q -p no:cacheprovider
+          --cov=astralprims --cov-branch --cov-report=xml --cov-fail-under=90
+      - name: Qualify changed lines
+        run: >-
+          uv run --frozen --group ci
+          diff-cover coverage.xml --compare-branch origin/main --fail-under=90
+      - name: Build wheel and source distribution
+        run: uv build --build-constraints tooling/python-ci/build-requirements.lock.txt --require-hashes
+      - name: Check distribution metadata
+        run: uv run --frozen --group ci twine check dist/*
+      - name: Clean-install package smoke
+        run: |
+          uv venv --python 3.11 .package-smoke
+          uv pip install --python .package-smoke/bin/python dist/*.whl
+          .package-smoke/bin/python - <<'PY'
+          from importlib.metadata import files, version
+          import astralprims
+          from astralprims import Text
+
+          assert version("astralprims") == "0.3.0"
+          package_files = files("astralprims")
+          assert package_files is not None
+          assert any(
+              path.as_posix() == "astralprims/py.typed" for path in package_files
+          )
+          assert Text(content="ci").to_dict() == {
+              "type": "text",
+              "content": "ci",
+              "variant": "body",
+          }
+          assert astralprims.__version__ == "0.3.0"
+          PY
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2
+        with:
+          name: distributions
+          path: |
+            dist/*.whl
+            dist/*.tar.gz
+          if-no-files-found: error
+
+  compatibility:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.9", "3.11", "3.14"]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6.0.2
+      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v7.6.0
+        with:
+          version: "0.11.26"
+          python-version: ${{ matrix.python }}
+          enable-cache: true
+      - name: Verify lock
+        run: uv lock --check
+      - name: Run supported-Python tests
+        run: uv run --frozen --python ${{ matrix.python }} --group ci pytest -q -p no:cacheprovider
+
+  gates:
+    if: always()
+    needs: [quality-package, compatibility]
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Require every owner gate
+        env:
+          QUALITY_PACKAGE: ${{ needs.quality-package.result }}
+          COMPATIBILITY: ${{ needs.compatibility.result }}
+        run: |
+          test "$QUALITY_PACKAGE" = success
+          test "$COMPATIBILITY" = success

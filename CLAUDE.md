@@ -32,16 +32,19 @@ pytest
 
 ## Release model — read this before merging
 
-`.github/workflows/python-publish.yml` is the **only** workflow. On push to `main` it
-builds, asks PyPI whether the current `pyproject.toml` version already exists, and uploads
-only if it does not (OIDC trusted publishing; no stored token).
+`.github/workflows/ci.yml` qualifies pull requests on Python 3.9, 3.11, and 3.14, including
+branch and changed-line coverage, both distribution formats, and a clean-install smoke test.
+`.github/workflows/python-publish.yml` runs only on push to `main`; its unprivileged job
+tests and builds before the environment-protected publisher receives OIDC and uploads the
+verified artifact. It asks PyPI whether the current `pyproject.toml` version already exists
+and uploads only if it does not (OIDC trusted publishing; no stored token).
 
 Two consequences that bite:
 
 - **`version` in `pyproject.toml` is the sole release marker.** There are no git tags.
   Merging a primitive does not ship it — the bump does. Bump in the same PR that adds it.
-- **CI never runs the tests.** A green PyPI release is not evidence `pytest` passes. Run it
-  locally before merging; this repo has none of AstralDeep's drift guards.
+- **Publication does not replace PR qualification.** The release workflow repeats the
+  locked tests and package checks without OIDC before its isolated publisher runs.
 
 AstralDeep pins a version *floor* (`astralprims>=0.2.0` in `backend/requirements.txt`), so
 its container image can lag this repo's HEAD. New component types therefore often have

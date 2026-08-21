@@ -10,7 +10,7 @@ server-driven UI. JSON stays the wire format; Pydantic is the authoring layer.
 from __future__ import annotations
 
 import json
-from typing import Any, ClassVar, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_serializer
 
