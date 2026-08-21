@@ -3,10 +3,20 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
+import pytest
+
 
 ROOT = Path(__file__).resolve().parents[1]
 WORKFLOWS = ROOT / ".github" / "workflows"
 ACTION_SHA = re.compile(r"^[^\s#]+@[0-9a-f]{40}(?:\s+#.*)?$")
+APPROVED_ACTIONS = {
+    "actions/checkout": "3d3c42e5aac5ba805825da76410c181273ba90b1",
+    "actions/download-artifact": "3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c",
+    "actions/setup-python": "ece7cb06caefa5fff74198d8649806c4678c61a1",
+    "actions/upload-artifact": "043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+    "astral-sh/setup-uv": "c771a70e6277c0a99b617c7a806ffedaca235ff9",
+    "pypa/gh-action-pypi-publish": "dc37677b2e1c63e2034f94d8a5b11f265b73ba33",
+}
 
 
 def _job_ids(text: str) -> set[str]:
@@ -25,12 +35,17 @@ def _job(text: str, job_id: str) -> str:
     return match.group(1)
 
 
-def _assert_actions_are_sha_pinned(text: str) -> None:
+def _assert_actions_are_approved(text: str) -> None:
     uses = [line.strip().removeprefix("- ") for line in text.splitlines() if "uses:" in line]
     assert uses
     for use in uses:
         reference = use.partition("uses:")[2].strip()
         assert ACTION_SHA.fullmatch(reference), f"action is not SHA-pinned: {reference}"
+        target = reference.partition(" #")[0]
+        action, separator, sha = target.partition("@")
+        assert separator and APPROVED_ACTIONS.get(action) == sha, (
+            f"unapproved action pin: {target}"
+        )
 
 
 def test_pull_requests_run_locked_quality_compatibility_and_package_gates() -> None:
@@ -44,7 +59,7 @@ def test_pull_requests_run_locked_quality_compatibility_and_package_gates() -> N
     assert "continue-on-error:" not in text
     assert "uv build --frozen" not in text
     assert "version: \"0.11.26\"" in text
-    _assert_actions_are_sha_pinned(text)
+    _assert_actions_are_approved(text)
 
     quality = _job(text, "quality-package")
     for command in (
@@ -81,7 +96,7 @@ def test_publication_verifies_without_oidc_before_environment_protected_upload()
 
     assert _job_ids(text) == {"verify-package", "publish"}
     assert "pull_request:" not in text
-    _assert_actions_are_sha_pinned(text)
+    _assert_actions_are_approved(text)
     assert "version: \"0.11.26\"" in text
     assert "uv build --frozen" not in text
 
@@ -110,6 +125,19 @@ def test_publication_verifies_without_oidc_before_environment_protected_upload()
     assert "needs.verify-package.outputs.exists == 'false'" in publish
 
     assert text.count("id-token: write") == 1
+
+
+def test_same_shape_unapproved_action_sha_is_rejected() -> None:
+    valid_yaml = f"""\
+jobs:
+  test:
+    steps:
+      - uses: actions/checkout@{APPROVED_ACTIONS['actions/checkout']}
+"""
+    mutated = valid_yaml.replace(APPROVED_ACTIONS["actions/checkout"], "0" * 40)
+
+    with pytest.raises(AssertionError, match="unapproved action pin"):
+        _assert_actions_are_approved(mutated)
 
 
 def test_build_backend_is_exact_and_hash_constrained_for_python39() -> None:
