@@ -80,11 +80,47 @@ directly.
 | Group     | Primitives                                                                 |
 |-----------|----------------------------------------------------------------------------|
 | Layout    | `Container`, `Card`, `Grid`/`Grids`, `Tabs` (+ `TabItem`), `Collapsible`, `Divider` |
-| Content   | `Text`, `Button`, `Input`, `ParamPicker`, `Image`, `CodeBlock`, `Alert`, `ProgressBar`, `MetricCard`, `List_`, `Table` |
-| Charts    | `BarChart`, `LineChart`, `PieChart`, `PlotlyChart` (+ `ChartDataset`)      |
+| Content   | `Text`, `Button`, `ActionGroup`, `Input`, `ParamPicker`, `Image`, `CodeBlock`, `Alert`, `ProgressBar`, `MetricCard`, `List_`, `Table` |
+| Charts    | `BarChart`, `LineChart`, `PieChart`, `DonutChart`, `RadarChart`, `PlotlyChart` (+ `ChartDataset`) |
 | Media/IO  | `Audio`, `FileUpload`, `FileDownload`                                      |
-| Dashboard | `Badge`, `Hero`, `KeyValue`, `Timeline`, `Rating`                          |
+| Dashboard | `Badge`, `Hero`, `KeyValue`, `Timeline`, `Rating`, `StatGroup`, `Gauge`, `PipelineStepper`, `ChatHistory` |
 | Theming   | `ColorPicker`, `ThemeApply`                                                |
+
+### Composite readouts
+
+Six types describe a whole readout rather than a single value, so a server can
+send the shape it means instead of assembling it from loose parts.
+
+| Primitive         | Wire type          | What it carries |
+|-------------------|--------------------|-----------------|
+| `ActionGroup`     | `action_group`     | `buttons` (nested `Button` primitives), `align` (start/center/end/between), `label` for the group's accessible name |
+| `StatGroup`       | `stat_group`       | `title`, `items` of `{label, value, delta?, trend?, hint?, variant?}`, `columns` (clamped 1-6) |
+| `Gauge`           | `gauge`            | `label`, `value` on the same 0-1 scale as `ProgressBar`, `display_value`, ascending `thresholds` of `{at, variant}`, `subtitle` |
+| `PipelineStepper` | `pipeline_stepper` | `title`, `steps` of `{label, status, detail?}` where status is done/active/pending/error, `orientation` |
+| `DonutChart`      | `donut_chart`      | `title`, parallel `labels`/`data`, and `center_label`/`center_value` for the hole |
+| `RadarChart`      | `radar_chart`      | `title`, `axes`, `datasets` of `{label, data}` parallel to the axes, optional `max_value` |
+
+```python
+from astralprims import ActionGroup, Button, Gauge, StatGroup
+
+Gauge(label="Humidity", value=0.62, display_value="62%",
+      thresholds=[{"at": 0.0, "variant": "success"},
+                  {"at": 0.8, "variant": "warning"}])
+
+StatGroup(title="This week", columns=3, items=[
+    {"label": "Requests", "value": "1,284", "delta": "+12%", "trend": "up"},
+    {"label": "Errors", "value": "3", "trend": "down", "variant": "success"},
+    {"label": "p95", "value": "412 ms"},
+])
+
+ActionGroup(label="Result actions", align="end", buttons=[
+    Button(label="Save", action="save_result"),
+    Button(label="Export", action="export_result", variant="secondary"),
+])
+```
+
+None of these carry a color. Variant strings name a semantic role and the
+renderer resolves it from the active theme.
 
 Every primitive also accepts `css`, `id`, `class_name` (serialized as `class`),
 `tooltip`, and an `attributes` dict for arbitrary extra keys.

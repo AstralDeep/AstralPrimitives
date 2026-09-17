@@ -136,6 +136,29 @@ class Button(Primitive):
     variant: str = "primary"
 
 
+class ActionGroup(Primitive):
+    """A row of related buttons presented as one labelled control group.
+
+    ``buttons`` holds :class:`Button` primitives, which serialize recursively
+    and are reconstructed by :meth:`Primitive.from_dict`. Grouping the actions
+    instead of emitting loose buttons lets a renderer give the set one
+    accessible name and lets a narrow viewport collapse the overflow.
+
+    ``align`` is start, center, end, or between. ``label`` names the group for
+    assistive technology.
+    """
+
+    type: Literal["action_group"] = "action_group"
+    buttons: List[Primitive] = Field(default_factory=list)
+    align: str = "start"
+    label: Optional[str] = None
+
+    @field_validator("buttons", mode="before")
+    @classmethod
+    def _coerce_buttons(cls, v: Any) -> Any:
+        return _coerce_children(v)
+
+
 class Input(Primitive):
     """A single-line form input."""
 
@@ -293,6 +316,42 @@ class PieChart(Primitive):
     colors: List[str] = Field(default_factory=list)
 
 
+class DonutChart(Primitive):
+    """A single-series ring chart with an optional centered readout.
+
+    ``data`` is parallel to ``labels``. ``center_label`` and ``center_value``
+    render in the hole (for example ``"Total"`` over ``"1,284"``); with neither
+    set the hole stays empty.
+    """
+
+    type: Literal["donut_chart"] = "donut_chart"
+    title: str = ""
+    labels: List[str] = Field(default_factory=list)
+    data: List[float] = Field(default_factory=list)
+    center_label: Optional[str] = None
+    center_value: Optional[str] = None
+
+
+class RadarChart(Primitive):
+    """A multi-axis comparison chart.
+
+    ``axes`` names the spokes (3-12 read well; a renderer may refuse or fall
+    back outside that range). Each entry in ``datasets`` is a dict of the same
+    shape the bar and line charts use::
+
+        {"label": "Baseline", "data": [0.82, 0.71, 0.9]}
+
+    ``data`` is parallel to ``axes``. ``max_value`` fixes the outer ring; with
+    it unset the renderer scales to the largest value present.
+    """
+
+    type: Literal["radar_chart"] = "radar_chart"
+    title: str = ""
+    axes: List[str] = Field(default_factory=list)
+    datasets: List[Dict[str, Any]] = Field(default_factory=list)
+    max_value: Optional[float] = None
+
+
 class PlotlyChart(Primitive):
     """An arbitrary Plotly figure (data + layout + config)."""
 
@@ -409,6 +468,67 @@ class Timeline(Primitive):
     title: Optional[str] = None
     items: List[Dict[str, Any]] = Field(default_factory=list)
     variant: str = "default"
+
+
+class StatGroup(Primitive):
+    """A grid of small KPI readouts.
+
+    Each entry in ``items`` is a dict of the shape::
+
+        {"label": "Requests", "value": "1,284", "delta": "+12%",
+         "trend": "up", "hint": "vs. last week", "variant": "success"}
+
+    Only ``label`` and ``value`` are required. ``trend`` is up, down, or flat
+    and selects the direction glyph; ``variant`` (default | success | warning |
+    error | info) selects the theme role. ``columns`` is clamped to 1-6 by the
+    renderer and by ROTE, which narrows it further on small viewports.
+    """
+
+    type: Literal["stat_group"] = "stat_group"
+    title: Optional[str] = None
+    items: List[Dict[str, Any]] = Field(default_factory=list)
+    columns: int = 4
+
+
+class Gauge(Primitive):
+    """A dial reading one bounded value.
+
+    ``value`` is 0-1, the same scale :class:`ProgressBar` uses.
+    ``display_value`` is the human reading to show in the dial (for example
+    ``"72 °F"``); with it unset the renderer shows ``value`` as a percentage.
+
+    Each entry in ``thresholds`` is a dict of the shape::
+
+        {"at": 0.8, "variant": "warning"}
+
+    ``at`` is on the same 0-1 scale and the list reads in ascending order; the
+    highest threshold at or below ``value`` selects the dial's theme role.
+    """
+
+    type: Literal["gauge"] = "gauge"
+    label: str = ""
+    value: float = 0.0
+    display_value: Optional[str] = None
+    thresholds: List[Dict[str, Any]] = Field(default_factory=list)
+    subtitle: Optional[str] = None
+
+
+class PipelineStepper(Primitive):
+    """An ordered sequence of stages with one current stage.
+
+    Each entry in ``steps`` is a dict of the shape::
+
+        {"label": "Queued", "status": "done", "detail": "3s"}
+
+    ``status`` is done, active, pending, or error; ``detail`` is optional. The
+    first ``active`` step carries ``aria-current="step"``. ``orientation`` is
+    horizontal or vertical; ROTE switches web layouts to vertical below 768px.
+    """
+
+    type: Literal["pipeline_stepper"] = "pipeline_stepper"
+    title: Optional[str] = None
+    steps: List[Dict[str, Any]] = Field(default_factory=list)
+    orientation: str = "horizontal"
 
 
 class Rating(Primitive):
