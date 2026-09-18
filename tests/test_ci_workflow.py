@@ -150,7 +150,7 @@ def test_build_backend_is_exact_and_hash_constrained_for_python39() -> None:
     ).read_text(encoding="utf-8")
 
     assert 'requires = ["hatchling==1.27.0"]' in project
-    assert 'version = "0.3.0"' in project
+    assert 'version = "0.4.0"' in project
     assert 'dependencies = ["pydantic>=2"]' in project
     pins = set(re.findall(r"(?m)^([a-z0-9-]+)==([^ ;\\]+)", constraints))
     assert pins == {

@@ -8,6 +8,7 @@
 
 from .base import CSS, Primitive
 from .primitives import (
+    ActionGroup,
     Alert,
     Audio,
     Badge,
@@ -21,8 +22,10 @@ from .primitives import (
     ColorPicker,
     Container,
     Divider,
+    DonutChart,
     FileDownload,
     FileUpload,
+    Gauge,
     Grid,
     Grids,
     Hero,
@@ -34,9 +37,12 @@ from .primitives import (
     MetricCard,
     ParamPicker,
     PieChart,
+    PipelineStepper,
     PlotlyChart,
     ProgressBar,
+    RadarChart,
     Rating,
+    StatGroup,
     Table,
     Tabs,
     TabItem,
@@ -52,7 +58,7 @@ from pydantic import Field as _Field, TypeAdapter
 
 from .base import _REGISTRY
 
-__version__ = "0.3.0"
+__version__ = "0.4.0"
 
 
 def _build_union():
@@ -96,6 +102,7 @@ __all__ = [
     # Content & controls
     "Text",
     "Button",
+    "ActionGroup",
     "Input",
     "ParamPicker",
     "Image",
@@ -110,6 +117,8 @@ __all__ = [
     "LineChart",
     "PieChart",
     "PlotlyChart",
+    "DonutChart",
+    "RadarChart",
     "ChartDataset",
     # Media & I/O
     "Audio",
@@ -121,6 +130,9 @@ __all__ = [
     "KeyValue",
     "Timeline",
     "Rating",
+    "StatGroup",
+    "Gauge",
+    "PipelineStepper",
     "ChatHistory",
     # Theming
     "ColorPicker",

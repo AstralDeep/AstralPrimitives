@@ -4,6 +4,7 @@ import pytest
 from pydantic import ValidationError
 
 from astralprims import (
+    ActionGroup,
     Audio,
     Badge,
     BarChart,
@@ -12,13 +13,18 @@ from astralprims import (
     ChatHistory,
     Collapsible,
     Container,
+    DonutChart,
+    Gauge,
     Grids,
     Hero,
     KeyValue,
     ParamPicker,
+    PipelineStepper,
     Primitive,
     ProgressBar,
+    RadarChart,
     Rating,
+    StatGroup,
     Table,
     TabItem,
     Tabs,
@@ -302,3 +308,188 @@ def test_adapter_validates_nested_tree():
     assert isinstance(inst.children[0], Card)
     assert isinstance(inst.children[0].content[0], Button)
     assert inst.to_dict() == data
+
+
+# -- composite readouts (feature 089) ------------------------------------
+
+# Every one of the six is additive: it must round-trip, default cleanly, and
+# emit no color field, because renderers resolve variants from the theme.
+
+NEW_089_TYPES = {
+    "action_group": ActionGroup,
+    "stat_group": StatGroup,
+    "gauge": Gauge,
+    "pipeline_stepper": PipelineStepper,
+    "donut_chart": DonutChart,
+    "radar_chart": RadarChart,
+}
+
+
+def test_action_group_nests_buttons():
+    group = ActionGroup(
+        label="Result actions",
+        align="end",
+        buttons=[
+            Button(label="Save", action="save_result"),
+            Button(label="Export", action="export_result", variant="secondary"),
+        ],
+    )
+    data = group.to_dict()
+    assert data["type"] == "action_group"
+    assert data["align"] == "end"
+    assert data["label"] == "Result actions"
+    assert [b["type"] for b in data["buttons"]] == ["button", "button"]
+    assert data["buttons"][1]["variant"] == "secondary"
+
+
+def test_action_group_from_dict_rebuilds_button_objects():
+    data = {
+        "type": "action_group",
+        "buttons": [{"type": "button", "label": "Save", "action": "save_result"}],
+    }
+    group = Primitive.from_dict(data)
+    assert isinstance(group, ActionGroup)
+    assert isinstance(group.buttons[0], Button)
+    assert group.buttons[0].action == "save_result"
+
+
+def test_stat_group_shape():
+    stats = StatGroup(
+        title="This week",
+        columns=3,
+        items=[
+            {"label": "Requests", "value": "1,284", "delta": "+12%", "trend": "up"},
+            {"label": "Errors", "value": "3", "trend": "down", "variant": "success"},
+        ],
+    )
+    data = stats.to_dict()
+    assert data["type"] == "stat_group"
+    assert data["columns"] == 3
+    assert data["items"][0]["trend"] == "up"
+    assert data["items"][1]["variant"] == "success"
+
+
+def test_gauge_shape_and_thresholds():
+    gauge = Gauge(
+        label="Humidity",
+        value=0.62,
+        display_value="62%",
+        subtitle="Lexington, KY",
+        thresholds=[{"at": 0.0, "variant": "success"}, {"at": 0.8, "variant": "warning"}],
+    )
+    data = gauge.to_dict()
+    assert data["type"] == "gauge"
+    assert data["value"] == 0.62
+    assert data["display_value"] == "62%"
+    assert [t["at"] for t in data["thresholds"]] == [0.0, 0.8]
+
+
+def test_gauge_coerces_numeric_strings_like_progress():
+    assert Gauge(value="0.5").value == 0.5
+
+
+def test_gauge_rejects_non_numeric_value():
+    with pytest.raises(ValidationError):
+        Gauge(value="warm")
+
+
+def test_pipeline_stepper_shape():
+    stepper = PipelineStepper(
+        title="Job",
+        orientation="vertical",
+        steps=[
+            {"label": "Queued", "status": "done", "detail": "3s"},
+            {"label": "Running", "status": "active"},
+            {"label": "Collected", "status": "pending"},
+        ],
+    )
+    data = stepper.to_dict()
+    assert data["type"] == "pipeline_stepper"
+    assert data["orientation"] == "vertical"
+    assert [s["status"] for s in data["steps"]] == ["done", "active", "pending"]
+
+
+def test_donut_chart_shape():
+    donut = DonutChart(
+        title="Storage",
+        labels=["Used", "Free"],
+        data=[62.0, 38.0],
+        center_label="Used",
+        center_value="62%",
+    )
+    data = donut.to_dict()
+    assert data["type"] == "donut_chart"
+    assert data["labels"] == ["Used", "Free"]
+    assert data["data"] == [62.0, 38.0]
+    assert data["center_value"] == "62%"
+
+
+def test_radar_chart_shape():
+    radar = RadarChart(
+        title="Model comparison",
+        axes=["accuracy", "recall", "latency"],
+        datasets=[
+            {"label": "Baseline", "data": [0.82, 0.71, 0.9]},
+            {"label": "Candidate", "data": [0.88, 0.79, 0.74]},
+        ],
+        max_value=1.0,
+    )
+    data = radar.to_dict()
+    assert data["type"] == "radar_chart"
+    assert data["axes"] == ["accuracy", "recall", "latency"]
+    assert [d["label"] for d in data["datasets"]] == ["Baseline", "Candidate"]
+    assert data["max_value"] == 1.0
+
+
+@pytest.mark.parametrize("wire_type,cls", sorted(NEW_089_TYPES.items()))
+def test_new_types_default_construct_and_round_trip(wire_type, cls):
+    data = cls().to_dict()
+    assert data["type"] == wire_type
+    restored = Primitive.from_dict(data)
+    assert type(restored) is cls
+    assert restored.to_dict() == data
+
+
+@pytest.mark.parametrize("wire_type,cls", sorted(NEW_089_TYPES.items()))
+def test_new_types_carry_no_color_field(wire_type, cls):
+    assert not {f for f in cls.model_fields if "color" in f}
+
+
+@pytest.mark.parametrize("wire_type,cls", sorted(NEW_089_TYPES.items()))
+def test_adapter_validates_new_types(wire_type, cls):
+    inst = primitive_adapter.validate_python({"type": wire_type})
+    assert isinstance(inst, cls)
+
+
+def test_new_types_nest_inside_a_container_and_round_trip():
+    tree = Container().add(
+        Card(
+            title="Run",
+            content=[
+                StatGroup(items=[{"label": "p95", "value": "412 ms"}]),
+                Gauge(label="Load", value=0.4),
+                PipelineStepper(steps=[{"label": "Queued", "status": "done"}]),
+                DonutChart(labels=["a"], data=[1.0]),
+                RadarChart(axes=["x", "y", "z"], datasets=[{"label": "s", "data": [1, 2, 3]}]),
+                ActionGroup(buttons=[Button(label="Save", action="save")]),
+            ],
+        )
+    )
+    data = tree.to_dict()
+    restored = Primitive.from_dict(data)
+    assert restored.to_dict() == data
+    card = restored.children[0]
+    assert [type(c).__name__ for c in card.content] == [
+        "StatGroup",
+        "Gauge",
+        "PipelineStepper",
+        "DonutChart",
+        "RadarChart",
+        "ActionGroup",
+    ]
+    assert isinstance(card.content[5].buttons[0], Button)
+
+
+def test_new_types_survive_json_encoding():
+    stats = StatGroup(title="t", items=[{"label": "a", "value": "1"}])
+    assert json.loads(stats.to_json()) == stats.to_dict()
