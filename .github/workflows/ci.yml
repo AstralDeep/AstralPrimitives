@@ -45,10 +45,14 @@ jobs:
           uv pip install --python .package-smoke/bin/python dist/*.whl
           .package-smoke/bin/python - <<'PY'
           from importlib.metadata import files, version
+          from pathlib import Path
+          import tomllib
           import astralprims
           from astralprims import Text
 
-          assert version("astralprims") == "0.3.0"
+          manifest = tomllib.loads(Path("pyproject.toml").read_text(encoding="utf-8"))
+          installed_version = version("astralprims")
+          assert installed_version == manifest["project"]["version"]
           package_files = files("astralprims")
           assert package_files is not None
           assert any(
@@ -59,7 +63,7 @@ jobs:
               "content": "ci",
               "variant": "body",
           }
-          assert astralprims.__version__ == "0.3.0"
+          assert astralprims.__version__ == installed_version
           PY
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
