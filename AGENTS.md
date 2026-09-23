@@ -1,20 +1,22 @@
-# AstralPrimitives — working notes
+# AstralPrimitives Agent Guide
+
+`AGENTS.md` is the single repository instruction file for all coding agents. Update it directly; do not create a separate agent-specific guide.
 
 `astralprims`: composable, serializable UI primitives for Python. Each primitive is a
 pydantic-v2 model that validates on construction and serializes to a plain wire dict. JSON
 is the wire format; pydantic is only the authoring layer.
 
 This package is the **"define" stage** of [AstralDeep](https://github.com/AstralDeep)'s
-server-driven UI: *astralprims defines → the orchestrator renders → ROTE adapts per device.*
+server-driven UI: *AstralPrimitives defines → AstralProjection renders and adapts → AstralDeep orchestrates.*
 It is consumed there as an ordinary pip dependency, and it releases on its own train.
 
 ## Layout
 
-Five files, small enough to read end to end:
+Start with these files:
 
 - `src/astralprims/base.py` — `Primitive` (the base), `SerModel` (nested non-primitive
   helpers), the `_REGISTRY` type→class map, and `Primitive.from_dict`.
-- `src/astralprims/primitives.py` — the 32 concrete primitives.
+- `src/astralprims/primitives.py` — the concrete primitive definitions; derive the current vocabulary from their type literals.
 - `src/astralprims/__init__.py` — public surface, `__version__`, and the `AnyPrimitive`
   discriminated union + `primitive_adapter`.
 - `src/astralprims/response.py` — `create_ui_response()`.
@@ -32,7 +34,7 @@ pytest
 
 ## Release model — read this before merging
 
-`.github/workflows/ci.yml` qualifies pull requests on Python 3.9, 3.11, and 3.14, including
+`.github/workflows/ci.yml` qualifies pull requests with locked tooling, including
 branch and changed-line coverage, both distribution formats, and a clean-install smoke test.
 `.github/workflows/python-publish.yml` runs only on push to `main`; its unprivileged job
 tests and builds before the environment-protected publisher receives OIDC and uploads the
@@ -46,10 +48,10 @@ Two consequences that bite:
 - **Publication does not replace PR qualification.** The release workflow repeats the
   locked tests and package checks without OIDC before its isolated publisher runs.
 
-AstralDeep pins a version *floor* (`astralprims>=0.2.0` in `backend/requirements.txt`), so
-its container image can lag this repo's HEAD. New component types therefore often have
-renderers in AstralDeep before the class exists here, and agents emit them as plain dicts in
-the meantime. That is the normal pattern, not a bug.
+Consumers pin their own package/component revisions. Check their current manifests and
+installed package versions before importing a newly added class; a running image can lag
+this repository. New wire types may use an approved plain dict until the matching package
+is installed. A documentation-only change does not require a package version bump.
 
 ## Serialization contract
 
@@ -85,60 +87,29 @@ writes `_REGISTRY[default] = cls`. So:
 - The union snapshots `_REGISTRY` at import time. After defining a custom primitive, call
   `rebuild_primitive_union()` or `primitive_adapter` will not see it.
 - Adding a primitive to the AstralDeep vocabulary additionally requires Constitution VIII
-  approval, documentation, and a same-PR edit to `backend/shared/ui_protocol.json` — four
-  drift guards fail otherwise. Those guards live in the AstralDeep repo, not this one.
+  approval, documentation, and coordinated changes to AstralProjection's
+  `contracts/ui_protocol.json`, renderers, ROTE, affected clients, and drift guards,
+  followed by the consuming AstralDeep composition pin. Keep the repositories' release
+  trains distinct; a package-only change does not update a deployed client.
 - Update the primitive table in `README.md`. It has drifted before.
 
 ## Knowledge graph
 
-An LLM-maintained wiki mirrors this repo at `/Users/sam/Desktop/Work/obsidian-vault` (its
-own git repo; read its `CLAUDE.md` for the schema). The relevant pages:
+Use the `kos-wiki` repository supplied by the current workspace, not historical absolute
+paths. Read its `AGENTS.md` and `index.md` before editing. Relevant curated pages are:
 
-- `wiki/sources/astral-primitives-repo.md` — the anchor: filesystem path + the commit last
-  reviewed. Every claim derived from this repo cites it.
-- `wiki/entities/astralprims.md` — the package: primitive table, the 32-vs-35 gap, release
-  model.
-- `wiki/concepts/Primitive Serialization Contract.md` — the rules above, in depth.
+- `wiki/astral-primitives.md` — package vocabulary and release model.
+- `wiki/astral-primitive-serialization-contract.md` — serialization rules.
+- `wiki/astral-sdui-pipeline.md` — ownership and cross-repository flow.
 
-**Refresh it at every checkpoint.** Anchors go stale silently: a version bump or a new
-primitive class invalidates claims on those pages and the 32-vs-35 count on
-`wiki/concepts/SDUI Pipeline.md`. The vault has already carried one stale claim this way
-(`astralprims>=0.1.0` long after the real pin moved to `>=0.2.0`).
+Refresh the vault at major checkpoints, especially a version bump, a primitive addition
+or removal, a PR merge, or a durable decision. Re-anchor the reviewed repository commit,
+revise affected claims against the live tree, update `index.md`, append to `log.md`, then
+commit and push the vault separately under its standing authorization. Never add raw
+artifacts, credentials, or user data. Report any blocked vault commit or push.
 
-Triggers specific to this repo: **a `version` bump in `pyproject.toml`** (the release
-marker) or **adding/removing a primitive class**. Also on the usual checkpoints — a PR
-merged, a feature shipped, a notable decision made.
-
-When triggered, follow the vault's `Operation: SESSION CHECKPOINT`:
-
-1. Re-anchor `reviewed_commit:` in `wiki/sources/astral-primitives-repo.md` to this repo's
-   HEAD.
-2. **Revise** the affected pages — don't just append. Re-verify counts against the working
-   tree rather than trusting a stale page; if a new fact contradicts an existing page, say
-   so explicitly on the page.
-3. Append a `log.md` entry, update `index.md` if pages were added or renamed.
-4. Commit the vault repo.
-
-A useful cross-check when the vocabulary changes — the class list against AstralDeep's wire
-manifest:
-
-Absolute paths on purpose — the two halves live in different repos, and a wrong cwd makes
-`prims.txt` empty, which reads as "every wire type is missing a class" rather than as an
-error.
-
-```bash
-P=/Users/sam/Desktop/Work/AstralPrimitives
-A=/Users/sam/Desktop/Work/AstralDeep
-
-grep -oE 'type: Literal\["[a-z_]+"\]' "$P/src/astralprims/primitives.py" \
-  | sed 's/.*\["//;s/"\]//' | sort > /tmp/prims.txt
-python3 -c "import json;print('\n'.join(sorted(json.load(open('$A/backend/shared/ui_protocol.json'))['component_types'])))" \
-  > /tmp/wire.txt
-
-wc -l /tmp/prims.txt /tmp/wire.txt      # sanity: neither may be 0
-comm -13 /tmp/prims.txt /tmp/wire.txt   # wire types with a renderer but no class
-comm -23 /tmp/prims.txt /tmp/wire.txt   # classes not in the manifest — should be empty
-```
-
-At `a204ec6` that prints 32 and 35, with `download_card`, `generative`, `skeleton` in the
-first diff and nothing in the second.
+When checking vocabulary parity, compare `type: Literal[...]` declarations in
+`src/astralprims/primitives.py` with `component_types` in the pinned AstralProjection
+`contracts/ui_protocol.json`. Resolve both repositories from the current workspace,
+check that both inputs are nonempty, and distinguish manifest-only renderer types from
+primitive classes. Do not use historical class counts as the current expected result.
