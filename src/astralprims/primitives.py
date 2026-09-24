@@ -1,15 +1,6 @@
-"""Concrete UI primitives.
-
-Each primitive is a Pydantic model that inherits ``css``, ``id``, ``class_name``,
-``tooltip`` and ``attributes`` from :class:`Primitive` and adds its own fields.
-Nesting (children / content / tabs) is reconstructed and serialized by the base
-class. Import the ones you need::
-
-    from astralprims import Button, Container, Card
-
-    Container().add(
-        Card(title="Welcome", content=[Button(label="Get started", action="go")])
-    )
+"""Concrete Pydantic UI primitive models (layout, content, charts, media, dashboard,
+theming) that extend Primitive from astralprims/base.py; re-exported via
+astralprims/__init__.py for building SDUI component trees.
 """
 
 from __future__ import annotations
@@ -21,27 +12,18 @@ from pydantic import Field, field_validator
 from .base import SerModel, _coerce_children
 from .base import Primitive
 
-# ---------------------------------------------------------------------------
-# Layout
-# ---------------------------------------------------------------------------
-
 
 class Container(Primitive):
-    """A layout container holding child primitives."""
-
     type: Literal["container"] = "container"
     children: List[Primitive] = Field(default_factory=list)
-    direction: Optional[str] = None  # e.g. "row" | "column"
+    direction: Optional[str] = None
 
     def add(self, *children: Primitive) -> "Container":
-        """Append one or more children and return self (chainable)."""
         self.children.extend(children)
         return self
 
 
 class Card(Primitive):
-    """A titled card wrapping child primitives."""
-
     type: Literal["card"] = "card"
     title: str = ""
     content: List[Primitive] = Field(default_factory=list)
@@ -53,8 +35,6 @@ class Card(Primitive):
 
 
 class Grids(Primitive):
-    """A grid layout with a fixed column count."""
-
     type: Literal["grid"] = "grid"
     columns: int = 2
     children: List[Primitive] = Field(default_factory=list)
@@ -65,13 +45,10 @@ class Grids(Primitive):
         return self
 
 
-# Backwards-compatible alias.
 Grid = Grids
 
 
 class TabItem(SerModel):
-    """A single tab. Not a primitive itself (no ``type``); nested in ``Tabs``."""
-
     label: str = ""
     content: List[Primitive] = Field(default_factory=list)
     value: Optional[str] = None
@@ -83,8 +60,6 @@ class TabItem(SerModel):
 
 
 class Tabs(Primitive):
-    """A tabbed container."""
-
     type: Literal["tabs"] = "tabs"
     tabs: List[TabItem] = Field(default_factory=list)
     variant: str = "default"
@@ -98,8 +73,6 @@ class Tabs(Primitive):
 
 
 class Collapsible(Primitive):
-    """A collapsible / accordion section."""
-
     type: Literal["collapsible"] = "collapsible"
     title: str = ""
     content: List[Primitive] = Field(default_factory=list)
@@ -107,28 +80,17 @@ class Collapsible(Primitive):
 
 
 class Divider(Primitive):
-    """A horizontal rule / visual separator."""
-
     type: Literal["divider"] = "divider"
     variant: str = "solid"
 
 
-# ---------------------------------------------------------------------------
-# Content & controls
-# ---------------------------------------------------------------------------
-
-
 class Text(Primitive):
-    """A run of text. ``variant`` is one of h1, h2, h3, body, caption."""
-
     type: Literal["text"] = "text"
     content: str = ""
     variant: str = "body"
 
 
 class Button(Primitive):
-    """A clickable button that dispatches an action with an optional payload."""
-
     type: Literal["button"] = "button"
     label: str = ""
     action: str = ""
@@ -137,17 +99,6 @@ class Button(Primitive):
 
 
 class ActionGroup(Primitive):
-    """A row of related buttons presented as one labelled control group.
-
-    ``buttons`` holds :class:`Button` primitives, which serialize recursively
-    and are reconstructed by :meth:`Primitive.from_dict`. Grouping the actions
-    instead of emitting loose buttons lets a renderer give the set one
-    accessible name and lets a narrow viewport collapse the overflow.
-
-    ``align`` is start, center, end, or between. ``label`` names the group for
-    assistive technology.
-    """
-
     type: Literal["action_group"] = "action_group"
     buttons: List[Primitive] = Field(default_factory=list)
     align: str = "start"
@@ -160,8 +111,6 @@ class ActionGroup(Primitive):
 
 
 class Input(Primitive):
-    """A single-line form input."""
-
     type: Literal["input"] = "input"
     placeholder: str = ""
     name: str = ""
@@ -169,27 +118,6 @@ class Input(Primitive):
 
 
 class ParamPicker(Primitive):
-    """Interactive parameter form rendered as a card with form fields.
-
-    Each entry in ``fields`` is a dict of the shape::
-
-        {"name": "models_to_train",
-         "label": "Models to train",
-         "kind": "boolean"|"number"|"text"|"checklist"|"select",
-         "default": <starting value>,
-         "options": [...]  # for checklist/select
-         "help": "...",
-         "step": 1  # optional, for number kind
-        }
-
-    On submit the renderer interpolates ``submit_message_template`` with the
-    user's field values. Two placeholder forms are supported:
-
-    * ``{field_name}`` — replaced with that field's value (JSON-encoded for
-      lists/dicts/bools).
-    * ``{__values_json__}`` — replaced with the JSON of the entire form state.
-    """
-
     type: Literal["param_picker"] = "param_picker"
     title: str = ""
     description: str = ""
@@ -199,8 +127,6 @@ class ParamPicker(Primitive):
 
 
 class Image(Primitive):
-    """An image."""
-
     type: Literal["image"] = "image"
     url: str = ""
     alt: Optional[str] = None
@@ -209,8 +135,6 @@ class Image(Primitive):
 
 
 class CodeBlock(Primitive):
-    """A syntax-highlighted code block."""
-
     type: Literal["code"] = "code"
     code: str = ""
     language: str = "text"
@@ -218,8 +142,6 @@ class CodeBlock(Primitive):
 
 
 class Alert(Primitive):
-    """A callout / banner. ``variant`` is info, success, warning, or error."""
-
     type: Literal["alert"] = "alert"
     message: str = ""
     variant: str = "info"
@@ -227,8 +149,6 @@ class Alert(Primitive):
 
 
 class ProgressBar(Primitive):
-    """A progress bar."""
-
     type: Literal["progress"] = "progress"
     value: float = 0.0
     label: Optional[str] = None
@@ -237,8 +157,6 @@ class ProgressBar(Primitive):
 
 
 class MetricCard(Primitive):
-    """A single KPI / metric tile."""
-
     type: Literal["metric"] = "metric"
     title: str = ""
     value: str = ""
@@ -249,8 +167,6 @@ class MetricCard(Primitive):
 
 
 class List_(Primitive):
-    """An ordered or unordered list of strings or dict items."""
-
     type: Literal["list"] = "list"
     items: List[Union[str, Dict[str, Any]]] = Field(default_factory=list)
     ordered: bool = False
@@ -258,39 +174,26 @@ class List_(Primitive):
 
 
 class Table(Primitive):
-    """A data table with optional pagination and re-invocation context."""
-
     type: Literal["table"] = "table"
     headers: List[str] = Field(default_factory=list)
     rows: List[List[Any]] = Field(default_factory=list)
     variant: str = "default"
-    # Pagination (optional — when present, the renderer shows controls).
     total_rows: Optional[int] = None
     page_size: Optional[int] = None
     page_offset: Optional[int] = None
     page_sizes: List[int] = Field(default_factory=list)
-    # Tool re-invocation context (lets the renderer request different pages).
     source_tool: Optional[str] = None
     source_agent: Optional[str] = None
     source_params: Dict[str, Any] = Field(default_factory=dict)
 
 
-# ---------------------------------------------------------------------------
-# Charts
-# ---------------------------------------------------------------------------
-
-
 class ChartDataset(SerModel):
-    """A named series of values. Not a primitive itself."""
-
     label: str = ""
     data: List[float] = Field(default_factory=list)
     color: Optional[str] = None
 
 
 class BarChart(Primitive):
-    """A bar chart."""
-
     type: Literal["bar_chart"] = "bar_chart"
     title: str = ""
     labels: List[str] = Field(default_factory=list)
@@ -298,8 +201,6 @@ class BarChart(Primitive):
 
 
 class LineChart(Primitive):
-    """A line chart."""
-
     type: Literal["line_chart"] = "line_chart"
     title: str = ""
     labels: List[str] = Field(default_factory=list)
@@ -307,8 +208,6 @@ class LineChart(Primitive):
 
 
 class PieChart(Primitive):
-    """A pie chart."""
-
     type: Literal["pie_chart"] = "pie_chart"
     title: str = ""
     labels: List[str] = Field(default_factory=list)
@@ -317,13 +216,6 @@ class PieChart(Primitive):
 
 
 class DonutChart(Primitive):
-    """A single-series ring chart with an optional centered readout.
-
-    ``data`` is parallel to ``labels``. ``center_label`` and ``center_value``
-    render in the hole (for example ``"Total"`` over ``"1,284"``); with neither
-    set the hole stays empty.
-    """
-
     type: Literal["donut_chart"] = "donut_chart"
     title: str = ""
     labels: List[str] = Field(default_factory=list)
@@ -333,18 +225,6 @@ class DonutChart(Primitive):
 
 
 class RadarChart(Primitive):
-    """A multi-axis comparison chart.
-
-    ``axes`` names the spokes (3-12 read well; a renderer may refuse or fall
-    back outside that range). Each entry in ``datasets`` is a dict of the same
-    shape the bar and line charts use::
-
-        {"label": "Baseline", "data": [0.82, 0.71, 0.9]}
-
-    ``data`` is parallel to ``axes``. ``max_value`` fixes the outer ring; with
-    it unset the renderer scales to the largest value present.
-    """
-
     type: Literal["radar_chart"] = "radar_chart"
     title: str = ""
     axes: List[str] = Field(default_factory=list)
@@ -353,8 +233,6 @@ class RadarChart(Primitive):
 
 
 class PlotlyChart(Primitive):
-    """An arbitrary Plotly figure (data + layout + config)."""
-
     type: Literal["plotly_chart"] = "plotly_chart"
     title: str = ""
     data: List[Dict[str, Any]] = Field(default_factory=list)
@@ -362,30 +240,18 @@ class PlotlyChart(Primitive):
     config: Dict[str, Any] = Field(default_factory=dict)
 
 
-# ---------------------------------------------------------------------------
-# Media & I/O
-# ---------------------------------------------------------------------------
-
-
 class Audio(Primitive):
-    """Audio player primitive.
-
-    Supports inline base64 data, URLs, generated speech, and MIDI.
-    """
-
     type: Literal["audio"] = "audio"
     src: str = ""
-    contentType: Optional[str] = None  # audio/mpeg, audio/wav, audio/midi, ...
+    contentType: Optional[str] = None
     autoplay: bool = False
     loop: bool = False
-    label: Optional[str] = None  # optional title above the player
+    label: Optional[str] = None
     showControls: bool = True
-    description: Optional[str] = None  # optional caption/description
+    description: Optional[str] = None
 
 
 class FileUpload(Primitive):
-    """A file upload control."""
-
     type: Literal["file_upload"] = "file_upload"
     label: str = "Upload File"
     accept: str = "*/*"
@@ -393,25 +259,13 @@ class FileUpload(Primitive):
 
 
 class FileDownload(Primitive):
-    """A file download link/button."""
-
     type: Literal["file_download"] = "file_download"
     label: str = "Download File"
     url: str = ""
     filename: Optional[str] = None
 
 
-# ---------------------------------------------------------------------------
-# Dashboard & status
-# ---------------------------------------------------------------------------
-
-
 class Badge(Primitive):
-    """A small inline status chip.
-
-    ``variant`` is one of default, success, warning, error, info, or accent.
-    """
-
     type: Literal["badge"] = "badge"
     label: str = ""
     variant: str = "default"
@@ -419,12 +273,6 @@ class Badge(Primitive):
 
 
 class Hero(Primitive):
-    """A page-level header band: eyebrow, title, subtitle, optional badges.
-
-    Gives dashboards and reports an anchoring masthead. ``variant`` is one of
-    default, gradient, or subtle.
-    """
-
     type: Literal["hero"] = "hero"
     title: str = ""
     subtitle: Optional[str] = None
@@ -435,16 +283,6 @@ class Hero(Primitive):
 
 
 class KeyValue(Primitive):
-    """A compact label/value fact sheet.
-
-    Each entry in ``items`` is a dict of the shape::
-
-        {"label": "Owner", "value": "Paws & Bubbles", "hint": "since 2021"}
-
-    ``hint`` is optional. ``columns`` controls how many label/value pairs sit
-    side by side (1-4).
-    """
-
     type: Literal["keyvalue"] = "keyvalue"
     title: Optional[str] = None
     items: List[Dict[str, Any]] = Field(default_factory=list)
@@ -452,18 +290,6 @@ class KeyValue(Primitive):
 
 
 class Timeline(Primitive):
-    """A vertical sequence of events, appointments, or steps.
-
-    Each entry in ``items`` is a dict of the shape::
-
-        {"time": "9:00 AM", "title": "Bella — Full Groom",
-         "description": "Golden Retriever, de-shed add-on",
-         "variant": "success"}
-
-    ``time``, ``description`` and ``variant`` (default | success | warning |
-    error | info) are optional.
-    """
-
     type: Literal["timeline"] = "timeline"
     title: Optional[str] = None
     items: List[Dict[str, Any]] = Field(default_factory=list)
@@ -471,19 +297,6 @@ class Timeline(Primitive):
 
 
 class StatGroup(Primitive):
-    """A grid of small KPI readouts.
-
-    Each entry in ``items`` is a dict of the shape::
-
-        {"label": "Requests", "value": "1,284", "delta": "+12%",
-         "trend": "up", "hint": "vs. last week", "variant": "success"}
-
-    Only ``label`` and ``value`` are required. ``trend`` is up, down, or flat
-    and selects the direction glyph; ``variant`` (default | success | warning |
-    error | info) selects the theme role. ``columns`` is clamped to 1-6 by the
-    renderer and by ROTE, which narrows it further on small viewports.
-    """
-
     type: Literal["stat_group"] = "stat_group"
     title: Optional[str] = None
     items: List[Dict[str, Any]] = Field(default_factory=list)
@@ -491,20 +304,6 @@ class StatGroup(Primitive):
 
 
 class Gauge(Primitive):
-    """A dial reading one bounded value.
-
-    ``value`` is 0-1, the same scale :class:`ProgressBar` uses.
-    ``display_value`` is the human reading to show in the dial (for example
-    ``"72 °F"``); with it unset the renderer shows ``value`` as a percentage.
-
-    Each entry in ``thresholds`` is a dict of the shape::
-
-        {"at": 0.8, "variant": "warning"}
-
-    ``at`` is on the same 0-1 scale and the list reads in ascending order; the
-    highest threshold at or below ``value`` selects the dial's theme role.
-    """
-
     type: Literal["gauge"] = "gauge"
     label: str = ""
     value: float = 0.0
@@ -514,17 +313,6 @@ class Gauge(Primitive):
 
 
 class PipelineStepper(Primitive):
-    """An ordered sequence of stages with one current stage.
-
-    Each entry in ``steps`` is a dict of the shape::
-
-        {"label": "Queued", "status": "done", "detail": "3s"}
-
-    ``status`` is done, active, pending, or error; ``detail`` is optional. The
-    first ``active`` step carries ``aria-current="step"``. ``orientation`` is
-    horizontal or vertical; ROTE switches web layouts to vertical below 768px.
-    """
-
     type: Literal["pipeline_stepper"] = "pipeline_stepper"
     title: Optional[str] = None
     steps: List[Dict[str, Any]] = Field(default_factory=list)
@@ -532,8 +320,6 @@ class PipelineStepper(Primitive):
 
 
 class Rating(Primitive):
-    """A star-rating readout (e.g. customer satisfaction)."""
-
     type: Literal["rating"] = "rating"
     value: float = 0.0
     max_value: int = 5
@@ -543,35 +329,12 @@ class Rating(Primitive):
 
 
 class ChatHistory(Primitive):
-    """A scannable list of recent conversations the user can reopen.
-
-    Each entry in ``items`` is a dict of the shape::
-
-        {"chat_id": "c1", "title": "Weather this weekend",
-         "preview": "Saturday looks clear, high of 81°F…", "time": "2h",
-         "icon": "🌤️", "saved": True}
-
-    Only ``chat_id`` and ``title`` are required to render an openable row;
-    ``preview`` (a last-message snippet), ``time`` (a pre-formatted relative
-    time such as ``"2h"``/``"3d"``), ``icon`` (a decorative per-agent glyph) and
-    ``saved`` (truthy → a saved-components marker) are optional. Selecting a row
-    dispatches a ``load_chat`` action carrying ``{"chat_id": …}``. With no items
-    the surface shows an empty state. ``title`` is the surface heading.
-    """
-
     type: Literal["chat_history"] = "chat_history"
     title: Optional[str] = "Recent chats"
     items: List[Dict[str, Any]] = Field(default_factory=list)
 
 
-# ---------------------------------------------------------------------------
-# Theming
-# ---------------------------------------------------------------------------
-
-
 class ColorPicker(Primitive):
-    """A color picker bound to a theme color key."""
-
     type: Literal["color_picker"] = "color_picker"
     label: str = ""
     color_key: str = ""
@@ -579,8 +342,6 @@ class ColorPicker(Primitive):
 
 
 class ThemeApply(Primitive):
-    """Applies a theme preset or individual color change."""
-
     type: Literal["theme_apply"] = "theme_apply"
     preset: Optional[str] = None
     colors: Optional[Dict[str, str]] = None

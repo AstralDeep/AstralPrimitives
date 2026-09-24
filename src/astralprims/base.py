@@ -1,10 +1,6 @@
-"""Base machinery shared by every UI primitive.
-
-A primitive is a Pydantic model describing a piece of UI. It validates on
-construction, serializes to a plain ``dict``/JSON (``to_dict``/``to_json``), and
-can be reconstructed from a ``dict`` (``from_dict``) — so primitives can be
-stored, transported, validated on inbound FastAPI requests, and rendered by a
-server-driven UI. JSON stays the wire format; Pydantic is the authoring layer.
+"""Pydantic base for every UI primitive: the type registry plus
+to_dict/to_json/from_dict serialization. primitives.py subclasses Primitive;
+__init__.py builds the union from the registry.
 """
 
 from __future__ import annotations
@@ -14,18 +10,12 @@ from typing import Any, Dict, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_serializer
 
-# A CSS block is just a mapping of (kebab-case) property -> value.
 CSS = Dict[str, str]
 
-# Registry of ``type`` string -> Primitive subclass, populated as subclasses are
-# defined. Used by :func:`Primitive.from_dict` to round-trip dicts back into
-# objects and by ``__init__`` to build the discriminated union.
 _REGISTRY: Dict[str, type["Primitive"]] = {}
 
 
 def _dump(value: Any) -> Any:
-    """Recursively serialize a value, dispatching nested models to their own
-    serializer (so each model controls its own output shape)."""
     if isinstance(value, BaseModel):
         return value.model_dump()
     if isinstance(value, list):
@@ -36,7 +26,6 @@ def _dump(value: Any) -> Any:
 
 
 def _coerce_children(value: Any) -> Any:
-    """Turn a list of child dicts (each carrying a ``type``) into primitives."""
     if isinstance(value, list):
         return [
             Primitive.from_dict(v) if isinstance(v, dict) and "type" in v else v
@@ -46,11 +35,6 @@ def _coerce_children(value: Any) -> Any:
 
 
 class SerModel(BaseModel):
-    """A model that serializes by dropping ``None`` fields and honoring aliases.
-
-    Used for nested non-primitive helpers (``TabItem``, ``ChartDataset``).
-    """
-
     @model_serializer(mode="plain")
     def _serialize(self) -> Dict[str, Any]:
         out: Dict[str, Any] = {}
@@ -63,14 +47,6 @@ class SerModel(BaseModel):
 
 
 class Primitive(BaseModel):
-    """Base class for all UI primitives.
-
-    Subclasses set ``type`` to a ``Literal[...]`` and declare their own fields.
-    Serialization emits ``"type"`` first, drops ``None``, omits an empty ``css``
-    block, renames ``class_name`` to ``"class"``, and merges ``attributes`` at
-    the top level.
-    """
-
     model_config = ConfigDict(populate_by_name=True, extra="ignore")
 
     type: str = "primitive"
@@ -78,7 +54,6 @@ class Primitive(BaseModel):
     id: Optional[str] = None
     class_name: Optional[str] = Field(default=None, alias="class")
     tooltip: Optional[str] = None
-    # Free-form extra attributes merged into the output (escape hatch).
     attributes: Dict[str, Any] = Field(default_factory=dict)
 
     @classmethod
@@ -88,15 +63,11 @@ class Primitive(BaseModel):
         if type_field is not None and isinstance(type_field.default, str):
             _REGISTRY[type_field.default] = cls
 
-    # Reconstruct nested ``children``/``content`` dicts into primitives. Declared
-    # here with check_fields=False so it applies to whichever subclasses have
-    # those fields (Container, Card, Grids, Collapsible, ...).
+    # check_fields=False lets one validator serve every subclass
     @field_validator("children", "content", mode="before", check_fields=False)
     @classmethod
     def _coerce_primitive_children(cls, v: Any) -> Any:
         return _coerce_children(v)
-
-    # -- serialization ----------------------------------------------------
 
     @model_serializer(mode="plain")
     def _serialize(self) -> Dict[str, Any]:
@@ -108,29 +79,19 @@ class Primitive(BaseModel):
             if value is None:
                 continue
             if name == "css" and not value:
-                continue  # omit empty style blocks
+                continue
             out[field.alias or name] = _dump(value)
-        # Extra attributes are merged last so callers can override or extend.
         out.update(self.attributes or {})
         return out
 
     def to_dict(self) -> Dict[str, Any]:
-        """Serialize to a plain ``dict`` with ``"type"`` first."""
         return self.model_dump()
 
     def to_json(self, **kwargs: Any) -> str:
-        """Serialize to a JSON string. Extra kwargs go to :func:`json.dumps`."""
         return json.dumps(self.model_dump(), **kwargs)
-
-    # -- deserialization --------------------------------------------------
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "Primitive":
-        """Reconstruct a primitive (and any children) from a ``dict``.
-
-        Dispatches on the ``"type"`` key to the matching registered subclass.
-        Unknown keys are funneled into ``attributes``.
-        """
         if "type" not in data:
             raise ValueError("primitive dict is missing required 'type' key")
 

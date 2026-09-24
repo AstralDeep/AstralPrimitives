@@ -1,3 +1,8 @@
+"""Tests for AstralPrimitives' GitHub Actions workflows: pinned/approved action SHAs,
+the main/PR quality-compatibility-package gate sequence, and the hash-constrained
+Python 3.9 build backend.
+"""
+
 from __future__ import annotations
 
 import re

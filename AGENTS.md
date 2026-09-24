@@ -25,6 +25,10 @@ Start with these files:
 
 Dependencies stay thin on purpose: `pydantic>=2`, `requires-python >=3.9`, hatchling.
 
+## Comments
+
+The code documents itself (AstralDeep Constitution VI). Each file opens with a header of at most three sentences on what it does and how it connects to other files. Add no other comments or docstrings except a one-line *why* where absolutely necessary; primitive documentation lives in `README.md`. No spec IDs, history, TODOs, or narration in source. Tool directives (`# noqa`, `# type: ignore`, `# pragma: no cover`) stay.
+
 ## Dev workflow
 
 ```bash

@@ -1,3 +1,7 @@
+"""Tests for astralprims: serialization shape, dropped None/empty fields, from_dict
+round-trips of nested children, and primitive_adapter validation and JSON schema.
+"""
+
 import json
 
 import pytest
@@ -35,9 +39,6 @@ from astralprims import (
 )
 
 
-# -- base behaviors ------------------------------------------------------
-
-
 def test_button_to_dict_shape():
     btn = Button(
         label="the button text",
@@ -52,7 +53,6 @@ def test_button_to_dict_shape():
 
 
 def test_none_fields_are_dropped():
-    # tooltip/id default to None and must not appear.
     out = Text(content="hi").to_dict()
     assert "tooltip" not in out
     assert "id" not in out
@@ -74,9 +74,6 @@ def test_extra_attributes_are_merged():
 
 def test_class_name_is_remapped():
     assert Text(content="x", class_name="muted").to_dict()["class"] == "muted"
-
-
-# -- nesting -------------------------------------------------------------
 
 
 def test_container_nests_children():
@@ -107,18 +104,14 @@ def test_tabs_serialize_tabitems_and_their_content():
     out = tabs.to_dict()
     assert out["tabs"][0]["label"] == "One"
     assert out["tabs"][0]["content"][0]["type"] == "text"
-    # None value on the TabItem is dropped by the generic dataclass serializer.
     assert "value" not in out["tabs"][0]
-
-
-# -- leaf primitives -----------------------------------------------------
 
 
 def test_table_pagination_fields():
     out = Table(headers=["a"], rows=[[1]], total_rows=100, page_size=10).to_dict()
     assert out["total_rows"] == 100
     assert out["page_size"] == 10
-    assert "source_tool" not in out  # None dropped
+    assert "source_tool" not in out
 
 
 def test_audio_defaults():
@@ -147,7 +140,7 @@ def test_badge_shape():
     assert out["type"] == "badge"
     assert out["label"] == "Confirmed"
     assert out["variant"] == "success"
-    assert "icon" not in out  # None dropped
+    assert "icon" not in out
 
 
 def test_hero_shape():
@@ -175,7 +168,7 @@ def test_timeline_shape():
                            "variant": "success"}]).to_dict()
     assert out["type"] == "timeline"
     assert out["items"][0]["time"] == "9:00 AM"
-    assert "title" not in out  # None dropped
+    assert "title" not in out
 
 
 def test_rating_shape():
@@ -194,7 +187,7 @@ def test_chat_history_shape():
          "icon": "🌤️", "saved": True},
     ]).to_dict()
     assert out["type"] == "chat_history"
-    assert out["title"] == "Recent chats"  # default heading
+    assert out["title"] == "Recent chats"
     assert out["items"][0]["chat_id"] == "c1"
     assert out["items"][0]["saved"] is True
 
@@ -209,9 +202,6 @@ def test_chat_history_from_dict_roundtrips():
     src = {"type": "chat_history", "title": "Recent chats",
            "items": [{"chat_id": "x", "title": "Hi"}]}
     assert Primitive.from_dict(src).to_dict() == src
-
-
-# -- from_dict round-trips ----------------------------------------------
 
 
 def test_from_dict_unknown_type_raises():
@@ -253,16 +243,10 @@ def test_from_dict_dashboard_types_roundtrip():
         assert restored.to_dict() == prim.to_dict()
 
 
-# -- response envelope ---------------------------------------------------
-
-
 def test_create_ui_response_shape():
     resp = create_ui_response([Text(content="hi"), Button(label="ok", action="go")])
     assert resp["_data"] is None
     assert [c["type"] for c in resp["_ui_components"]] == ["text", "button"]
-
-
-# -- pydantic validation & schema ---------------------------------------
 
 
 def test_invalid_field_type_raises():
@@ -309,11 +293,6 @@ def test_adapter_validates_nested_tree():
     assert isinstance(inst.children[0].content[0], Button)
     assert inst.to_dict() == data
 
-
-# -- composite readouts (feature 089) ------------------------------------
-
-# Every one of the six is additive: it must round-trip, default cleanly, and
-# emit no color field, because renderers resolve variants from the theme.
 
 NEW_089_TYPES = {
     "action_group": ActionGroup,
