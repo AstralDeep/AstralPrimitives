@@ -122,8 +122,195 @@ ActionGroup(label="Result actions", align="end", buttons=[
 None of these carry a color. Variant strings name a semantic role and the
 renderer resolves it from the active theme.
 
-Every primitive also accepts `css`, `id`, `class_name` (serialized as `class`),
-`tooltip`, and an `attributes` dict for arbitrary extra keys.
+## Primitive reference
+
+Every primitive serializes to a dict with its wire `type` first, then the common
+fields, then its own fields. Fields left at `None` and an empty `css` are
+dropped; every other default is emitted and is part of the wire contract. The
+wire `type` does not always match the class name: `CodeBlock` is `code`,
+`ProgressBar` is `progress`, `MetricCard` is `metric`, `List_` is `list`,
+`KeyValue` is `keyvalue`, and `Grid` is an alias of `Grids`, which is `grid`.
+In a type, `Primitive` means any nested primitive; a nested dict is rebuilt as
+the class registered for its `type`.
+
+<!-- primitive-reference:start -->
+
+### Common fields
+
+| Field | Type | Default |
+| --- | --- | --- |
+| `css` | `Optional[Dict[str, str]]` | `None` |
+| `id` | `Optional[str]` | `None` |
+| `class_name` (wire `class`) | `Optional[str]` | `None` |
+| `tooltip` | `Optional[str]` | `None` |
+| `attributes` | `Dict[str, Any]` | `{}` |
+
+### Primitives
+
+| Class | Wire type | Field | Type | Default |
+| --- | --- | --- | --- | --- |
+| `Container` | `container` | `children` | `List[Primitive]` | `[]` |
+|  |  | `direction` | `Optional[str]` | `None` |
+| `Card` | `card` | `title` | `str` | `""` |
+|  |  | `content` | `List[Primitive]` | `[]` |
+|  |  | `variant` | `str` | `"default"` |
+| `Grids` (alias `Grid`) | `grid` | `columns` | `int` | `2` |
+|  |  | `children` | `List[Primitive]` | `[]` |
+|  |  | `gap` | `int` | `20` |
+| `Tabs` | `tabs` | `tabs` | `List[TabItem]` | `[]` |
+|  |  | `variant` | `str` | `"default"` |
+| `Collapsible` | `collapsible` | `title` | `str` | `""` |
+|  |  | `content` | `List[Primitive]` | `[]` |
+|  |  | `default_open` | `bool` | `False` |
+| `Divider` | `divider` | `variant` | `str` | `"solid"` |
+| `Text` | `text` | `content` | `str` | `""` |
+|  |  | `variant` | `str` | `"body"` |
+| `Button` | `button` | `label` | `str` | `""` |
+|  |  | `action` | `str` | `""` |
+|  |  | `payload` | `Dict[str, Any]` | `{}` |
+|  |  | `variant` | `str` | `"primary"` |
+| `ActionGroup` | `action_group` | `buttons` | `List[Primitive]` | `[]` |
+|  |  | `align` | `str` | `"start"` |
+|  |  | `label` | `Optional[str]` | `None` |
+| `Input` | `input` | `placeholder` | `str` | `""` |
+|  |  | `name` | `str` | `""` |
+|  |  | `value` | `str` | `""` |
+| `ParamPicker` | `param_picker` | `title` | `str` | `""` |
+|  |  | `description` | `str` | `""` |
+|  |  | `fields` | `List[Dict[str, Any]]` | `[]` |
+|  |  | `submit_label` | `str` | `"Submit"` |
+|  |  | `submit_message_template` | `str` | `""` |
+| `Image` | `image` | `url` | `str` | `""` |
+|  |  | `alt` | `Optional[str]` | `None` |
+|  |  | `width` | `Optional[str]` | `None` |
+|  |  | `height` | `Optional[str]` | `None` |
+| `CodeBlock` | `code` | `code` | `str` | `""` |
+|  |  | `language` | `str` | `"text"` |
+|  |  | `show_line_numbers` | `bool` | `False` |
+| `Alert` | `alert` | `message` | `str` | `""` |
+|  |  | `variant` | `str` | `"info"` |
+|  |  | `title` | `Optional[str]` | `None` |
+| `ProgressBar` | `progress` | `value` | `float` | `0.0` |
+|  |  | `label` | `Optional[str]` | `None` |
+|  |  | `variant` | `str` | `"default"` |
+|  |  | `show_percentage` | `bool` | `True` |
+| `MetricCard` | `metric` | `title` | `str` | `""` |
+|  |  | `value` | `str` | `""` |
+|  |  | `subtitle` | `Optional[str]` | `None` |
+|  |  | `icon` | `Optional[str]` | `None` |
+|  |  | `variant` | `str` | `"default"` |
+|  |  | `progress` | `Optional[float]` | `None` |
+| `List_` | `list` | `items` | `List[Union[str, Dict[str, Any]]]` | `[]` |
+|  |  | `ordered` | `bool` | `False` |
+|  |  | `variant` | `str` | `"default"` |
+| `Table` | `table` | `headers` | `List[str]` | `[]` |
+|  |  | `rows` | `List[List[Any]]` | `[]` |
+|  |  | `variant` | `str` | `"default"` |
+|  |  | `total_rows` | `Optional[int]` | `None` |
+|  |  | `page_size` | `Optional[int]` | `None` |
+|  |  | `page_offset` | `Optional[int]` | `None` |
+|  |  | `page_sizes` | `List[int]` | `[]` |
+|  |  | `source_tool` | `Optional[str]` | `None` |
+|  |  | `source_agent` | `Optional[str]` | `None` |
+|  |  | `source_params` | `Dict[str, Any]` | `{}` |
+| `BarChart` | `bar_chart` | `title` | `str` | `""` |
+|  |  | `labels` | `List[str]` | `[]` |
+|  |  | `datasets` | `List[Dict[str, Any]]` | `[]` |
+| `LineChart` | `line_chart` | `title` | `str` | `""` |
+|  |  | `labels` | `List[str]` | `[]` |
+|  |  | `datasets` | `List[Dict[str, Any]]` | `[]` |
+| `PieChart` | `pie_chart` | `title` | `str` | `""` |
+|  |  | `labels` | `List[str]` | `[]` |
+|  |  | `data` | `List[float]` | `[]` |
+|  |  | `colors` | `List[str]` | `[]` |
+| `DonutChart` | `donut_chart` | `title` | `str` | `""` |
+|  |  | `labels` | `List[str]` | `[]` |
+|  |  | `data` | `List[float]` | `[]` |
+|  |  | `center_label` | `Optional[str]` | `None` |
+|  |  | `center_value` | `Optional[str]` | `None` |
+| `RadarChart` | `radar_chart` | `title` | `str` | `""` |
+|  |  | `axes` | `List[str]` | `[]` |
+|  |  | `datasets` | `List[Dict[str, Any]]` | `[]` |
+|  |  | `max_value` | `Optional[float]` | `None` |
+| `PlotlyChart` | `plotly_chart` | `title` | `str` | `""` |
+|  |  | `data` | `List[Dict[str, Any]]` | `[]` |
+|  |  | `layout` | `Dict[str, Any]` | `{}` |
+|  |  | `config` | `Dict[str, Any]` | `{}` |
+| `Audio` | `audio` | `src` | `str` | `""` |
+|  |  | `contentType` | `Optional[str]` | `None` |
+|  |  | `autoplay` | `bool` | `False` |
+|  |  | `loop` | `bool` | `False` |
+|  |  | `label` | `Optional[str]` | `None` |
+|  |  | `showControls` | `bool` | `True` |
+|  |  | `description` | `Optional[str]` | `None` |
+| `FileUpload` | `file_upload` | `label` | `str` | `"Upload File"` |
+|  |  | `accept` | `str` | `"*/*"` |
+|  |  | `action` | `str` | `""` |
+| `FileDownload` | `file_download` | `label` | `str` | `"Download File"` |
+|  |  | `url` | `str` | `""` |
+|  |  | `filename` | `Optional[str]` | `None` |
+| `Badge` | `badge` | `label` | `str` | `""` |
+|  |  | `variant` | `str` | `"default"` |
+|  |  | `icon` | `Optional[str]` | `None` |
+| `Hero` | `hero` | `title` | `str` | `""` |
+|  |  | `subtitle` | `Optional[str]` | `None` |
+|  |  | `eyebrow` | `Optional[str]` | `None` |
+|  |  | `icon` | `Optional[str]` | `None` |
+|  |  | `variant` | `str` | `"default"` |
+|  |  | `badges` | `List[str]` | `[]` |
+| `KeyValue` | `keyvalue` | `title` | `Optional[str]` | `None` |
+|  |  | `items` | `List[Dict[str, Any]]` | `[]` |
+|  |  | `columns` | `int` | `2` |
+| `Timeline` | `timeline` | `title` | `Optional[str]` | `None` |
+|  |  | `items` | `List[Dict[str, Any]]` | `[]` |
+|  |  | `variant` | `str` | `"default"` |
+| `StatGroup` | `stat_group` | `title` | `Optional[str]` | `None` |
+|  |  | `items` | `List[Dict[str, Any]]` | `[]` |
+|  |  | `columns` | `int` | `4` |
+| `Gauge` | `gauge` | `label` | `str` | `""` |
+|  |  | `value` | `float` | `0.0` |
+|  |  | `display_value` | `Optional[str]` | `None` |
+|  |  | `thresholds` | `List[Dict[str, Any]]` | `[]` |
+|  |  | `subtitle` | `Optional[str]` | `None` |
+| `PipelineStepper` | `pipeline_stepper` | `title` | `Optional[str]` | `None` |
+|  |  | `steps` | `List[Dict[str, Any]]` | `[]` |
+|  |  | `orientation` | `str` | `"horizontal"` |
+| `Rating` | `rating` | `value` | `float` | `0.0` |
+|  |  | `max_value` | `int` | `5` |
+|  |  | `label` | `Optional[str]` | `None` |
+|  |  | `subtitle` | `Optional[str]` | `None` |
+|  |  | `show_value` | `bool` | `True` |
+| `ChatHistory` | `chat_history` | `title` | `Optional[str]` | `"Recent chats"` |
+|  |  | `items` | `List[Dict[str, Any]]` | `[]` |
+| `ColorPicker` | `color_picker` | `label` | `str` | `""` |
+|  |  | `color_key` | `str` | `""` |
+|  |  | `value` | `str` | `"#000000"` |
+| `ThemeApply` | `theme_apply` | `preset` | `Optional[str]` | `None` |
+|  |  | `colors` | `Optional[Dict[str, str]]` | `None` |
+|  |  | `color_key` | `Optional[str]` | `None` |
+|  |  | `color_value` | `Optional[str]` | `None` |
+|  |  | `message` | `str` | `""` |
+
+### Nested models
+
+| Class | Field | Type | Default |
+| --- | --- | --- | --- |
+| `TabItem` | `label` | `str` | `""` |
+|  | `content` | `List[Primitive]` | `[]` |
+|  | `value` | `Optional[str]` | `None` |
+| `ChartDataset` | `label` | `str` | `""` |
+|  | `data` | `List[float]` | `[]` |
+|  | `color` | `Optional[str]` | `None` |
+
+<!-- primitive-reference:end -->
+
+`attributes` is never emitted as a key: its entries are merged into the top
+level last and can overwrite any field, including `type`, so it must carry only
+trusted keys, never user or model input.
+
+This reference is generated from the models. After changing a primitive, run
+`uv run --frozen python tooling/python-ci/primitive_reference.py` to regenerate
+it; `tests/test_readme_reference.py` fails while it is stale.
 
 ## Defining your own primitive
 
