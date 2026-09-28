@@ -2,6 +2,8 @@
 
 `AGENTS.md` is the single repository instruction file for all coding agents. Update it directly; do not create a separate agent-specific guide.
 
+`.specify/memory/constitution.md` is this repository's highest-authority engineering policy; read it before changing primitives, serialization, dependencies, CI, or publication. Spec Kit skills are installed for Codex in `.agents/skills/` and per machine for Claude in `.claude/skills/`.
+
 `astralprims`: composable, serializable UI primitives for Python. Each primitive is a
 pydantic-v2 model that validates on construction and serializes to a plain wire dict. JSON
 is the wire format; pydantic is only the authoring layer.
@@ -27,7 +29,7 @@ Dependencies stay thin on purpose: `pydantic>=2`, `requires-python >=3.9`, hatch
 
 ## Comments
 
-The code documents itself (AstralDeep Constitution VI). Each file opens with a header of at most three sentences on what it does and how it connects to other files. Add no other comments or docstrings except a one-line *why* where absolutely necessary; primitive documentation lives in `README.md`. No spec IDs, history, TODOs, or narration in source. Tool directives (`# noqa`, `# type: ignore`, `# pragma: no cover`) stay.
+The code documents itself (Constitution Principle VI). Each file opens with a header of at most three sentences on what it does and how it connects to other files. Add no other comments or docstrings except a one-line *why* where absolutely necessary; primitive documentation lives in `README.md`. No spec IDs, history, TODOs, or narration in source. Tool directives (`# noqa`, `# type: ignore`, `# pragma: no cover`) stay.
 
 ## Dev workflow
 
@@ -90,8 +92,8 @@ writes `_REGISTRY[default] = cls`. So:
   replaces** the built-in in the registry.
 - The union snapshots `_REGISTRY` at import time. After defining a custom primitive, call
   `rebuild_primitive_union()` or `primitive_adapter` will not see it.
-- Adding a primitive to the AstralDeep vocabulary additionally requires Constitution VIII
-  approval, documentation, and coordinated changes to AstralProjection's
+- Adding a primitive to the Astral vocabulary additionally requires the owner approval,
+  documentation, and coordinated changes of Constitution Principle IV: AstralProjection's
   `contracts/ui_protocol.json`, renderers, ROTE, affected clients, and drift guards,
   followed by the consuming AstralDeep composition pin. Keep the repositories' release
   trains distinct; a package-only change does not update a deployed client.
