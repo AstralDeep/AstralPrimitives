@@ -1,7 +1,8 @@
 """Turns diff-cover's JSON report into one explicit changed-line coverage decision that names
-the compared revisions and changed paths: pass, fail, or not-applicable when no measurable
-executable line changed. The quality-package job in .github/workflows/ci.yml runs it after
-diff-cover, and tests/test_check_changed_coverage.py pins its behavior.
+the base and candidate commits and the paths changed between them: pass, fail, or
+not-applicable when no measurable executable line changed. The quality-package job in
+.github/workflows/ci.yml runs it after diff-cover compares the event's base SHA directly with
+HEAD, and tests/test_check_changed_coverage.py pins its behavior.
 """
 
 from __future__ import annotations
@@ -9,12 +10,15 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import subprocess
 from decimal import ROUND_FLOOR, Decimal, InvalidOperation
 from pathlib import Path
 from typing import Any, Dict, List, NamedTuple, Optional, Sequence
 
 PASSING_STATUSES = ("pass", "not-applicable")
+COMMIT_SHA = re.compile(r"[0-9a-f]{40}")
+NULL_SHA = "0" * 40
 
 
 class DecisionError(Exception):
@@ -99,25 +103,22 @@ def _git(*args: str) -> str:
     return completed.stdout
 
 
-def resolve_revisions(compare_branch: str) -> Revisions:
-    if not compare_branch or compare_branch.startswith("-"):
-        raise DecisionError(f"compare branch must be a revision name, not {compare_branch!r}")
+def resolve_revisions(base_sha: str) -> Revisions:
     if _git("status", "--porcelain", "--untracked-files=no").strip():
         raise DecisionError(
             "tracked files have uncommitted changes, so the measured tree is not a revision"
         )
+    if _git("rev-parse", "--verify", f"{base_sha}^{{commit}}").strip() != base_sha:
+        raise DecisionError(f"base {base_sha} is not a commit object")
     candidate = _git("rev-parse", "--verify", "HEAD^{commit}").strip()
-    base = _git("merge-base", compare_branch, candidate).strip()
-    paths = _git("diff", "--name-only", "-z", base, candidate).split("\0")
-    return Revisions(base, candidate, sorted(path for path in paths if path))
+    paths = _git("diff", "--name-only", "-z", base_sha, candidate).split("\0")
+    return Revisions(base_sha, candidate, sorted(path for path in paths if path))
 
 
-def decide(
-    report: Report, revisions: Revisions, compare_branch: str, fail_under: Decimal
-) -> Dict[str, Any]:
-    if not report.diff_name.startswith(f"{compare_branch}...HEAD"):
+def decide(report: Report, revisions: Revisions, fail_under: Decimal) -> Dict[str, Any]:
+    if not report.diff_name.startswith(f"{revisions.base_sha}..HEAD"):
         raise DecisionError(
-            f"diff-cover compared {report.diff_name!r}, not {compare_branch}...HEAD"
+            f"diff-cover compared {report.diff_name!r}, not {revisions.base_sha}..HEAD"
         )
     outside = sorted(set(report.measured_paths) - set(revisions.changed_paths))
     if outside:
@@ -140,7 +141,6 @@ def decide(
             "no_measurable_changed_lines" if revisions.changed_paths else "no_changed_paths"
         )
     decision.update(
-        compare_branch=compare_branch,
         base_sha=revisions.base_sha,
         candidate_sha=revisions.candidate_sha,
         changed_paths=revisions.changed_paths,
@@ -163,6 +163,12 @@ def decide(
     return decision
 
 
+def _base_sha(text: str) -> str:
+    if not COMMIT_SHA.fullmatch(text) or text == NULL_SHA:
+        raise argparse.ArgumentTypeError(f"must be a non-zero 40-hex commit SHA, not {text!r}")
+    return text
+
+
 def _threshold(text: str) -> Decimal:
     try:
         value = Decimal(text)
@@ -178,14 +184,14 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         description="Record the changed-line coverage decision for a diff-cover JSON report."
     )
     parser.add_argument("report", type=Path, help="diff-cover --format json output")
-    parser.add_argument("--compare-branch", required=True, help="the branch diff-cover compared")
+    parser.add_argument(
+        "--base-sha", required=True, type=_base_sha, help="the commit diff-cover compared with HEAD"
+    )
     parser.add_argument("--fail-under", required=True, type=_threshold, help="minimum percent")
     args = parser.parse_args(argv)
     try:
         report = load_report(args.report)
-        decision = decide(
-            report, resolve_revisions(args.compare_branch), args.compare_branch, args.fail_under
-        )
+        decision = decide(report, resolve_revisions(args.base_sha), args.fail_under)
     except DecisionError as error:
         decision = {"status": "error", "reason": str(error)}
     rendered = json.dumps(decision, indent=2)

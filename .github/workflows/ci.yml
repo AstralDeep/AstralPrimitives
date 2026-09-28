@@ -33,14 +33,17 @@ jobs:
           uv run --frozen --group ci pytest -q -p no:cacheprovider
           --cov=astralprims --cov=tooling/python-ci --cov-branch --cov-report=xml --cov-fail-under=90
       - name: Qualify changed lines
-        run: >-
-          uv run --frozen --group ci
-          diff-cover coverage.xml --compare-branch origin/main --fail-under=90
-          --format json:changed-coverage.json
-      - name: Record the changed-line coverage decision
-        run: >-
-          uv run --frozen --group ci python tooling/python-ci/check_changed_coverage.py
-          changed-coverage.json --compare-branch origin/main --fail-under=90
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          set -euo pipefail
+          [[ "$BASE_SHA" =~ ^[a-f0-9]{40}$ ]] || { echo "::error::BASE_SHA is not a 40-hex SHA"; exit 1; }
+          [[ "$BASE_SHA" != 0000000000000000000000000000000000000000 ]] || { echo "::error::BASE_SHA is all zeros"; exit 1; }
+          uv run --frozen --group ci diff-cover coverage.xml \
+            --compare-branch "$BASE_SHA" --diff-range-notation '..' --fail-under=90 \
+            --format json:changed-coverage.json
+          uv run --frozen --group ci python tooling/python-ci/check_changed_coverage.py \
+            changed-coverage.json --base-sha "$BASE_SHA" --fail-under=90
       - name: Build wheel and source distribution
         run: uv build --build-constraints tooling/python-ci/build-requirements.lock.txt --require-hashes
       - name: Check distribution metadata

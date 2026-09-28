@@ -1,6 +1,7 @@
 """Exercises tooling/python-ci/check_changed_coverage.py in throwaway Git repositories: explicit
-not-applicable, pass, and fail decisions, fail-closed handling of malformed reports and
-revisions, and real diff-cover JSON reports wherever diff-cover is installed.
+not-applicable, pass, and fail decisions over the direct base..HEAD range, fail-closed handling
+of malformed reports, base SHAs, and revisions, and real diff-cover JSON reports wherever
+diff-cover is installed.
 """
 
 from __future__ import annotations
@@ -18,7 +19,7 @@ import pytest
 import check_changed_coverage as changed
 
 MODULE = "".join(f"value_{number} = {number}\n" for number in range(1, 11))
-BASE_DIFF = "base...HEAD, staged and unstaged changes"
+WORKING_TREE_SUFFIX = ", staged and unstaged changes"
 requires_diff_cover = pytest.mark.skipif(
     importlib.util.find_spec("diff_cover") is None,
     reason="diff-cover is locked only for Python 3.10 and newer",
@@ -40,6 +41,10 @@ def _commit(repo: Path, files: dict[str, str]) -> None:
     _git(repo, "commit", "-q", "-m", "change")
 
 
+def _base_sha() -> str:
+    return _git(Path.cwd(), "rev-parse", "base")
+
+
 def _stats(covered: list[int], violations: list[int]) -> dict:
     return {
         "percent_covered": 100.0,
@@ -50,13 +55,17 @@ def _stats(covered: list[int], violations: list[int]) -> dict:
 
 
 def _write_report(
-    measured_stats: dict | None = None, *, changed_lines: int | None = None, **overrides: object
+    measured_stats: dict | None = None,
+    *,
+    changed_lines: int | None = None,
+    diff_name: str | None = None,
+    **overrides: object,
 ) -> Path:
     stats = measured_stats or {}
     measured = sum(len(s["covered_lines"]) + len(s["violation_lines"]) for s in stats.values())
     document = {
         "report_name": "XML",
-        "diff_name": BASE_DIFF,
+        "diff_name": diff_name or f"{_base_sha()}..HEAD{WORKING_TREE_SUFFIX}",
         "src_stats": stats,
         "total_num_lines": measured,
         "total_num_violations": sum(len(s["violation_lines"]) for s in stats.values()),
@@ -69,8 +78,12 @@ def _write_report(
     return path
 
 
-def _decide(capsys: pytest.CaptureFixture[str], *args: str) -> tuple[int, dict]:
-    code = changed.main(["report.json", "--compare-branch", "base", "--fail-under=90", *args])
+def _decide(
+    capsys: pytest.CaptureFixture[str], *args: str, base: str | None = None
+) -> tuple[int, dict]:
+    code = changed.main(
+        ["report.json", "--base-sha", base or _base_sha(), "--fail-under=90", *args]
+    )
     return code, json.loads(capsys.readouterr().out)
 
 
@@ -110,7 +123,6 @@ def test_a_diff_without_measurable_lines_is_recorded_as_not_applicable(
     assert decision == {
         "status": "not-applicable",
         "reason": "no_measurable_changed_lines",
-        "compare_branch": "base",
         "base_sha": _git(repo, "rev-parse", "base"),
         "candidate_sha": _git(repo, "rev-parse", "HEAD"),
         "changed_paths": ["README.md"],
@@ -140,14 +152,17 @@ def test_an_empty_comparison_is_not_applicable_and_names_identical_revisions(
     assert decision["changed_paths"] == []
 
 
-def test_measured_lines_at_the_threshold_pass(repo: Path, capsys) -> None:
-    _commit(repo, {"pkg/mod.py": MODULE + "extra = 11\n", "README.md": "# Demo!\n"})
+def test_measured_lines_across_a_pushed_range_at_the_threshold_pass(repo: Path, capsys) -> None:
+    _commit(repo, {"README.md": "# Demo!\n"})
+    _commit(repo, {"pkg/mod.py": MODULE + "extra = 11\n"})
     _write_report({"pkg/mod.py": _stats(list(range(1, 10)), [10])})
 
     code, decision = _decide(capsys)
 
     assert code == 0
     assert decision["status"] == "pass"
+    assert decision["base_sha"] == _git(repo, "rev-parse", "base")
+    assert decision["candidate_sha"] == _git(repo, "rev-parse", "HEAD")
     assert "reason" not in decision and "uncovered" not in decision
     assert decision["changed_paths"] == ["README.md", "pkg/mod.py"]
     assert decision["measured_paths"] == ["pkg/mod.py"]
@@ -227,7 +242,7 @@ def test_inconsistent_reports_fail_closed(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, overrides: dict, message: str
 ) -> None:
     monkeypatch.chdir(tmp_path)
-    path = _write_report({"pkg/mod.py": _stats([1, 2], [3])}, **overrides)
+    path = _write_report({"pkg/mod.py": _stats([1, 2], [3])}, diff_name="x..HEAD", **overrides)
 
     with pytest.raises(changed.DecisionError, match=message):
         changed.load_report(path)
@@ -244,57 +259,104 @@ def test_a_malformed_report_is_recorded_as_an_error(repo: Path, capsys) -> None:
 
 
 @pytest.mark.parametrize(
-    "setup, args, message",
+    "setup, message",
     [
-        ("dirty", (), "tracked files have uncommitted changes"),
-        ("none", ("--compare-branch", "missing"), "git merge-base missing"),
-        ("none", ("--compare-branch=--all",), "compare branch must be a revision name"),
-        ("none", ("--compare-branch=",), "compare branch must be a revision name"),
-        ("other-branch", (), "diff-cover compared 'origin/main...HEAD"),
-        ("outside", (), "measured paths outside the compared revisions: pkg/other.py"),
-        ("phantom-lines", (), "counted changed lines but the compared revisions change no path"),
+        ("dirty", "tracked files have uncommitted changes"),
+        ("unknown-base", f"git rev-parse --verify {'1' * 40}^{{commit}} failed"),
+        ("tag-base", "is not a commit object"),
+        ("three-dot-report", "...HEAD, staged and unstaged changes', not "),
+        ("outside", "measured paths outside the compared revisions: pkg/other.py"),
+        ("phantom-lines", "counted changed lines but the compared revisions change no path"),
     ],
 )
 def test_reports_that_do_not_match_the_compared_revisions_fail_closed(
-    repo: Path, capsys, setup: str, args: tuple, message: str
+    repo: Path, capsys, setup: str, message: str
 ) -> None:
+    base = None
     if setup == "dirty":
         (repo / "README.md").write_text("# Uncommitted\n", encoding="utf-8")
         _write_report()
-    elif setup == "other-branch":
-        _write_report(diff_name="origin/main...HEAD, staged and unstaged changes")
+    elif setup == "unknown-base":
+        base = "1" * 40
+        _write_report(diff_name=f"{base}..HEAD{WORKING_TREE_SUFFIX}")
+    elif setup == "tag-base":
+        _git(repo, "tag", "-a", "release", "-m", "release", "base")
+        base = _git(repo, "rev-parse", "release")
+        _write_report(diff_name=f"{base}..HEAD{WORKING_TREE_SUFFIX}")
+    elif setup == "three-dot-report":
+        _write_report(diff_name=f"{_base_sha()}...HEAD{WORKING_TREE_SUFFIX}")
     elif setup == "outside":
         _commit(repo, {"pkg/mod.py": MODULE + "extra = 11\n"})
         _write_report({"pkg/other.py": _stats([1], [])})
-    elif setup == "phantom-lines":
-        _write_report(changed_lines=3)
     else:
-        _write_report()
+        _write_report(changed_lines=3)
 
-    code, decision = _decide(capsys, *args)
+    code, decision = _decide(capsys, base=base)
 
     assert code == 1
     assert decision["status"] == "error"
     assert message in decision["reason"]
 
 
+def test_changed_paths_are_the_direct_difference_from_a_base_off_the_candidate_line(
+    repo: Path, capsys
+) -> None:
+    _git(repo, "checkout", "-q", "-b", "side", "base")
+    _commit(repo, {"side.txt": "side\n"})
+    side = _git(repo, "rev-parse", "HEAD")
+    _git(repo, "checkout", "-q", "main")
+    _commit(repo, {"main.txt": "main\n"})
+    _write_report(changed_lines=1, diff_name=f"{side}..HEAD{WORKING_TREE_SUFFIX}")
+
+    code, decision = _decide(capsys, base=side)
+
+    assert code == 0
+    assert decision["reason"] == "no_measurable_changed_lines"
+    assert decision["base_sha"] == side
+    assert decision["changed_paths"] == ["main.txt", "side.txt"]
+
+
 def test_a_missing_git_executable_is_recorded_as_an_error(
     repo: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys
 ) -> None:
     _write_report()
+    base = _base_sha()
     monkeypatch.setenv("PATH", str(tmp_path / "no-git-here"))
 
-    code, decision = _decide(capsys)
+    code, decision = _decide(capsys, base=base)
 
     assert code == 1
     assert decision["status"] == "error"
     assert decision["reason"].startswith("cannot run git")
 
 
+@pytest.mark.parametrize(
+    "value",
+    [
+        "",
+        "origin/main",
+        "0" * 40,
+        "A" * 40,
+        "a" * 39,
+        "a" * 41,
+        "g" * 40,
+        f" {'a' * 40}",
+    ],
+)
+def test_base_shas_other_than_a_nonzero_40_hex_commit_sha_are_rejected(
+    value: str, capsys
+) -> None:
+    with pytest.raises(SystemExit) as exit_info:
+        changed.main(["report.json", f"--base-sha={value}", "--fail-under=90"])
+
+    assert exit_info.value.code == 2
+    assert "must be a non-zero 40-hex commit SHA" in capsys.readouterr().err
+
+
 @pytest.mark.parametrize("value", ["abc", "nan", "inf", "-1", "100.01"])
 def test_thresholds_outside_zero_to_one_hundred_are_rejected(value: str, capsys) -> None:
     with pytest.raises(SystemExit) as exit_info:
-        changed.main(["report.json", "--compare-branch", "base", f"--fail-under={value}"])
+        changed.main(["report.json", f"--base-sha={'a' * 40}", f"--fail-under={value}"])
 
     assert exit_info.value.code == 2
     assert "must be a percentage from 0 to 100" in capsys.readouterr().err
@@ -311,7 +373,7 @@ def test_the_script_entry_point_exits_with_the_decision_code(
     _write_report()
     script = Path(changed.__file__)
     monkeypatch.setattr(
-        sys, "argv", [str(script), "report.json", "--compare-branch", "base", "--fail-under=90"]
+        sys, "argv", [str(script), "report.json", "--base-sha", _base_sha(), "--fail-under=90"]
     )
 
     with pytest.raises(SystemExit) as exit_info:
@@ -339,7 +401,9 @@ def _run_diff_cover(repo: Path, hits: dict[int, int]) -> int:
             "diff_cover.diff_cover_tool",
             "coverage.xml",
             "--compare-branch",
-            "base",
+            _git(repo, "rev-parse", "base"),
+            "--diff-range-notation",
+            "..",
             "--fail-under=90",
             "--format",
             "json:report.json",

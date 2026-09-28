@@ -1,11 +1,14 @@
 """Tests for AstralPrimitives' GitHub Actions workflows: pinned/approved action SHAs, a
 job-level timeout of at most 30 minutes on every job, the main/PR
-quality-compatibility-package gate sequence, and the hash-constrained Python 3.9 build backend.
+quality-compatibility-package gate sequence with changed lines gated against the event's base
+SHA, and the hash-constrained Python 3.9 build backend.
 """
 
 from __future__ import annotations
 
+import os
 import re
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -24,6 +27,7 @@ APPROVED_ACTIONS = {
 }
 JOB_TIMEOUT = re.compile(r"(?m)^    timeout-minutes:(.*)$")
 MAX_JOB_MINUTES = 30
+EVENT_BASE_SHA = "BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}"
 
 
 def _job_ids(text: str) -> set[str]:
@@ -122,11 +126,16 @@ def test_main_and_pull_requests_run_locked_quality_compatibility_and_package_gat
         "uv sync --frozen --group ci",
         "ruff check .",
         "--cov=astralprims --cov=tooling/python-ci --cov-branch --cov-report=xml --cov-fail-under=90",
-        "diff-cover coverage.xml --compare-branch origin/main --fail-under=90",
+        "fetch-depth: 0",
+        EVENT_BASE_SHA,
+        "set -euo pipefail",
+        '[[ "$BASE_SHA" =~ ^[a-f0-9]{40}$ ]] || { echo "::error::BASE_SHA is not a 40-hex SHA"; exit 1; }',
+        '[[ "$BASE_SHA" != 0000000000000000000000000000000000000000 ]] || { echo "::error::BASE_SHA is all zeros"; exit 1; }',
+        "diff-cover coverage.xml",
+        "--compare-branch \"$BASE_SHA\" --diff-range-notation '..' --fail-under=90",
         "--format json:changed-coverage.json",
-        "- name: Record the changed-line coverage decision",
         "python tooling/python-ci/check_changed_coverage.py",
-        "changed-coverage.json --compare-branch origin/main --fail-under=90",
+        'changed-coverage.json --base-sha "$BASE_SHA" --fail-under=90',
         "uv build --build-constraints tooling/python-ci/build-requirements.lock.txt --require-hashes",
         "twine check dist/*",
         'installed_version == manifest["project"]["version"]',
@@ -137,10 +146,13 @@ def test_main_and_pull_requests_run_locked_quality_compatibility_and_package_gat
     ):
         assert command in quality
     assert (
-        quality.index("diff-cover coverage.xml")
+        quality.index(EVENT_BASE_SHA)
+        < quality.index('[[ "$BASE_SHA"')
+        < quality.index("diff-cover coverage.xml")
         < quality.index("check_changed_coverage.py")
         < quality.index("uv build")
     )
+    assert "origin/main" not in text
     assert "dist/*.whl" in quality and "dist/*.tar.gz" in quality
 
     compatibility = _job(text, "compatibility")
@@ -154,6 +166,52 @@ def test_main_and_pull_requests_run_locked_quality_compatibility_and_package_gat
     assert "needs: [quality-package, compatibility]" in gates
     assert "needs.quality-package.result" in gates
     assert "needs.compatibility.result" in gates
+
+
+def _base_sha_guard() -> str:
+    quality = _job((WORKFLOWS / "ci.yml").read_text(encoding="utf-8"), "quality-package")
+    guard = [line.strip() for line in quality.splitlines() if line.strip().startswith("[[ ")]
+    assert guard, "quality-package must validate BASE_SHA before diff-cover"
+    return "\n".join(["set -euo pipefail", *guard])
+
+
+@pytest.mark.parametrize(
+    "base_sha, error",
+    [
+        ("0123456789abcdef0123456789abcdef01234567", None),
+        ("0" * 40, "BASE_SHA is all zeros"),
+        ("", "BASE_SHA is not a 40-hex SHA"),
+        ("0123456789ABCDEF0123456789ABCDEF01234567", "BASE_SHA is not a 40-hex SHA"),
+        ("0123456789abcdef0123456789abcdef0123456", "BASE_SHA is not a 40-hex SHA"),
+        ("0123456789abcdef0123456789abcdef012345678", "BASE_SHA is not a 40-hex SHA"),
+        ("origin/main", "BASE_SHA is not a 40-hex SHA"),
+    ],
+)
+def test_the_changed_line_step_accepts_only_a_nonzero_40_hex_base_sha(
+    base_sha: str, error: str | None
+) -> None:
+    completed = subprocess.run(
+        ["bash", "-c", _base_sha_guard()],
+        env={"PATH": os.environ.get("PATH", ""), "LC_ALL": "C", "BASE_SHA": base_sha},
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert (completed.returncode, completed.stdout) == (
+        (0, "") if error is None else (1, f"::error::{error}\n")
+    )
+
+
+def test_the_changed_line_step_fails_when_the_event_supplies_no_base_sha() -> None:
+    completed = subprocess.run(
+        ["bash", "-c", _base_sha_guard()],
+        env={"PATH": os.environ.get("PATH", ""), "LC_ALL": "C"},
+        capture_output=True,
+        check=False,
+    )
+
+    assert completed.returncode != 0
 
 
 def test_publication_verifies_without_oidc_before_environment_protected_upload() -> None:
