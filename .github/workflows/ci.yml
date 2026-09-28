@@ -31,11 +31,16 @@ jobs:
       - name: Test with branch coverage
         run: >-
           uv run --frozen --group ci pytest -q -p no:cacheprovider
-          --cov=astralprims --cov-branch --cov-report=xml --cov-fail-under=90
+          --cov=astralprims --cov=tooling/python-ci --cov-branch --cov-report=xml --cov-fail-under=90
       - name: Qualify changed lines
         run: >-
           uv run --frozen --group ci
           diff-cover coverage.xml --compare-branch origin/main --fail-under=90
+          --format json:changed-coverage.json
+      - name: Record the changed-line coverage decision
+        run: >-
+          uv run --frozen --group ci python tooling/python-ci/check_changed_coverage.py
+          changed-coverage.json --compare-branch origin/main --fail-under=90
       - name: Build wheel and source distribution
         run: uv build --build-constraints tooling/python-ci/build-requirements.lock.txt --require-hashes
       - name: Check distribution metadata

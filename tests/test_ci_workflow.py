@@ -121,8 +121,12 @@ def test_main_and_pull_requests_run_locked_quality_compatibility_and_package_gat
         "uv lock --check",
         "uv sync --frozen --group ci",
         "ruff check .",
-        "--cov=astralprims --cov-branch --cov-report=xml --cov-fail-under=90",
+        "--cov=astralprims --cov=tooling/python-ci --cov-branch --cov-report=xml --cov-fail-under=90",
         "diff-cover coverage.xml --compare-branch origin/main --fail-under=90",
+        "--format json:changed-coverage.json",
+        "- name: Record the changed-line coverage decision",
+        "python tooling/python-ci/check_changed_coverage.py",
+        "changed-coverage.json --compare-branch origin/main --fail-under=90",
         "uv build --build-constraints tooling/python-ci/build-requirements.lock.txt --require-hashes",
         "twine check dist/*",
         'installed_version == manifest["project"]["version"]',
@@ -132,6 +136,11 @@ def test_main_and_pull_requests_run_locked_quality_compatibility_and_package_gat
         '"variant": "body"',
     ):
         assert command in quality
+    assert (
+        quality.index("diff-cover coverage.xml")
+        < quality.index("check_changed_coverage.py")
+        < quality.index("uv build")
+    )
     assert "dist/*.whl" in quality and "dist/*.tar.gz" in quality
 
     compatibility = _job(text, "compatibility")
