@@ -294,7 +294,7 @@ def test_adapter_validates_nested_tree():
     assert inst.to_dict() == data
 
 
-NEW_089_TYPES = {
+COMPOSITE_READOUT_TYPES = {
     "action_group": ActionGroup,
     "stat_group": StatGroup,
     "gauge": Gauge,
@@ -420,8 +420,8 @@ def test_radar_chart_shape():
     assert data["max_value"] == 1.0
 
 
-@pytest.mark.parametrize("wire_type,cls", sorted(NEW_089_TYPES.items()))
-def test_new_types_default_construct_and_round_trip(wire_type, cls):
+@pytest.mark.parametrize("wire_type,cls", sorted(COMPOSITE_READOUT_TYPES.items()))
+def test_composite_readouts_default_construct_and_round_trip(wire_type, cls):
     data = cls().to_dict()
     assert data["type"] == wire_type
     restored = Primitive.from_dict(data)
@@ -429,18 +429,18 @@ def test_new_types_default_construct_and_round_trip(wire_type, cls):
     assert restored.to_dict() == data
 
 
-@pytest.mark.parametrize("wire_type,cls", sorted(NEW_089_TYPES.items()))
-def test_new_types_carry_no_color_field(wire_type, cls):
+@pytest.mark.parametrize("wire_type,cls", sorted(COMPOSITE_READOUT_TYPES.items()))
+def test_composite_readouts_carry_no_color_field(wire_type, cls):
     assert not {f for f in cls.model_fields if "color" in f}
 
 
-@pytest.mark.parametrize("wire_type,cls", sorted(NEW_089_TYPES.items()))
-def test_adapter_validates_new_types(wire_type, cls):
+@pytest.mark.parametrize("wire_type,cls", sorted(COMPOSITE_READOUT_TYPES.items()))
+def test_adapter_validates_composite_readouts(wire_type, cls):
     inst = primitive_adapter.validate_python({"type": wire_type})
     assert isinstance(inst, cls)
 
 
-def test_new_types_nest_inside_a_container_and_round_trip():
+def test_composite_readouts_nest_inside_a_container_and_round_trip():
     tree = Container().add(
         Card(
             title="Run",
@@ -469,6 +469,6 @@ def test_new_types_nest_inside_a_container_and_round_trip():
     assert isinstance(card.content[5].buttons[0], Button)
 
 
-def test_new_types_survive_json_encoding():
+def test_composite_readouts_survive_json_encoding():
     stats = StatGroup(title="t", items=[{"label": "a", "value": "1"}])
     assert json.loads(stats.to_json()) == stats.to_dict()
