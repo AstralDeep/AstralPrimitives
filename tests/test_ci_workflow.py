@@ -1,6 +1,6 @@
-"""Tests for AstralPrimitives' GitHub Actions workflows: pinned/approved action SHAs,
-the main/PR quality-compatibility-package gate sequence, and the hash-constrained
-Python 3.9 build backend.
+"""Tests for AstralPrimitives' GitHub Actions workflows: pinned/approved action SHAs, a
+job-level timeout of at most 30 minutes on every job, the main/PR
+quality-compatibility-package gate sequence, and the hash-constrained Python 3.9 build backend.
 """
 
 from __future__ import annotations
@@ -22,6 +22,8 @@ APPROVED_ACTIONS = {
     "astral-sh/setup-uv": "c771a70e6277c0a99b617c7a806ffedaca235ff9",
     "pypa/gh-action-pypi-publish": "dc37677b2e1c63e2034f94d8a5b11f265b73ba33",
 }
+JOB_TIMEOUT = re.compile(r"(?m)^    timeout-minutes:(.*)$")
+MAX_JOB_MINUTES = 30
 
 
 def _job_ids(text: str) -> set[str]:
@@ -51,6 +53,51 @@ def _assert_actions_are_approved(text: str) -> None:
         assert separator and APPROVED_ACTIONS.get(action) == sha, (
             f"unapproved action pin: {target}"
         )
+
+
+def _assert_jobs_are_time_bounded(text: str) -> None:
+    for job_id in sorted(_job_ids(text)):
+        values = [value.strip() for value in JOB_TIMEOUT.findall(_job(text, job_id))]
+        assert len(values) == 1, f"job {job_id!r} must declare one job-level timeout-minutes"
+        assert values[0].isdigit() and 1 <= int(values[0]) <= MAX_JOB_MINUTES, (
+            f"job {job_id!r} timeout-minutes must be an integer from 1 to {MAX_JOB_MINUTES}"
+        )
+
+
+def test_every_workflow_job_is_time_bounded_and_uses_only_approved_actions() -> None:
+    workflows = sorted([*WORKFLOWS.glob("*.yml"), *WORKFLOWS.glob("*.yaml")])
+
+    assert {"ci.yml", "python-publish.yml"} <= {path.name for path in workflows}
+    for path in workflows:
+        text = path.read_text(encoding="utf-8")
+        _assert_jobs_are_time_bounded(text)
+        _assert_actions_are_approved(text)
+        assert "continue-on-error:" not in text, path.name
+
+
+@pytest.mark.parametrize(
+    "job_body, message",
+    [
+        ("    runs-on: ubuntu-24.04\n", "must declare one job-level timeout-minutes"),
+        (
+            "    steps:\n      - run: true\n        timeout-minutes: 5\n",
+            "must declare one job-level timeout-minutes",
+        ),
+        (
+            "    timeout-minutes: 10\n    timeout-minutes: 10\n",
+            "must declare one job-level timeout-minutes",
+        ),
+        ("    timeout-minutes: 31\n", "integer from 1 to 30"),
+        ("    timeout-minutes: 0\n", "integer from 1 to 30"),
+        ("    timeout-minutes: ${{ inputs.minutes }}\n", "integer from 1 to 30"),
+    ],
+)
+def test_missing_or_unbounded_job_timeouts_are_rejected(job_body: str, message: str) -> None:
+    bounded = "name: sample\njobs:\n  bounded:\n    timeout-minutes: 30\n"
+    _assert_jobs_are_time_bounded(bounded)
+
+    with pytest.raises(AssertionError, match=message):
+        _assert_jobs_are_time_bounded(f"{bounded}  candidate:\n{job_body}")
 
 
 def test_main_and_pull_requests_run_locked_quality_compatibility_and_package_gates() -> None:

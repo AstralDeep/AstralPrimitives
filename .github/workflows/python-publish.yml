@@ -7,6 +7,7 @@ on:
 jobs:
   verify-package:
     runs-on: ubuntu-24.04
+    timeout-minutes: 15
     permissions:
       contents: read
     outputs:
@@ -73,6 +74,7 @@ jobs:
     if: needs.verify-package.outputs.exists == 'false'
     needs: verify-package
     runs-on: ubuntu-24.04
+    timeout-minutes: 10
     environment:
       name: pypi
       url: https://pypi.org/p/astralprims
