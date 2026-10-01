@@ -18,7 +18,7 @@ ROOT = Path(__file__).resolve().parents[1]
 WORKFLOWS = ROOT / ".github" / "workflows"
 ACTION_SHA = re.compile(r"^[^\s#]+@[0-9a-f]{40}(?:\s+#.*)?$")
 APPROVED_ACTIONS = {
-    "AstralDeep/astraldeep.github.io/actions/claim-reply": "d7ab78f98bc6a508c7b4717fbb0ea0b61abcb3ff",
+    "AstralDeep/astraldeep.github.io/actions/claim-reply": "054490f832b47eeb99b193dae10e409ca1bc8c9e",
     "actions/checkout": "3d3c42e5aac5ba805825da76410c181273ba90b1",
     "actions/download-artifact": "3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c",
     "actions/setup-python": "ece7cb06caefa5fff74198d8649806c4678c61a1",
