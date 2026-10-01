@@ -6,6 +6,7 @@ __init__.py builds the union from the registry.
 from __future__ import annotations
 
 import json
+import math
 from typing import Any, Dict, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_serializer
@@ -15,13 +16,18 @@ CSS = Dict[str, str]
 _REGISTRY: Dict[str, type["Primitive"]] = {}
 
 
-def _dump(value: Any) -> Any:
+def _dump(value: Any, path: str = "") -> Any:
+    if isinstance(value, float) and (math.isnan(value) or math.isinf(value)):
+        field_context = f" in field {path!r}" if path else ""
+        raise ValueError(
+            f"non-finite numeric value {value!r}{field_context} is not valid wire JSON"
+        )
     if isinstance(value, BaseModel):
         return value.model_dump()
     if isinstance(value, list):
-        return [_dump(v) for v in value]
+        return [_dump(v, f"{path}[{i}]" if path else f"[{i}]") for i, v in enumerate(value)]
     if isinstance(value, dict):
-        return {k: _dump(v) for k, v in value.items()}
+        return {k: _dump(v, f"{path}.{k}" if path else str(k)) for k, v in value.items()}
     return value
 
 
@@ -80,14 +86,18 @@ class Primitive(BaseModel):
                 continue
             if name == "css" and not value:
                 continue
-            out[field.alias or name] = _dump(value)
-        out.update(self.attributes or {})
+            out[field.alias or name] = _dump(value, path=field.alias or name)
+        if self.attributes:
+            for k, v in self.attributes.items():
+                _dump(v, path=f"attributes.{k}")
+            out.update(self.attributes)
         return out
 
     def to_dict(self) -> Dict[str, Any]:
         return self.model_dump()
 
     def to_json(self, **kwargs: Any) -> str:
+        kwargs.setdefault("allow_nan", False)
         return json.dumps(self.model_dump(), **kwargs)
 
     @classmethod

@@ -472,3 +472,30 @@ def test_composite_readouts_nest_inside_a_container_and_round_trip():
 def test_composite_readouts_survive_json_encoding():
     stats = StatGroup(title="t", items=[{"label": "a", "value": "1"}])
     assert json.loads(stats.to_json()) == stats.to_dict()
+
+
+@pytest.mark.parametrize("invalid_num", [float("nan"), float("inf"), float("-inf")])
+def test_rejects_non_finite_numeric_in_top_level_metrics(invalid_num: float):
+    progress = ProgressBar(value=invalid_num)
+    with pytest.raises(ValueError, match="non-finite"):
+        progress.to_json()
+    with pytest.raises(ValueError, match="non-finite"):
+        progress.to_dict()
+
+
+@pytest.mark.parametrize("invalid_num", [float("nan"), float("inf"), float("-inf")])
+def test_rejects_non_finite_numeric_in_charts_and_payloads(invalid_num: float):
+    chart = DonutChart(labels=["a"], data=[invalid_num])
+    with pytest.raises(ValueError, match="non-finite"):
+        chart.to_json()
+
+    btn = Button(label="Click", payload={"metric": invalid_num})
+    with pytest.raises(ValueError, match="non-finite"):
+        btn.to_json()
+
+
+@pytest.mark.parametrize("invalid_num", [float("nan"), float("inf"), float("-inf")])
+def test_rejects_non_finite_numeric_in_attributes(invalid_num: float):
+    badge = Badge(label="new", attributes={"score": invalid_num})
+    with pytest.raises(ValueError, match="non-finite"):
+        badge.to_json()
