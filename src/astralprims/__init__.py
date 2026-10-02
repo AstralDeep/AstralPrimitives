@@ -3,7 +3,12 @@ union (AnyPrimitive, primitive_adapter) over base.py's registry. AstralDeep agen
 build UI payloads through it.
 """
 
-from .base import CSS, Primitive
+from .base import (
+    CSS,
+    Primitive,
+    PrimitiveTypeCollisionError,
+    unregister_primitive,
+)
 from .primitives import (
     ActionGroup,
     Alert,
@@ -55,7 +60,7 @@ from pydantic import Field as _Field, TypeAdapter
 
 from .base import _REGISTRY
 
-__version__ = "0.4.0"
+__version__ = "0.4.1"
 
 
 def _build_union():
@@ -76,6 +81,8 @@ def rebuild_primitive_union():
 __all__ = [
     "CSS",
     "Primitive",
+    "PrimitiveTypeCollisionError",
+    "unregister_primitive",
     "AnyPrimitive",
     "primitive_adapter",
     "rebuild_primitive_union",

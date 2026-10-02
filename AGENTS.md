@@ -85,13 +85,17 @@ Gotchas:
 
 ### Adding a primitive
 
-Subclassing is registration: `__pydantic_init_subclass__` reads the `type` default and
-writes `_REGISTRY[default] = cls`. So:
+Subclassing is registration: `__pydantic_init_subclass__` validates the `type` field and
+registers `_REGISTRY[default] = cls`. So:
 
-- Pick a `type` string that does not collide with a built-in — a collision **silently
-  replaces** the built-in in the registry.
+- Pick a `type` string that does not collide with a built-in or existing extension. Collisions
+  fail fast with `PrimitiveTypeCollisionError` before modifying the registry.
+- Custom primitives must specify a default string for `type` that matches any `Literal` annotation.
 - The union snapshots `_REGISTRY` at import time. After defining a custom primitive, call
   `rebuild_primitive_union()` or `primitive_adapter` will not see it.
+- Extension lifecycle: Subclasses register automatically upon definition. Extensions can remove
+  custom types using `unregister_primitive(type_name)`. Deliberate aliases (such as `Grid = Grids`)
+  and identical class reload definitions are preserved.
 - Adding a primitive to the Astral vocabulary additionally requires the owner approval,
   documentation, and coordinated changes of Constitution Principle IV: AstralProjection's
   `contracts/ui_protocol.json`, renderers, ROTE, affected clients, and drift guards,

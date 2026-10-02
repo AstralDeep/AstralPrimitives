@@ -6,9 +6,10 @@ __init__.py builds the union from the registry.
 from __future__ import annotations
 
 import json
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Literal, Optional, get_args, get_origin
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_serializer
+from pydantic_core import PydanticUndefined
 
 CSS = Dict[str, str]
 
@@ -46,6 +47,15 @@ class SerModel(BaseModel):
         return out
 
 
+class PrimitiveTypeCollisionError(ValueError):
+    """Raised when a primitive subclass attempts to register a wire type already bound to a different class."""
+
+
+def unregister_primitive(type_name: str) -> Optional[type["Primitive"]]:
+    """Unregister an extension primitive type from the global registry."""
+    return _REGISTRY.pop(type_name, None)
+
+
 class Primitive(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="ignore")
 
@@ -60,8 +70,35 @@ class Primitive(BaseModel):
     def __pydantic_init_subclass__(cls, **kwargs: Any) -> None:
         super().__pydantic_init_subclass__(**kwargs)
         type_field = cls.model_fields.get("type")
-        if type_field is not None and isinstance(type_field.default, str):
-            _REGISTRY[type_field.default] = cls
+        if type_field is None:
+            raise ValueError(f"Primitive subclass {cls.__name__} must define a 'type' field.")
+
+        default_val = type_field.default
+        if default_val is PydanticUndefined or default_val is None:
+            raise ValueError(
+                f"Primitive subclass {cls.__name__} must define a default string for 'type'."
+            )
+        if not isinstance(default_val, str) or not default_val.strip():
+            raise ValueError(
+                f"Primitive subclass {cls.__name__} 'type' default must be a non-empty string, got {default_val!r}."
+            )
+
+        origin = get_origin(type_field.annotation)
+        if origin is Literal:
+            allowed = get_args(type_field.annotation)
+            if default_val not in allowed:
+                raise ValueError(
+                    f"Primitive subclass {cls.__name__} default 'type' {default_val!r} does not match Literal choices {allowed!r}."
+                )
+
+        wire_type = default_val
+        if wire_type != "primitive":
+            existing = _REGISTRY.get(wire_type)
+            if existing is not None and existing is not cls:
+                raise PrimitiveTypeCollisionError(
+                    f"Primitive wire type {wire_type!r} is already registered to {existing.__name__}; collision detected for {cls.__name__}."
+                )
+            _REGISTRY[wire_type] = cls
 
     # check_fields=False lets one validator serve every subclass
     @field_validator("children", "content", mode="before", check_fields=False)
