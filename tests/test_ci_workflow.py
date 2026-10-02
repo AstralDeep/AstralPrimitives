@@ -19,7 +19,7 @@ WORKFLOWS = ROOT / ".github" / "workflows"
 ACTION_SHA = re.compile(r"^[^\s#]+@[0-9a-f]{40}(?:\s+#.*)?$")
 APPROVED_ACTIONS = {
     "AstralDeep/astraldeep.github.io/actions/pr-ci": "f1930907e1f702e341fe03f73e102e156ec3e36e",
-    "AstralDeep/astraldeep.github.io/actions/claim-reply": "e649eaa2288ef7d75f01857f067bd82f13de2033",
+    "AstralDeep/astraldeep.github.io/actions/claim-reply": "87501ca5d93dc3b0592fe4dbbb7d39f50109084b",
     "actions/checkout": "3d3c42e5aac5ba805825da76410c181273ba90b1",
     "actions/download-artifact": "3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c",
     "actions/setup-python": "ece7cb06caefa5fff74198d8649806c4678c61a1",
