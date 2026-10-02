@@ -19,12 +19,14 @@ from astralprims import (
     Container,
     DonutChart,
     Gauge,
+    Grid,
     Grids,
     Hero,
     KeyValue,
     ParamPicker,
     PipelineStepper,
     Primitive,
+    PrimitiveTypeCollisionError,
     ProgressBar,
     RadarChart,
     Rating,
@@ -36,6 +38,8 @@ from astralprims import (
     Timeline,
     create_ui_response,
     primitive_adapter,
+    rebuild_primitive_union,
+    unregister_primitive,
 )
 
 
@@ -472,3 +476,180 @@ def test_composite_readouts_nest_inside_a_container_and_round_trip():
 def test_composite_readouts_survive_json_encoding():
     stats = StatGroup(title="t", items=[{"label": "a", "value": "1"}])
     assert json.loads(stats.to_json()) == stats.to_dict()
+
+
+def test_custom_primitive_registration_and_lifecycle():
+    from typing import Literal
+
+    class CustomPluginWidget(Primitive):
+        type: Literal["custom_plugin_widget"] = "custom_plugin_widget"
+        title: str = "custom"
+
+    from astralprims.base import _REGISTRY
+    assert _REGISTRY["custom_plugin_widget"] is CustomPluginWidget
+
+    adapter = rebuild_primitive_union()
+    data = {"type": "custom_plugin_widget", "title": "hello"}
+    obj = Primitive.from_dict(data)
+    assert isinstance(obj, CustomPluginWidget)
+    assert obj.title == "hello"
+
+    validated = adapter.validate_python(data)
+    assert isinstance(validated, CustomPluginWidget)
+
+    removed = unregister_primitive("custom_plugin_widget")
+    assert removed is CustomPluginWidget
+    assert "custom_plugin_widget" not in _REGISTRY
+    rebuild_primitive_union()
+
+
+def test_collision_with_builtin_fails_fast():
+    from typing import Literal
+
+    with pytest.raises(PrimitiveTypeCollisionError, match="collision detected"):
+        class FakeText(Primitive):
+            type: Literal["text"] = "text"
+
+    from astralprims.base import _REGISTRY
+    assert _REGISTRY["text"] is Text
+
+
+def test_collision_between_two_custom_classes_fails_fast():
+    from typing import Literal
+
+    class CustomAlpha(Primitive):
+        type: Literal["custom_collision_test"] = "custom_collision_test"
+
+    with pytest.raises(PrimitiveTypeCollisionError, match="collision detected"):
+        class CustomBeta(Primitive):
+            type: Literal["custom_collision_test"] = "custom_collision_test"
+
+    from astralprims.base import _REGISTRY
+    assert _REGISTRY["custom_collision_test"] is CustomAlpha
+
+    unregister_primitive("custom_collision_test")
+    rebuild_primitive_union()
+
+
+def test_subclass_inheriting_builtin_without_new_type_fails_fast():
+    with pytest.raises(PrimitiveTypeCollisionError, match="collision detected"):
+        class SubText(Text):
+            pass
+
+    from astralprims.base import _REGISTRY
+    assert _REGISTRY["text"] is Text
+
+
+def test_literal_and_default_validation():
+    from typing import Literal
+
+    with pytest.raises(ValueError, match="does not match Literal choices"):
+        class MismatchedLiteral(Primitive):
+            type: Literal["declared_foo"] = "different_bar"
+
+    with pytest.raises(ValueError, match="must define a default string"):
+        class MissingDefault(Primitive):
+            type: Literal["no_default_val"]
+
+    with pytest.raises(ValueError, match="must be a non-empty string"):
+        class NonStringDefault(Primitive):
+            type: int = 42
+
+    with pytest.raises(ValueError, match="must be a non-empty string"):
+        class EmptyStringDefault(Primitive):
+            type: str = "   "
+
+
+def test_grid_alias_preserved():
+    from astralprims.base import _REGISTRY
+    assert Grid is Grids
+    assert _REGISTRY["grid"] is Grids
+
+    res = Primitive.from_dict({"type": "grid", "content": []})
+    assert isinstance(res, Grid)
+    assert isinstance(res, Grids)
+
+
+def test_str_only_type_annotation_and_intermediate_subclass():
+    class PlainStrCustom(Primitive):
+        type: str = "plain_str_custom"
+
+    from astralprims.base import _REGISTRY
+    assert _REGISTRY["plain_str_custom"] is PlainStrCustom
+
+    class IntermediateCustom(Primitive):
+        pass
+
+    assert "primitive" not in _REGISTRY
+
+    unregister_primitive("plain_str_custom")
+    rebuild_primitive_union()
+
+
+def test_repeated_union_rebuild():
+    adapter1 = rebuild_primitive_union()
+    adapter2 = rebuild_primitive_union()
+    btn = adapter1.validate_python({"type": "button", "label": "ok", "action": "submit"})
+    assert isinstance(btn, Button)
+    btn2 = adapter2.validate_python({"type": "button", "label": "ok", "action": "submit"})
+    assert isinstance(btn2, Button)
+
+
+def test_failed_registration_leaves_registry_and_adapter_unchanged():
+    from typing import Literal
+    from astralprims.base import _REGISTRY
+
+    registry_snapshot = dict(_REGISTRY)
+    adapter = rebuild_primitive_union()
+
+    with pytest.raises(PrimitiveTypeCollisionError):
+        class CollidingButton(Primitive):
+            type: Literal["button"] = "button"
+
+    assert dict(_REGISTRY) == registry_snapshot
+    valid = adapter.validate_python({"type": "button", "label": "test", "action": "click"})
+    assert isinstance(valid, Button)
+
+    with pytest.raises(ValueError):
+        class InvalidCustom(Primitive):
+            type: int = 123
+
+    assert dict(_REGISTRY) == registry_snapshot
+    assert "123" not in _REGISTRY
+
+
+def test_reload_policy_same_class_permitted_new_class_rejected():
+    from typing import Literal
+    from astralprims.base import _REGISTRY
+
+    class TargetReloadClass(Primitive):
+        type: Literal["target_reload_type"] = "target_reload_type"
+
+    assert _REGISTRY["target_reload_type"] is TargetReloadClass
+
+    TargetReloadClass.__pydantic_init_subclass__()
+    assert _REGISTRY["target_reload_type"] is TargetReloadClass
+
+    with pytest.raises(PrimitiveTypeCollisionError, match="collision detected"):
+        class SecondReloadClass(Primitive):
+            type: Literal["target_reload_type"] = "target_reload_type"
+
+    assert _REGISTRY["target_reload_type"] is TargetReloadClass
+
+    removed = unregister_primitive("target_reload_type")
+    assert removed is TargetReloadClass
+    assert "target_reload_type" not in _REGISTRY
+
+    class SecondReloadClass(Primitive):
+        type: Literal["target_reload_type"] = "target_reload_type"
+
+    assert _REGISTRY["target_reload_type"] is SecondReloadClass
+    adapter = rebuild_primitive_union()
+    obj = adapter.validate_python({"type": "target_reload_type"})
+    assert isinstance(obj, SecondReloadClass)
+
+    unregister_primitive("target_reload_type")
+    rebuild_primitive_union()
+
+
+
