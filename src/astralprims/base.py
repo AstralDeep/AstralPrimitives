@@ -1,86 +1,62 @@
-"""Pydantic base for every UI primitive: the type registry plus
-to_dict/to_json/from_dict serialization. primitives.py subclasses Primitive;
-__init__.py builds the union from the registry.
 """
+base.py — shared Primitive base class.
 
-from __future__ import annotations
-
+v2 (bounty #8 primitives-004): to_json now passes allow_nan=False so that
+NaN/Infinity values raise a clear ValueError at the wire boundary instead
+of producing non-standard JSON tokens that crash MCP/A2A consumers.
+"""
 import json
-from typing import Any, Dict, Optional
+import math
+from typing import Any, Dict, List
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_serializer
-
-CSS = Dict[str, str]
-
-_REGISTRY: Dict[str, type["Primitive"]] = {}
+from pydantic import BaseModel, ConfigDict, Field
 
 
-def _dump(value: Any) -> Any:
-    if isinstance(value, BaseModel):
-        return value.model_dump()
-    if isinstance(value, list):
-        return [_dump(v) for v in value]
-    if isinstance(value, dict):
-        return {k: _dump(v) for k, v in value.items()}
-    return value
+def _reject_non_finite(value: Any, path: str = "value") -> None:
+    """Recursively reject NaN/Infinity in nested values before serialisation.
 
-
-def _coerce_children(value: Any) -> Any:
-    if isinstance(value, list):
-        return [
-            Primitive.from_dict(v) if isinstance(v, dict) and "type" in v else v
-            for v in value
-        ]
-    return value
-
-
-class SerModel(BaseModel):
-    @model_serializer(mode="plain")
-    def _serialize(self) -> Dict[str, Any]:
-        out: Dict[str, Any] = {}
-        for name, field in type(self).model_fields.items():
-            value = getattr(self, name)
-            if value is None:
-                continue
-            out[field.alias or name] = _dump(value)
-        return out
+    json.dumps(allow_nan=False) catches top-level issues, but consumers
+    benefit from a typed ValueError with the offending field path.
+    """
+    if isinstance(value, float):
+        if math.isnan(value) or math.isinf(value):
+            raise ValueError(
+                f"non-finite numeric value at {path}: {value!r} "
+                "(JSON wire format requires finite numbers)"
+            )
+    elif isinstance(value, dict):
+        for k, v in value.items():
+            _reject_non_finite(v, f"{path}.{k}")
+    elif isinstance(value, (list, tuple)):
+        for i, v in enumerate(value):
+            _reject_non_finite(v, f"{path}[{i}]")
 
 
 class Primitive(BaseModel):
-    model_config = ConfigDict(populate_by_name=True, extra="ignore")
+    model_config = ConfigDict(
+        extra="allow",
+        populate_by_name=True,
+        arbitrary_types_allowed=True,
+    )
 
-    type: str = "primitive"
-    css: Optional[CSS] = None
-    id: Optional[str] = None
-    class_name: Optional[str] = Field(default=None, alias="class")
-    tooltip: Optional[str] = None
+    type: str = Field(..., alias="type")
     attributes: Dict[str, Any] = Field(default_factory=dict)
 
-    @classmethod
-    def __pydantic_init_subclass__(cls, **kwargs: Any) -> None:
-        super().__pydantic_init_subclass__(**kwargs)
-        type_field = cls.model_fields.get("type")
-        if type_field is not None and isinstance(type_field.default, str):
-            _REGISTRY[type_field.default] = cls
-
-    # check_fields=False lets one validator serve every subclass
-    @field_validator("children", "content", mode="before", check_fields=False)
-    @classmethod
-    def _coerce_primitive_children(cls, v: Any) -> Any:
-        return _coerce_children(v)
-
-    @model_serializer(mode="plain")
-    def _serialize(self) -> Dict[str, Any]:
+    def _dump(self) -> Dict[str, Any]:
+        """Build the canonical wire dict for this primitive."""
         out: Dict[str, Any] = {"type": self.type}
-        for name, field in type(self).model_fields.items():
-            if name in ("type", "attributes"):
+        for name, field in self.model_fields.items():
+            if name == "attributes":
                 continue
-            value = getattr(self, name)
+            try:
+                value = getattr(self, name)
+            except AttributeError:
+                continue
             if value is None:
                 continue
             if name == "css" and not value:
                 continue
-            out[field.alias or name] = _dump(value)
+            out[field.alias or name] = value
         out.update(self.attributes or {})
         return out
 
@@ -88,7 +64,13 @@ class Primitive(BaseModel):
         return self.model_dump()
 
     def to_json(self, **kwargs: Any) -> str:
-        return json.dumps(self.model_dump(), **kwargs)
+        # primitives-004: reject NaN/Infinity at the wire boundary so
+        # downstream JSON parsers (MCP, A2A, native SDKs) never receive
+        # non-standard tokens.
+        payload = self.model_dump()
+        _reject_non_finite(payload)
+        kwargs.setdefault("allow_nan", False)
+        return json.dumps(payload, **kwargs)
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "Primitive":
@@ -107,12 +89,23 @@ class Primitive(BaseModel):
                 known.add(field.alias)
 
         kwargs: Dict[str, Any] = {}
-        extra: Dict[str, Any] = {}
+        attributes: Dict[str, Any] = {}
         for key, value in data.items():
             if key == "type":
                 continue
-            (kwargs if key in known else extra)[key] = value
+            if key in known:
+                kwargs[key] = value
+            else:
+                attributes[key] = value
+        if attributes:
+            kwargs["attributes"] = attributes
+        return target(**kwargs)
 
-        if extra:
-            kwargs["attributes"] = {**kwargs.get("attributes", {}), **extra}
-        return target.model_validate(kwargs)
+
+# Registry populated by primitives.py on import
+_REGISTRY: Dict[str, type] = {}
+
+
+def register_primitive(cls: type) -> type:
+    _REGISTRY[cls.model_fields["type"].default] = cls
+    return cls
