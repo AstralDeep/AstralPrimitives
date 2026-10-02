@@ -595,4 +595,61 @@ def test_repeated_union_rebuild():
     assert isinstance(btn2, Button)
 
 
+def test_failed_registration_leaves_registry_and_adapter_unchanged():
+    from typing import Literal
+    from astralprims.base import _REGISTRY
+
+    registry_snapshot = dict(_REGISTRY)
+    adapter = rebuild_primitive_union()
+
+    with pytest.raises(PrimitiveTypeCollisionError):
+        class CollidingButton(Primitive):
+            type: Literal["button"] = "button"
+
+    assert dict(_REGISTRY) == registry_snapshot
+    valid = adapter.validate_python({"type": "button", "label": "test", "action": "click"})
+    assert isinstance(valid, Button)
+
+    with pytest.raises(ValueError):
+        class InvalidCustom(Primitive):
+            type: int = 123
+
+    assert dict(_REGISTRY) == registry_snapshot
+    assert "123" not in _REGISTRY
+
+
+def test_reload_policy_same_class_permitted_new_class_rejected():
+    from typing import Literal
+    from astralprims.base import _REGISTRY
+
+    class TargetReloadClass(Primitive):
+        type: Literal["target_reload_type"] = "target_reload_type"
+
+    assert _REGISTRY["target_reload_type"] is TargetReloadClass
+
+    TargetReloadClass.__pydantic_init_subclass__()
+    assert _REGISTRY["target_reload_type"] is TargetReloadClass
+
+    with pytest.raises(PrimitiveTypeCollisionError, match="collision detected"):
+        class SecondReloadClass(Primitive):
+            type: Literal["target_reload_type"] = "target_reload_type"
+
+    assert _REGISTRY["target_reload_type"] is TargetReloadClass
+
+    removed = unregister_primitive("target_reload_type")
+    assert removed is TargetReloadClass
+    assert "target_reload_type" not in _REGISTRY
+
+    class SecondReloadClass(Primitive):
+        type: Literal["target_reload_type"] = "target_reload_type"
+
+    assert _REGISTRY["target_reload_type"] is SecondReloadClass
+    adapter = rebuild_primitive_union()
+    obj = adapter.validate_python({"type": "target_reload_type"})
+    assert isinstance(obj, SecondReloadClass)
+
+    unregister_primitive("target_reload_type")
+    rebuild_primitive_union()
+
+
 

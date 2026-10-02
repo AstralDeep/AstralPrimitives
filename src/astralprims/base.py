@@ -48,11 +48,10 @@ class SerModel(BaseModel):
 
 
 class PrimitiveTypeCollisionError(ValueError):
-    """Raised when a primitive subclass attempts to register a wire type already bound to a different class."""
+    pass
 
 
 def unregister_primitive(type_name: str) -> Optional[type["Primitive"]]:
-    """Unregister an extension primitive type from the global registry."""
     return _REGISTRY.pop(type_name, None)
 
 

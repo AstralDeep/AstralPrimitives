@@ -95,7 +95,9 @@ registers `_REGISTRY[default] = cls`. So:
   `rebuild_primitive_union()` or `primitive_adapter` will not see it.
 - Extension lifecycle: Subclasses register automatically upon definition. Extensions can remove
   custom types using `unregister_primitive(type_name)`. Deliberate aliases (such as `Grid = Grids`)
-  and identical class reload definitions are preserved.
+  are preserved. Re-registering the same class object is permitted, but a module reload creates a
+  different class object and is rejected as a collision; unregister the type before reloading.
+  Failed registration leaves the registry and existing adapter unchanged.
 - Adding a primitive to the Astral vocabulary additionally requires the owner approval,
   documentation, and coordinated changes of Constitution Principle IV: AstralProjection's
   `contracts/ui_protocol.json`, renderers, ROTE, affected clients, and drift guards,

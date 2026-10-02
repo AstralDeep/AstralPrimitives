@@ -330,6 +330,35 @@ class Ribbon(Primitive):
 rebuild_primitive_union()  # refresh AnyPrimitive/primitive_adapter
 ```
 
+### Collision errors and validation
+
+Every primitive subclass must declare a `type` field with a non-empty string default
+that matches any `Literal` annotation choices. Wire types must be globally unique across
+built-in and custom primitives. Attempting to register a wire `type` that is already bound
+to another class raises `PrimitiveTypeCollisionError` before modifying the registry.
+Failed registrations abort cleanly without altering `_REGISTRY` or existing `primitive_adapter`
+instances.
+
+### Unregistering and rebuild ordering
+
+To remove an extension primitive or prepare for a replacement, unregister the wire type name
+using `unregister_primitive()` and then call `rebuild_primitive_union()`:
+
+```python
+from astralprims import unregister_primitive, rebuild_primitive_union
+
+unregister_primitive("ribbon")
+rebuild_primitive_union()
+```
+
+### Reload policy
+
+Re-registering the exact same class object (for example, in interactive environments) is
+permitted. However, module reloads create a new, distinct class object for the same wire
+type, which triggers `PrimitiveTypeCollisionError`. To reload a module defining custom
+primitives, call `unregister_primitive()` on the custom wire types before reloading the
+module, then call `rebuild_primitive_union()`.
+
 ## Tests
 
 ```bash
