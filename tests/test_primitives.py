@@ -741,7 +741,7 @@ def test_representative_trees_exercise_recursive_fields_and_round_trip():
                         ],
                     ),
                     Tabs(
-                        items=[
+                        tabs=[
                             TabItem(
                                 label="Overview",
                                 content=[
@@ -770,16 +770,30 @@ def test_representative_trees_exercise_recursive_fields_and_round_trip():
     assert (
         serialized["children"][0]["content"][0]["class"] == "custom-grid-class"
     )
+    assert serialized["children"][0]["content"][1]["type"] == "tabs"
+    assert (
+        serialized["children"][0]["content"][1]["tabs"][0]["content"][0]["type"]
+        == "stat_group"
+    )
+    assert (
+        serialized["children"][0]["content"][1]["tabs"][1]["content"][0]["type"]
+        == "code"
+    )
 
     restored = Primitive.from_dict(serialized)
     assert isinstance(restored, Container)
     assert isinstance(restored.children[0], Card)
     assert isinstance(restored.children[0].content[0], Grids)
+    tabs_inst = restored.children[0].content[1]
+    assert isinstance(tabs_inst, Tabs)
+    assert isinstance(tabs_inst.tabs[0], TabItem)
+    assert isinstance(tabs_inst.tabs[0].content[0], StatGroup)
+    assert isinstance(tabs_inst.tabs[1].content[0], CodeBlock)
     assert restored.to_dict() == serialized
 
 
 def test_attributes_precedence_and_aliases():
-    # Test that unknown keys become extra attributes without overriding fixed fields
+    # 1. Test alias mapping and unknown keys merging into attributes
     raw = {
         "type": "button",
         "label": "Click Me",
@@ -794,6 +808,19 @@ def test_attributes_precedence_and_aliases():
     out = btn.to_dict()
     assert out["class"] == "btn-alias"
     assert out["custom_data_attr"] == "custom-value"
+
+    # 2. Test explicit attributes precedence: attributes override model fields on serialization
+    btn_override = Button(
+        label="typed-label",
+        class_name="typed-class",
+        attributes={
+            "label": "attribute-label",
+            "class": "attribute-class",
+        },
+    )
+    out_override = btn_override.to_dict()
+    assert out_override["label"] == "attribute-label"
+    assert out_override["class"] == "attribute-class"
 
 
 def test_omitted_empty_css_and_preserved_empty_payloads():
@@ -822,7 +849,3 @@ def test_omitted_empty_css_and_preserved_empty_payloads():
     btn_dict = btn_empty_payload.to_dict()
     assert "payload" in btn_dict
     assert btn_dict["payload"] == {}
-
-
-
-
