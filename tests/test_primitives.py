@@ -15,6 +15,7 @@ from astralprims import (
     Button,
     Card,
     ChatHistory,
+    CodeBlock,
     Collapsible,
     Container,
     DonutChart,
@@ -41,6 +42,7 @@ from astralprims import (
     rebuild_primitive_union,
     unregister_primitive,
 )
+from astralprims.base import _REGISTRY
 
 
 def test_button_to_dict_shape():
@@ -650,6 +652,177 @@ def test_reload_policy_same_class_permitted_new_class_rejected():
 
     unregister_primitive("target_reload_type")
     rebuild_primitive_union()
+
+
+BUILT_IN_PRIMITIVES = sorted(
+    (wire_type, model)
+    for wire_type, model in _REGISTRY.items()
+    if model.__module__.startswith("astralprims.")
+)
+
+
+def test_registry_contains_all_builtin_primitives():
+    assert len(BUILT_IN_PRIMITIVES) == 38
+
+
+@pytest.mark.parametrize(
+    "wire_type,cls",
+    BUILT_IN_PRIMITIVES,
+    ids=[wire for wire, _ in BUILT_IN_PRIMITIVES],
+)
+def test_all_builtin_primitives_default_construct_and_round_trip(wire_type, cls):
+    # Verify default construction
+    a = cls()
+    b = cls()
+
+    # to_dict shape
+    data = a.to_dict()
+    assert isinstance(data, dict)
+    assert data["type"] == wire_type
+
+    # to_json and JSON roundtrip
+    json_str = a.to_json()
+    assert json.loads(json_str) == data
+
+    # Primitive.from_dict roundtrip
+    restored = Primitive.from_dict(data)
+    assert type(restored) is cls
+    assert restored.to_dict() == data
+
+    # primitive_adapter validation
+    validated = primitive_adapter.validate_python(data)
+    assert type(validated) is cls
+    assert validated.to_dict() == data
+
+    # Mutable-default isolation checks: ensure instances do not share mutable defaults
+    for field_name in cls.model_fields:
+        val_a = getattr(a, field_name)
+        val_b = getattr(b, field_name)
+        if isinstance(val_a, (list, dict, set)):
+            assert val_a is not val_b, (
+                f"Field {field_name} on {cls.__name__} shares mutable default instance"
+            )
+            if isinstance(val_a, list):
+                val_a.append("sentinel_mutation_check")
+                assert "sentinel_mutation_check" not in getattr(b, field_name)
+                val_a.pop()
+
+
+def test_representative_trees_exercise_recursive_fields_and_round_trip():
+    # Construct a comprehensive tree covering recursive fields across containers
+    tree = Container(
+        css={"display": "block", "padding": "16px"},
+        children=[
+            Card(
+                title="Status Card",
+                content=[
+                    Grids(
+                        columns=2,
+                        class_name="custom-grid-class",
+                        children=[
+                            ActionGroup(
+                                align="center",
+                                buttons=[
+                                    Button(label="Submit", action="submit_form"),
+                                    Button(
+                                        label="Reset",
+                                        action="reset_form",
+                                        variant="secondary",
+                                    ),
+                                ],
+                            ),
+                            Collapsible(
+                                title="Details",
+                                content=[
+                                    Text(content="Detailed diagnostic readout"),
+                                    Badge(label="Active", variant="success"),
+                                ],
+                            ),
+                        ],
+                    ),
+                    Tabs(
+                        items=[
+                            TabItem(
+                                label="Overview",
+                                content=[
+                                    StatGroup(
+                                        items=[{"label": "metric", "value": "100"}]
+                                    )
+                                ],
+                            ),
+                            TabItem(
+                                label="Raw",
+                                content=[
+                                    CodeBlock(code='{"k": 1}', language="json")
+                                ],
+                            ),
+                        ]
+                    ),
+                ],
+            )
+        ],
+    )
+    serialized = tree.to_dict()
+    assert serialized["type"] == "container"
+    assert serialized["css"] == {"display": "block", "padding": "16px"}
+    assert serialized["children"][0]["type"] == "card"
+    assert serialized["children"][0]["content"][0]["type"] == "grid"
+    assert (
+        serialized["children"][0]["content"][0]["class"] == "custom-grid-class"
+    )
+
+    restored = Primitive.from_dict(serialized)
+    assert isinstance(restored, Container)
+    assert isinstance(restored.children[0], Card)
+    assert isinstance(restored.children[0].content[0], Grids)
+    assert restored.to_dict() == serialized
+
+
+def test_attributes_precedence_and_aliases():
+    # Test that unknown keys become extra attributes without overriding fixed fields
+    raw = {
+        "type": "button",
+        "label": "Click Me",
+        "action": "do_action",
+        "class": "btn-alias",
+        "custom_data_attr": "custom-value",
+    }
+    btn = Primitive.from_dict(raw)
+    assert isinstance(btn, Button)
+    assert btn.class_name == "btn-alias"
+    assert btn.attributes.get("custom_data_attr") == "custom-value"
+    out = btn.to_dict()
+    assert out["class"] == "btn-alias"
+    assert out["custom_data_attr"] == "custom-value"
+
+
+def test_omitted_empty_css_and_preserved_empty_payloads():
+    # Empty dict or None css must not be serialized
+    b_empty_css = Button(label="B1", action="a1", css={})
+    assert "css" not in b_empty_css.to_dict()
+
+    b_none_css = Button(label="B2", action="a2", css=None)
+    assert "css" not in b_none_css.to_dict()
+
+    b_with_css = Button(label="B3", action="a3", css={"padding": "4px"})
+    assert b_with_css.to_dict().get("css") == {"padding": "4px"}
+
+    # Empty payload collections (e.g. empty lists / dicts) must be preserved
+    sg_empty = StatGroup(items=[])
+    sg_dict = sg_empty.to_dict()
+    assert "items" in sg_dict
+    assert sg_dict["items"] == []
+
+    ch_empty = ChatHistory(items=[])
+    ch_dict = ch_empty.to_dict()
+    assert "items" in ch_dict
+    assert ch_dict["items"] == []
+
+    btn_empty_payload = Button(label="B4", action="a4", payload={})
+    btn_dict = btn_empty_payload.to_dict()
+    assert "payload" in btn_dict
+    assert btn_dict["payload"] == {}
+
 
 
 
