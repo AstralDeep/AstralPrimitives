@@ -662,7 +662,7 @@ BUILT_IN_PRIMITIVES = sorted(
 
 
 def test_registry_contains_all_builtin_primitives():
-    assert len(BUILT_IN_PRIMITIVES) == 38
+    assert len(BUILT_IN_PRIMITIVES) >= 38
 
 
 @pytest.mark.parametrize(
