@@ -60,6 +60,7 @@ class TabItem(SerModel):
 
 
 class Tabs(Primitive):
+    default_index: int = 0
     type: Literal["tabs"] = "tabs"
     tabs: List[TabItem] = Field(default_factory=list)
     variant: str = "default"
