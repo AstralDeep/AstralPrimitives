@@ -290,6 +290,7 @@ class KeyValue(Primitive):
 
 
 class Timeline(Primitive):
+    auto_sort: bool = False
     type: Literal["timeline"] = "timeline"
     title: Optional[str] = None
     items: List[Dict[str, Any]] = Field(default_factory=list)
