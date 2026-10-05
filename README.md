@@ -94,12 +94,15 @@ Fields set to `None` are omitted from wire output entirely, as is an empty
 `css` block, so those properties do not accept an explicit top-level `null`
 in the schema; nested values permitted by a field's own type, such as entries
 in unconstrained lists or dictionaries, may still contain `null`.
-Non-`None` defaults are always emitted and appear as the schema `default` of
-their property. `attributes` is a trusted escape hatch
-merged last into the top-level object: extra keys are always accepted, but
-overriding a declared key, including `type`, may intentionally produce output
-outside this baseline schema. Custom registered primitives stay supported
-through `Primitive.from_dict()` but are not part of this versioned baseline.
+Non-`None` defaults of declared wire properties are always emitted and appear
+as the schema `default` of their property. `attributes` is a trusted escape
+hatch merged last into the top-level object: extra keys are always accepted,
+but overriding a declared key, including `type`, may intentionally produce
+output outside this baseline schema. Validating output against this schema is
+not sanitization, and never a security boundary, because `attributes` can
+carry any trusted keys — only trusted data may enter it. Custom registered
+primitives stay supported through `Primitive.from_dict()` but are not part of
+this versioned baseline.
 
 ## Built-in primitives
 
