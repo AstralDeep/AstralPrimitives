@@ -28,10 +28,15 @@ def _dump(value: Any) -> Any:
 
 def _coerce_children(value: Any) -> Any:
     if isinstance(value, list):
-        return [
-            Primitive.from_dict(v) if isinstance(v, dict) and "type" in v else v
-            for v in value
-        ]
+        coerced = []
+        for v in value:
+            if isinstance(v, dict):
+                if "type" not in v or not v["type"]:
+                    raise ValueError(f"child dictionary is missing required concrete 'type' key: {v!r}")
+                coerced.append(Primitive.from_dict(v))
+            else:
+                coerced.append(v)
+        return coerced
     return value
 
 
