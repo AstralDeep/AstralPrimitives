@@ -16,13 +16,24 @@ CSS = Dict[str, str]
 _REGISTRY: Dict[str, type["Primitive"]] = {}
 
 
+from datetime import date, datetime, time
+from uuid import UUID
+
 def _dump(value: Any) -> Any:
     if isinstance(value, BaseModel):
         return value.model_dump()
+    if isinstance(value, (datetime, date, time)):
+        return value.isoformat()
+    if isinstance(value, UUID):
+        return str(value)
+    if isinstance(value, bytes):
+        return base64.b64encode(value).decode("utf-8")
+    if isinstance(value, set):
+        return sorted([_dump(v) for v in value])
     if isinstance(value, list):
         return [_dump(v) for v in value]
     if isinstance(value, dict):
-        return {k: _dump(v) for k, v in value.items()}
+        return {str(k): _dump(v) for k, v in value.items()}
     return value
 
 
