@@ -855,3 +855,16 @@ def test_scarlet_regression_nested():
     
     assert primitive_restored.to_dict() == wire
     assert container_restored.to_dict() == wire
+
+def test_chart_dataset_instances_accepted_in_charts():
+    from astralprims import BarChart, LineChart, ChartDataset
+    ds = ChartDataset(label="Sales", data=[10.0, 20.0], color="#ff0000")
+    bc = BarChart(title="Revenue", labels=["Q1", "Q2"], datasets=[ds])
+    assert bc.datasets[0]["label"] == "Sales"
+    assert bc.datasets[0]["data"] == [10.0, 20.0]
+    assert bc.datasets[0]["color"] == "#ff0000"
+
+    lc = LineChart(title="Trends", labels=["Q1", "Q2"], datasets=[ds, {"label": "Direct", "data": [5.0, 15.0]}])
+    assert len(lc.datasets) == 2
+    assert lc.datasets[0]["label"] == "Sales"
+    assert lc.datasets[1]["label"] == "Direct"
