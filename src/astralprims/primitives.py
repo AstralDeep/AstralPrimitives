@@ -73,6 +73,7 @@ class Tabs(Primitive):
 
 
 class Collapsible(Primitive):
+    default_open: bool = False
     type: Literal["collapsible"] = "collapsible"
     title: str = ""
     content: List[Primitive] = Field(default_factory=list)
