@@ -273,6 +273,7 @@ class Badge(Primitive):
 
 
 class Hero(Primitive):
+    align: str = "center"
     type: Literal["hero"] = "hero"
     title: str = ""
     subtitle: Optional[str] = None
