@@ -1,3 +1,4 @@
+from typing import Any
 """Public API of astralprims: re-exports every primitive and builds the discriminated
 union (AnyPrimitive, primitive_adapter) over base.py's registry. AstralDeep agents
 build UI payloads through it.
@@ -81,6 +82,7 @@ def rebuild_primitive_union():
 __all__ = [
     "CSS",
     "Primitive",
+    "get_primitive_schema",
     "PrimitiveTypeCollisionError",
     "unregister_primitive",
     "AnyPrimitive",
@@ -129,3 +131,16 @@ __all__ = [
     "ColorPicker",
     "ThemeApply",
 ]
+
+def get_primitive_schema() -> dict[str, Any]:
+    """Return the complete JSON schema for all registered concrete SDUI primitives."""
+    from .base import _REGISTRY
+    schema_defs = {}
+    for type_name, cls in _REGISTRY.items():
+        schema_defs[type_name] = cls.model_json_schema()
+    return {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "title": "AstralPrimitivesRegistrySchema",
+        "type": "object",
+        "definitions": schema_defs,
+    }
