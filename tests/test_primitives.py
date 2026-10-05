@@ -689,3 +689,62 @@ def test_scarlet_regression_nested():
     
     assert primitive_restored.to_dict() == wire
     assert container_restored.to_dict() == wire
+
+
+def test_complete_public_vocabulary_serialization_contract():
+    from astralprims import (
+        Container, Card, Grid, Grids, Tabs, TabItem, Collapsible, Divider,
+        Text, Button, ActionGroup, Input, ParamPicker, Image, CodeBlock,
+        Alert, ProgressBar, MetricCard, List_, Table, BarChart, LineChart,
+        PieChart, PlotlyChart, DonutChart, RadarChart, ChartDataset, Audio,
+        FileUpload, FileDownload, Badge, Hero, KeyValue, Timeline, Rating,
+        StatGroup, Gauge, PipelineStepper, ChatHistory, ColorPicker, ThemeApply
+    )
+
+    all_primitives = [
+        Container(children=[Text(content="Inside")]),
+        Card(title="Sample Card", content=[Text(content="Body")]),
+        Grid(columns=3, children=[Text(content="Cell")]),
+        Grids(columns=2, children=[Text(content="Grid cell")]),
+        Tabs(tabs=[TabItem(label="Tab 1", content=[Text(content="Tab body")])]),
+        Collapsible(title="Details", content=[Text(content="Hidden")]),
+        Divider(),
+        Text(content="Sample Text", variant="body"),
+        Button(label="Click", action="submit"),
+        ActionGroup(buttons=[Button(label="OK")]),
+        Input(label="Username", name="user"),
+        ParamPicker(name="picker", label="Param", options=["A", "B"]),
+        Image(src="https://example.com/pic.png", alt="Demo"),
+        CodeBlock(code="print(1)", language="python"),
+        Alert(message="System ready", variant="info"),
+        ProgressBar(label="Sync", value=50.0),
+        MetricCard(title="TPS", value="1500"),
+        List_(items=["Item 1", "Item 2"]),
+        Table(columns=[{"key": "col1", "label": "Column 1"}], data=[{"col1": "val1"}]),
+        BarChart(title="Bar", labels=["A"], datasets=[{"label": "D1", "data": [10.0]}]),
+        LineChart(title="Line", labels=["A"], datasets=[{"label": "D2", "data": [20.0]}]),
+        PieChart(title="Pie", labels=["A"], data=[30.0]),
+        PlotlyChart(figure={"data": []}),
+        DonutChart(title="Donut", labels=["A"], data=[40.0]),
+        RadarChart(title="Radar", axes=["Speed"], data=[{"axis": "Speed", "value": 50.0}]),
+        Audio(src="https://example.com/audio.mp3"),
+        FileUpload(label="Upload", accept=".png"),
+        FileDownload(label="Download", url="https://example.com/file.zip"),
+        Badge(text="Active", variant="success"),
+        Hero(title="Hero Title", subtitle="Hero Sub"),
+        KeyValue(items=[{"key": "Key", "value": "Value"}]),
+        Timeline(events=[{"title": "Event 1"}]),
+        Rating(value=5),
+        StatGroup(title="Overview", items=[{"label": "Uptime", "value": "99.9%"}]),
+        Gauge(label="Temp", value=75.0),
+        PipelineStepper(steps=[{"title": "Step 1"}]),
+        ChatHistory(messages=[{"role": "user", "content": "Hi"}]),
+        ColorPicker(label="Select color", value="#ffffff"),
+        ThemeApply(theme_id="dark")
+    ]
+
+    for prim in all_primitives:
+        d = prim.to_dict()
+        assert "type" in d
+        j = prim.to_json()
+        assert isinstance(j, str)
