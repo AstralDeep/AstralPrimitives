@@ -304,6 +304,8 @@ class StatGroup(Primitive):
 
 
 class Gauge(Primitive):
+    min_value: float = 0.0
+    max_value: float = 100.0
     type: Literal["gauge"] = "gauge"
     label: str = ""
     value: float = 0.0
