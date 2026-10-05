@@ -304,6 +304,7 @@ class StatGroup(Primitive):
 
 
 class Gauge(Primitive):
+    unit: str = "%"
     type: Literal["gauge"] = "gauge"
     label: str = ""
     value: float = 0.0
