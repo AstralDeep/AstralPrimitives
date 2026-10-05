@@ -12,14 +12,26 @@ from pydantic import Field, field_validator
 from .base import SerModel, _coerce_children
 from .base import Primitive
 
+def _validate_add_items(items: tuple[Any, ...]) -> List[Primitive]:
+    validated: List[Primitive] = []
+    for item in items:
+        if isinstance(item, dict) and "type" in item:
+            validated.append(Primitive.from_dict(item))
+        elif isinstance(item, Primitive):
+            validated.append(item)
+        else:
+            raise ValueError(f"cannot add invalid non-primitive child: {item!r}")
+    return validated
+
 
 class Container(Primitive):
     type: Literal["container"] = "container"
     children: List[Primitive] = Field(default_factory=list)
     direction: Optional[str] = None
 
-    def add(self, *children: Primitive) -> "Container":
-        self.children.extend(children)
+    def add(self, *children: Any) -> "Container":
+        validated = _validate_add_items(children)
+        self.children.extend(validated)
         return self
 
 
@@ -29,8 +41,9 @@ class Card(Primitive):
     content: List[Primitive] = Field(default_factory=list)
     variant: str = "default"
 
-    def add(self, *content: Primitive) -> "Card":
-        self.content.extend(content)
+    def add(self, *content: Any) -> "Card":
+        validated = _validate_add_items(content)
+        self.content.extend(validated)
         return self
 
 
@@ -40,8 +53,9 @@ class Grids(Primitive):
     children: List[Primitive] = Field(default_factory=list)
     gap: int = 20
 
-    def add(self, *children: Primitive) -> "Grids":
-        self.children.extend(children)
+    def add(self, *children: Any) -> "Grids":
+        validated = _validate_add_items(children)
+        self.children.extend(validated)
         return self
 
 

@@ -689,3 +689,24 @@ def test_scarlet_regression_nested():
     
     assert primitive_restored.to_dict() == wire
     assert container_restored.to_dict() == wire
+
+def test_fluent_add_validates_and_mutates_atomically():
+    import pytest
+    from astralprims import Container, Card, Grids, Text
+
+    c = Container()
+    with pytest.raises(ValueError):
+        c.add("invalid_string")
+    assert c.children == []
+
+    card = Card(title="Test")
+    with pytest.raises(ValueError):
+        card.add({"untagged": "dict"})
+    assert card.content == []
+
+    # Valid items chainable
+    t1 = Text(content="Line 1")
+    t2 = Text(content="Line 2")
+    c.add(t1, t2)
+    assert len(c.children) == 2
+    assert c.children[0].content == "Line 1"
