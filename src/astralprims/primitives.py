@@ -241,6 +241,7 @@ class PlotlyChart(Primitive):
 
 
 class Audio(Primitive):
+    autoplay: bool = False
     type: Literal["audio"] = "audio"
     src: str = ""
     contentType: Optional[str] = None
