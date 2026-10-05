@@ -150,7 +150,7 @@ def test_every_field_is_described_according_to_the_serializer():
                 continue
             expected_required = name != "css" and not _nullable(field.annotation)
             assert (wire_key in required) == expected_required, wire_key
-            default = field.get_default(call_default_factory=True, validated_data={})
+            default = field.get_default(call_default_factory=True)
             if default is None or default is PydanticUndefined:
                 assert "default" not in properties[wire_key], wire_key
             else:
@@ -219,6 +219,22 @@ def test_nullable_field_omitted_from_wire_still_validates(model, name):
     Draft202012Validator(schema["$defs"][_definition_name(model)]).validate(payload)
     if issubclass(model, Primitive):
         Draft202012Validator(schema).validate(payload)
+
+
+@pytest.mark.parametrize(
+    "model,name", _NULLABLE_CASES, ids=lambda value: getattr(value, "__name__", value)
+)
+def test_explicit_null_for_omittable_fields_is_rejected(model, name):
+    schema = wire_schema()
+    payload = model(**{name: None}).model_dump()
+    wire_key = model.model_fields[name].alias or name
+    payload[wire_key] = None
+    definition = schema["$defs"][_definition_name(model)]
+    with pytest.raises(ValidationError):
+        Draft202012Validator(definition).validate(payload)
+    if issubclass(model, Primitive):
+        with pytest.raises(ValidationError):
+            Draft202012Validator(schema).validate(payload)
 
 
 def test_nested_compositions_validate_against_the_root_schema():

@@ -17,12 +17,13 @@ _NONE_TYPE = type(None)
 
 _ROOT_DESCRIPTION = (
     "Canonical JSON output of to_dict() and model_dump() for the primitives shipped "
-    "by this AstralPrimitives release. Fields set to None are omitted, as is an "
-    "empty css block, so nullable properties are absent rather than null. "
-    "attributes is a trusted escape hatch merged last into the top-level object: "
-    "additional keys are always accepted, but overriding a declared key, including "
-    "type, may intentionally produce output outside this baseline schema. Custom "
-    "registered primitives are not part of this versioned baseline."
+    "by this AstralPrimitives release. A field whose value is None is omitted "
+    "entirely, as is an empty css block, so canonical output never contains null "
+    "and this schema rejects explicit nulls for such fields. attributes is a "
+    "trusted escape hatch merged last into the top-level object: additional keys "
+    "are always accepted, but overriding a declared key, including type, may "
+    "intentionally produce output outside this baseline schema. Custom registered "
+    "primitives are not part of this versioned baseline."
 )
 
 
@@ -143,7 +144,7 @@ def _model_definition(model: type) -> Dict[str, Any]:
         properties[wire_key] = _annotation_to_schema(field.annotation, omit_none=True)
         if name != "css" and not _nullable(field.annotation):
             required.append(wire_key)
-        default = field.get_default(call_default_factory=True, validated_data={})
+        default = field.get_default(call_default_factory=True)
         if default is not None and default is not PydanticUndefined:
             properties[wire_key]["default"] = default
     return {

@@ -90,9 +90,10 @@ schema["x-astralprims-version"]  # matches astralprims.__version__
 schema["$defs"]["button"]        # the wire shape of Button output
 ```
 
-Fields set to `None` are omitted from wire output, so nullable properties are
-absent rather than `null`; non-`None` defaults are always emitted and appear as
-the schema `default` of their property. `attributes` is a trusted escape hatch
+Fields set to `None` are omitted from wire output entirely — canonical wire JSON
+never contains `null` — and the same applies to an empty `css` block;
+non-`None` defaults are always emitted and appear as the schema `default` of
+their property. `attributes` is a trusted escape hatch
 merged last into the top-level object: extra keys are always accepted, but
 overriding a declared key, including `type`, may intentionally produce output
 outside this baseline schema. Custom registered primitives stay supported
