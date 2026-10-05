@@ -151,4 +151,5 @@ class Primitive(BaseModel):
 
         if extra:
             kwargs["attributes"] = {**kwargs.get("attributes", {}), **extra}
+        kwargs['type'] = type_name
         return target.model_validate(kwargs)
