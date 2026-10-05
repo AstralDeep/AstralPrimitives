@@ -149,6 +149,7 @@ class Alert(Primitive):
 
 
 class ProgressBar(Primitive):
+    striped: bool = False
     type: Literal["progress"] = "progress"
     value: float = 0.0
     label: Optional[str] = None
