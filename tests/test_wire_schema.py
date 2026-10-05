@@ -281,6 +281,15 @@ def test_nested_compositions_validate_against_the_root_schema():
     validator.validate(Image(url="https://example.com/i.png", alt="an image").to_dict())
 
 
+def test_nested_container_nulls_stay_valid_while_field_level_nulls_are_rejected():
+    validator = Draft202012Validator(wire_schema())
+    validator.validate(
+        Table(headers=["h"], rows=[["text", None, {"nested": None}]]).to_dict()
+    )
+    with pytest.raises(ValidationError):
+        validator.validate({"type": "chat_history", "title": None, "items": []})
+
+
 def test_baseline_rejects_wrong_types_missing_fields_and_unknown_discriminants():
     validator = Draft202012Validator(wire_schema())
     with pytest.raises(ValidationError):
