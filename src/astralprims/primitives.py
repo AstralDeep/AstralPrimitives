@@ -111,6 +111,7 @@ class ActionGroup(Primitive):
 
 
 class Input(Primitive):
+    clearable: bool = False
     type: Literal["input"] = "input"
     placeholder: str = ""
     name: str = ""
