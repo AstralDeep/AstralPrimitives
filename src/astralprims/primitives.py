@@ -80,6 +80,7 @@ class Collapsible(Primitive):
 
 
 class Divider(Primitive):
+    style: str = "solid"
     type: Literal["divider"] = "divider"
     variant: str = "solid"
 
