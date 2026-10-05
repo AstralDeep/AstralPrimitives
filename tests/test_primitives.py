@@ -41,6 +41,13 @@ from astralprims import (
     rebuild_primitive_union,
     unregister_primitive,
 )
+from astralprims.base import _REGISTRY
+
+BUILT_IN_PRIMITIVES = sorted(
+    (wire_type, cls)
+    for wire_type, cls in _REGISTRY.items()
+    if cls.__module__.startswith("astralprims.")
+)
 
 
 def test_button_to_dict_shape():
@@ -476,6 +483,165 @@ def test_composite_readouts_nest_inside_a_container_and_round_trip():
 def test_composite_readouts_survive_json_encoding():
     stats = StatGroup(title="t", items=[{"label": "a", "value": "1"}])
     assert json.loads(stats.to_json()) == stats.to_dict()
+
+
+@pytest.mark.parametrize(
+    "wire_type,cls", BUILT_IN_PRIMITIVES, ids=[w for w, _ in BUILT_IN_PRIMITIVES]
+)
+def test_built_in_primitives_default_construct_and_round_trip(
+    wire_type, cls, enforce_idempotency
+):
+    inst = cls()
+    data = inst.to_dict()
+    assert data["type"] == wire_type
+    json_str = inst.to_json()
+    assert json.loads(json_str) == data
+    restored = Primitive.from_dict(data)
+    assert type(restored) is cls
+    assert restored.to_dict() == data
+    if enforce_idempotency:
+        re_restored = Primitive.from_dict(restored.to_dict())
+        assert re_restored.to_dict() == data
+        assert inst.to_dict() == data
+
+
+@pytest.mark.parametrize(
+    "wire_type,cls", BUILT_IN_PRIMITIVES, ids=[w for w, _ in BUILT_IN_PRIMITIVES]
+)
+def test_built_in_primitives_adapter_validation(wire_type, cls):
+    data = cls().to_dict()
+    inst = primitive_adapter.validate_python(data)
+    assert isinstance(inst, cls)
+
+
+@pytest.mark.parametrize(
+    "wire_type,cls", BUILT_IN_PRIMITIVES, ids=[w for w, _ in BUILT_IN_PRIMITIVES]
+)
+def test_built_in_primitives_isolate_mutable_defaults(wire_type, cls):
+    first = cls()
+    second = cls()
+    for field_name in cls.model_fields:
+        val1 = getattr(first, field_name)
+        val2 = getattr(second, field_name)
+        if isinstance(val1, list):
+            assert val1 is not val2
+        elif isinstance(val1, dict):
+            assert val1 is not val2
+
+
+def test_representative_nested_tree_round_trip_and_contracts(enforce_idempotency):
+    tree = Container(
+        class_name="layout-root",
+        css={},
+        attributes={"data-testid": "root-layout", "layout": "stacked"},
+        children=[
+            Grid(
+                columns=2,
+                class_name="dashboard-grid",
+                children=[
+                    Card(
+                        title="Overview",
+                        content=[
+                            Collapsible(
+                                title="Metrics Details",
+                                content=[
+                                    Text(content="Inner details", class_name="muted-label"),
+                                ],
+                            ),
+                            Tabs(
+                                tabs=[
+                                    TabItem(
+                                        label="Controls",
+                                        content=[
+                                            ActionGroup(
+                                                buttons=[
+                                                    Button(
+                                                        label="Submit",
+                                                        action="commit_action",
+                                                        payload={},
+                                                        css={},
+                                                        class_name="btn-submit",
+                                                        attributes={
+                                                            "label": "Overridden Action",
+                                                            "data-button-id": "btn-01",
+                                                        },
+                                                    ),
+                                                ],
+                                            ),
+                                        ],
+                                    ),
+                                ],
+                            ),
+                        ],
+                    ),
+                ],
+            ),
+        ],
+    )
+    data = tree.to_dict()
+    assert "css" not in data
+    assert data["class"] == "layout-root"
+    assert data["layout"] == "stacked"
+    assert data["data-testid"] == "root-layout"
+
+    grid_wire = data["children"][0]
+    assert grid_wire["type"] == "grid"
+    assert grid_wire["class"] == "dashboard-grid"
+
+    card_wire = grid_wire["children"][0]
+    assert card_wire["type"] == "card"
+    assert card_wire["title"] == "Overview"
+
+    collapsible_wire = card_wire["content"][0]
+    assert collapsible_wire["type"] == "collapsible"
+    text_wire = collapsible_wire["content"][0]
+    assert text_wire["type"] == "text"
+    assert text_wire["content"] == "Inner details"
+    assert text_wire["class"] == "muted-label"
+
+    tabs_wire = card_wire["content"][1]
+    assert tabs_wire["type"] == "tabs"
+    tab_item_wire = tabs_wire["tabs"][0]
+    assert tab_item_wire["label"] == "Controls"
+
+    action_group_wire = tab_item_wire["content"][0]
+    assert action_group_wire["type"] == "action_group"
+
+    btn_wire = action_group_wire["buttons"][0]
+    assert btn_wire["type"] == "button"
+    assert btn_wire["class"] == "btn-submit"
+    assert btn_wire["action"] == "commit_action"
+    assert btn_wire["payload"] == {}
+    assert "css" not in btn_wire
+    assert btn_wire["label"] == "Overridden Action"
+    assert btn_wire["data-button-id"] == "btn-01"
+
+    restored = Primitive.from_dict(data)
+    assert isinstance(restored, Container)
+    assert restored.to_dict() == data
+
+    json_str = tree.to_json()
+    assert json.loads(json_str) == data
+
+    validated = primitive_adapter.validate_python(data)
+    assert isinstance(validated, Container)
+    assert isinstance(validated.children[0], Grids)
+    assert isinstance(validated.children[0].children[0], Card)
+    assert isinstance(validated.children[0].children[0].content[0], Collapsible)
+    assert isinstance(validated.children[0].children[0].content[0].content[0], Text)
+    assert isinstance(validated.children[0].children[0].content[1], Tabs)
+    assert isinstance(
+        validated.children[0].children[0].content[1].tabs[0].content[0], ActionGroup
+    )
+    assert isinstance(
+        validated.children[0].children[0].content[1].tabs[0].content[0].buttons[0],
+        Button,
+    )
+
+    if enforce_idempotency:
+        re_restored = Primitive.from_dict(restored.to_dict())
+        assert re_restored.to_dict() == data
+        assert restored.to_dict() == data
 
 
 def test_custom_primitive_registration_and_lifecycle():
