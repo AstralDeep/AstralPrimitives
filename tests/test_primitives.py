@@ -653,3 +653,39 @@ def test_reload_policy_same_class_permitted_new_class_rejected():
 
 
 
+
+def test_scarlet_regression_matching():
+    for original in [Button(label='x', action='go'), Text(content='hi')]:
+        saved_wire = original.to_dict()
+        assert Primitive.from_dict(saved_wire).to_dict() == saved_wire
+        assert type(original).from_dict(saved_wire).to_dict() == saved_wire
+
+def test_scarlet_regression_missing():
+    saved_dictionary = {k: v for k, v in Text(content='hi').to_dict().items() if k != 'type'}
+    for cls in [Primitive, Text]:
+        with pytest.raises(ValueError):
+            cls.from_dict(saved_dictionary)
+
+def test_scarlet_regression_unknown():
+    saved_dictionary = {**Text(content='hi').to_dict(), 'type': 'unknown'}
+    with pytest.raises(ValueError):
+        Primitive.from_dict(saved_dictionary)
+    with pytest.raises(ValidationError):
+        Text.from_dict(saved_dictionary)
+
+def test_scarlet_regression_mismatched():
+    button_wire = Button(label='x', action='go').to_dict()
+    with pytest.raises(ValidationError):
+        Text.from_dict(button_wire)
+    text_wire = Text(content='hi').to_dict()
+    with pytest.raises(ValidationError):
+        Button.from_dict(text_wire)
+
+def test_scarlet_regression_nested():
+    wire = Container().add(Card(title='t', content=[Button(label='ok', action='go')])).to_dict()
+    
+    primitive_restored = Primitive.from_dict(wire)
+    container_restored = Container.from_dict(wire)
+    
+    assert primitive_restored.to_dict() == wire
+    assert container_restored.to_dict() == wire

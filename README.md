@@ -1,5 +1,7 @@
 # Astral Primitives
 
+mismatched concrete subclass discriminators raise ValidationError; valid wire round trips remain unchanged.
+
 Composable, serializable UI primitives for Python. Describe UI as plain Python
 objects, then serialize them to a `dict`/JSON for storage or for a server-driven
 UI to render.
