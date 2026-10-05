@@ -75,6 +75,29 @@ create_ui_response([Text(content="hi"), Button(label="ok", action="go")])
 A FastAPI endpoint can return `primitive.to_dict()` or `create_ui_response(...)`
 directly.
 
+## Wire schema
+
+`wire_schema()` returns a JSON Schema (draft 2020-12) describing the canonical
+`to_dict()` output of every built-in primitive in this release. Each wire type
+gets an entry under `$defs`, and the root schema validates any serialized
+component directly:
+
+```python
+from astralprims import wire_schema
+
+schema = wire_schema()
+schema["x-astralprims-version"]  # matches astralprims.__version__
+schema["$defs"]["button"]        # the wire shape of Button output
+```
+
+Fields set to `None` are omitted from wire output, so nullable properties are
+absent rather than `null`; non-`None` defaults are always emitted and appear as
+the schema `default` of their property. `attributes` is a trusted escape hatch
+merged last into the top-level object: extra keys are always accepted, but
+overriding a declared key, including `type`, may intentionally produce output
+outside this baseline schema. Custom registered primitives stay supported
+through `Primitive.from_dict()` but are not part of this versioned baseline.
+
 ## Built-in primitives
 
 | Group     | Primitives                                                                 |
