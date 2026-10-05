@@ -297,6 +297,7 @@ class Timeline(Primitive):
 
 
 class StatGroup(Primitive):
+    columns: int = 3
     type: Literal["stat_group"] = "stat_group"
     title: Optional[str] = None
     items: List[Dict[str, Any]] = Field(default_factory=list)
