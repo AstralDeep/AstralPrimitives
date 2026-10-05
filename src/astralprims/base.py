@@ -65,6 +65,17 @@ class Primitive(BaseModel):
     tooltip: Optional[str] = None
     attributes: Dict[str, Any] = Field(default_factory=dict)
 
+    @field_validator("attributes", mode="before")
+    @classmethod
+    def _validate_json_native_attributes(cls, v: Any) -> Any:
+        if isinstance(v, dict):
+            for k, val in v.items():
+                if not isinstance(k, str) or not k:
+                    raise ValueError(f"attribute key must be non-empty string: {k!r}")
+                if val is not None and not isinstance(val, (str, int, float, bool, list, dict)):
+                    raise ValueError(f"attribute value {val!r} is not a valid JSON-native type")
+        return v
+
     @classmethod
     def __pydantic_init_subclass__(cls, **kwargs: Any) -> None:
         super().__pydantic_init_subclass__(**kwargs)
