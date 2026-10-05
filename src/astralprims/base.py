@@ -88,6 +88,8 @@ class Primitive(BaseModel):
         return self.model_dump()
 
     def to_json(self, **kwargs: Any) -> str:
+        if "allow_nan" not in kwargs:
+            kwargs["allow_nan"] = False
         return json.dumps(self.model_dump(), **kwargs)
 
     @classmethod

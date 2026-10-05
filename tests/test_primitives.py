@@ -472,3 +472,13 @@ def test_composite_readouts_nest_inside_a_container_and_round_trip():
 def test_composite_readouts_survive_json_encoding():
     stats = StatGroup(title="t", items=[{"label": "a", "value": "1"}])
     assert json.loads(stats.to_json()) == stats.to_dict()
+
+def test_rejects_non_finite_numbers_in_wire_json():
+    import math, pytest
+    from astralprims import ProgressBar
+    bar = ProgressBar(label="Loading", value=float("nan"))
+    with pytest.raises(ValueError):
+        bar.to_json()
+    bar_inf = ProgressBar(label="Loading", value=float("inf"))
+    with pytest.raises(ValueError):
+        bar_inf.to_json()
