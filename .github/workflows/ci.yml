@@ -80,16 +80,22 @@ jobs:
         run: |
           mkdir -p .sdist-consume
           cd .sdist-consume
+          uv build --wheel ../dist/*.tar.gz --out-dir dist \
+            --build-constraints ../tooling/python-ci/build-requirements.lock.txt \
+            --require-hashes
           uv venv --python 3.11 .venv
-          # Install sdist in isolation without source-tree imports, using build constraints and exact requirements
-          uv pip install --python .venv/bin/python ../dist/*.tar.gz
-          .venv/bin/python - <<'PY'
+          uv pip install --python .venv/bin/python dist/*.whl
+          .venv/bin/python -I - <<'PY'
           from importlib.metadata import files, version
           from pathlib import Path
+          import sys
           import tomllib
           import astralprims
           from astralprims import Text
 
+          assert Path(astralprims.__file__).resolve().is_relative_to(Path(sys.prefix).resolve())
+          for name in astralprims.__all__:
+              getattr(astralprims, name)
           manifest = tomllib.loads(Path("../pyproject.toml").read_text(encoding="utf-8"))
           installed_version = version("astralprims")
           assert installed_version == manifest["project"]["version"]
