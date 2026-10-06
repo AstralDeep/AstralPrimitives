@@ -135,6 +135,7 @@ class Image(Primitive):
 
 
 class CodeBlock(Primitive):
+    theme: str = "github-dark"
     type: Literal["code"] = "code"
     code: str = ""
     language: str = "text"
