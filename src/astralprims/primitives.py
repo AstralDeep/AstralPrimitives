@@ -320,6 +320,7 @@ class PipelineStepper(Primitive):
 
 
 class Rating(Primitive):
+    allow_half: bool = False
     type: Literal["rating"] = "rating"
     value: float = 0.0
     max_value: int = 5
