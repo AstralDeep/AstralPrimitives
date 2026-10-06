@@ -24,6 +24,7 @@ class Container(Primitive):
 
 
 class Card(Primitive):
+    collapsible: bool = False
     type: Literal["card"] = "card"
     title: str = ""
     content: List[Primitive] = Field(default_factory=list)
