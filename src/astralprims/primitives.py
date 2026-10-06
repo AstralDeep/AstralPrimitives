@@ -335,6 +335,7 @@ class ChatHistory(Primitive):
 
 
 class ColorPicker(Primitive):
+    format: str = "hex"
     type: Literal["color_picker"] = "color_picker"
     label: str = ""
     color_key: str = ""
