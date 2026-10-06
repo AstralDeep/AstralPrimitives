@@ -3,6 +3,7 @@ Verify malformed discriminators are rejected and valid model/wire trees keep the
 """
 
 from collections import UserDict, deque
+from typing import List, Literal, Optional
 
 import pytest
 from pydantic import ValidationError
@@ -19,6 +20,8 @@ from astralprims import (
     Tabs,
     Text,
     primitive_adapter,
+    rebuild_primitive_union,
+    unregister_primitive,
 )
 
 
@@ -193,3 +196,37 @@ def test_text_rejects_invalid_iterables_without_consuming_them():
     with pytest.raises(ValidationError):
         Text(content=children())
     assert visited == []
+
+
+def test_registered_optional_scalar_and_collection_content_keep_their_boundaries():
+    class OptionalText(Primitive):
+        type: Literal["optional_text"] = "optional_text"
+        content: Optional[str] = None
+
+    class OptionalChildren(Primitive):
+        type: Literal["optional_children"] = "optional_children"
+        content: Optional[List[Primitive]] = None
+
+    try:
+        visited = []
+
+        def scalar_input():
+            visited.append(True)
+            yield {"type": "text"}
+
+        with pytest.raises(ValidationError):
+            OptionalText(content=scalar_input())
+        assert visited == []
+        assert OptionalText(content="hello").content == "hello"
+        assert OptionalText().content is None
+        assert OptionalChildren().content is None
+        child = Text(content="retained")
+        restored = OptionalChildren(content=iter([UserDict(child.to_dict())]))
+        assert isinstance(restored.content[0], Text)
+        assert restored.content[0].to_dict() == child.to_dict()
+        with pytest.raises(ValidationError):
+            OptionalChildren(content=iter([{"content": "untagged"}]))
+    finally:
+        unregister_primitive("optional_text")
+        unregister_primitive("optional_children")
+        rebuild_primitive_union()

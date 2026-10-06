@@ -48,6 +48,13 @@ def _coerce_children(value: Any) -> Any:
     return value
 
 
+def _is_child_collection(annotation: Any) -> bool:
+    origin = get_origin(annotation)
+    if isinstance(origin, type) and issubclass(origin, Iterable):
+        return not issubclass(origin, Mapping)
+    return any(_is_child_collection(argument) for argument in get_args(annotation))
+
+
 class SerModel(BaseModel):
     @model_serializer(mode="plain")
     def _serialize(self) -> Dict[str, Any]:
@@ -116,7 +123,9 @@ class Primitive(BaseModel):
     @field_validator("children", "content", mode="before", check_fields=False)
     @classmethod
     def _coerce_primitive_children(cls, v: Any, info: ValidationInfo) -> Any:
-        if cls.model_fields[info.field_name].annotation is str:
+        if not isinstance(v, list) and not _is_child_collection(
+            cls.model_fields[info.field_name].annotation
+        ):
             return v
         return _coerce_children(v)
 
