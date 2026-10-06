@@ -174,6 +174,7 @@ class List_(Primitive):
 
 
 class Table(Primitive):
+    hoverable: bool = True
     type: Literal["table"] = "table"
     headers: List[str] = Field(default_factory=list)
     rows: List[List[Any]] = Field(default_factory=list)
