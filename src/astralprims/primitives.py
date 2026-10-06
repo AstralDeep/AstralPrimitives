@@ -127,6 +127,7 @@ class ParamPicker(Primitive):
 
 
 class Image(Primitive):
+    loading: str = "lazy"
     type: Literal["image"] = "image"
     url: str = ""
     alt: Optional[str] = None
