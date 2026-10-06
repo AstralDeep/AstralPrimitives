@@ -53,6 +53,7 @@ from .primitives import (
     Timeline,
 )
 from .response import create_ui_response
+from .schema import wire_schema
 
 from typing import Annotated, Union
 
@@ -60,7 +61,7 @@ from pydantic import Field as _Field, TypeAdapter
 
 from .base import _REGISTRY
 
-__version__ = "0.7.0"
+__version__ = "0.8.0"
 
 
 def _build_union():
@@ -87,6 +88,7 @@ __all__ = [
     "primitive_adapter",
     "rebuild_primitive_union",
     "create_ui_response",
+    "wire_schema",
     "Container",
     "Card",
     "Grid",
