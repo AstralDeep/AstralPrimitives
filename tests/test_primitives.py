@@ -44,6 +44,12 @@ from astralprims import (
 )
 from astralprims.base import _REGISTRY
 
+BUILT_IN_PRIMITIVES = sorted(
+    (wire_type, cls)
+    for wire_type, cls in _REGISTRY.items()
+    if cls.__module__.startswith("astralprims.")
+)
+
 
 def test_button_to_dict_shape():
     btn = Button(
@@ -480,6 +486,165 @@ def test_composite_readouts_survive_json_encoding():
     assert json.loads(stats.to_json()) == stats.to_dict()
 
 
+@pytest.mark.parametrize(
+    "wire_type,cls", BUILT_IN_PRIMITIVES, ids=[w for w, _ in BUILT_IN_PRIMITIVES]
+)
+def test_built_in_primitives_default_construct_and_round_trip(
+    wire_type, cls, enforce_idempotency
+):
+    inst = cls()
+    data = inst.to_dict()
+    assert data["type"] == wire_type
+    json_str = inst.to_json()
+    assert json.loads(json_str) == data
+    restored = Primitive.from_dict(data)
+    assert type(restored) is cls
+    assert restored.to_dict() == data
+    if enforce_idempotency:
+        re_restored = Primitive.from_dict(restored.to_dict())
+        assert re_restored.to_dict() == data
+        assert inst.to_dict() == data
+
+
+@pytest.mark.parametrize(
+    "wire_type,cls", BUILT_IN_PRIMITIVES, ids=[w for w, _ in BUILT_IN_PRIMITIVES]
+)
+def test_built_in_primitives_adapter_validation(wire_type, cls):
+    data = cls().to_dict()
+    inst = primitive_adapter.validate_python(data)
+    assert isinstance(inst, cls)
+
+
+@pytest.mark.parametrize(
+    "wire_type,cls", BUILT_IN_PRIMITIVES, ids=[w for w, _ in BUILT_IN_PRIMITIVES]
+)
+def test_built_in_primitives_isolate_mutable_defaults(wire_type, cls):
+    first = cls()
+    second = cls()
+    for field_name in cls.model_fields:
+        val1 = getattr(first, field_name)
+        val2 = getattr(second, field_name)
+        if isinstance(val1, list):
+            assert val1 is not val2
+        elif isinstance(val1, dict):
+            assert val1 is not val2
+
+
+def test_representative_nested_tree_round_trip_and_contracts(enforce_idempotency):
+    tree = Container(
+        class_name="layout-root",
+        css={},
+        attributes={"data-testid": "root-layout", "layout": "stacked"},
+        children=[
+            Grid(
+                columns=2,
+                class_name="dashboard-grid",
+                children=[
+                    Card(
+                        title="Overview",
+                        content=[
+                            Collapsible(
+                                title="Metrics Details",
+                                content=[
+                                    Text(content="Inner details", class_name="muted-label"),
+                                ],
+                            ),
+                            Tabs(
+                                tabs=[
+                                    TabItem(
+                                        label="Controls",
+                                        content=[
+                                            ActionGroup(
+                                                buttons=[
+                                                    Button(
+                                                        label="Submit",
+                                                        action="commit_action",
+                                                        payload={},
+                                                        css={},
+                                                        class_name="btn-submit",
+                                                        attributes={
+                                                            "label": "Overridden Action",
+                                                            "data-button-id": "btn-01",
+                                                        },
+                                                    ),
+                                                ],
+                                            ),
+                                        ],
+                                    ),
+                                ],
+                            ),
+                        ],
+                    ),
+                ],
+            ),
+        ],
+    )
+    data = tree.to_dict()
+    assert "css" not in data
+    assert data["class"] == "layout-root"
+    assert data["layout"] == "stacked"
+    assert data["data-testid"] == "root-layout"
+
+    grid_wire = data["children"][0]
+    assert grid_wire["type"] == "grid"
+    assert grid_wire["class"] == "dashboard-grid"
+
+    card_wire = grid_wire["children"][0]
+    assert card_wire["type"] == "card"
+    assert card_wire["title"] == "Overview"
+
+    collapsible_wire = card_wire["content"][0]
+    assert collapsible_wire["type"] == "collapsible"
+    text_wire = collapsible_wire["content"][0]
+    assert text_wire["type"] == "text"
+    assert text_wire["content"] == "Inner details"
+    assert text_wire["class"] == "muted-label"
+
+    tabs_wire = card_wire["content"][1]
+    assert tabs_wire["type"] == "tabs"
+    tab_item_wire = tabs_wire["tabs"][0]
+    assert tab_item_wire["label"] == "Controls"
+
+    action_group_wire = tab_item_wire["content"][0]
+    assert action_group_wire["type"] == "action_group"
+
+    btn_wire = action_group_wire["buttons"][0]
+    assert btn_wire["type"] == "button"
+    assert btn_wire["class"] == "btn-submit"
+    assert btn_wire["action"] == "commit_action"
+    assert btn_wire["payload"] == {}
+    assert "css" not in btn_wire
+    assert btn_wire["label"] == "Overridden Action"
+    assert btn_wire["data-button-id"] == "btn-01"
+
+    restored = Primitive.from_dict(data)
+    assert isinstance(restored, Container)
+    assert restored.to_dict() == data
+
+    json_str = tree.to_json()
+    assert json.loads(json_str) == data
+
+    validated = primitive_adapter.validate_python(data)
+    assert isinstance(validated, Container)
+    assert isinstance(validated.children[0], Grids)
+    assert isinstance(validated.children[0].children[0], Card)
+    assert isinstance(validated.children[0].children[0].content[0], Collapsible)
+    assert isinstance(validated.children[0].children[0].content[0].content[0], Text)
+    assert isinstance(validated.children[0].children[0].content[1], Tabs)
+    assert isinstance(
+        validated.children[0].children[0].content[1].tabs[0].content[0], ActionGroup
+    )
+    assert isinstance(
+        validated.children[0].children[0].content[1].tabs[0].content[0].buttons[0],
+        Button,
+    )
+
+    if enforce_idempotency:
+        re_restored = Primitive.from_dict(restored.to_dict())
+        assert re_restored.to_dict() == data
+        assert restored.to_dict() == data
+
+
 def test_custom_primitive_registration_and_lifecycle():
     from typing import Literal
 
@@ -654,12 +819,6 @@ def test_reload_policy_same_class_permitted_new_class_rejected():
     rebuild_primitive_union()
 
 
-BUILT_IN_PRIMITIVES = sorted(
-    (wire_type, model)
-    for wire_type, model in _REGISTRY.items()
-    if model.__module__.startswith("astralprims.")
-)
-
 
 def test_registry_contains_all_builtin_primitives():
     assert len(BUILT_IN_PRIMITIVES) >= 38
@@ -671,30 +830,24 @@ def test_registry_contains_all_builtin_primitives():
     ids=[wire for wire, _ in BUILT_IN_PRIMITIVES],
 )
 def test_all_builtin_primitives_default_construct_and_round_trip(wire_type, cls):
-    # Verify default construction
     a = cls()
     b = cls()
 
-    # to_dict shape
     data = a.to_dict()
     assert isinstance(data, dict)
     assert data["type"] == wire_type
 
-    # to_json and JSON roundtrip
     json_str = a.to_json()
     assert json.loads(json_str) == data
 
-    # Primitive.from_dict roundtrip
     restored = Primitive.from_dict(data)
     assert type(restored) is cls
     assert restored.to_dict() == data
 
-    # primitive_adapter validation
     validated = primitive_adapter.validate_python(data)
     assert type(validated) is cls
     assert validated.to_dict() == data
 
-    # Mutable-default isolation checks: ensure instances do not share mutable defaults
     for field_name in cls.model_fields:
         val_a = getattr(a, field_name)
         val_b = getattr(b, field_name)
@@ -709,7 +862,6 @@ def test_all_builtin_primitives_default_construct_and_round_trip(wire_type, cls)
 
 
 def test_representative_trees_exercise_recursive_fields_and_round_trip():
-    # Construct a comprehensive tree covering recursive fields across containers
     tree = Container(
         css={"display": "block", "padding": "16px"},
         children=[
@@ -793,7 +945,6 @@ def test_representative_trees_exercise_recursive_fields_and_round_trip():
 
 
 def test_attributes_precedence_and_aliases():
-    # 1. Test alias mapping and unknown keys merging into attributes
     raw = {
         "type": "button",
         "label": "Click Me",
@@ -809,7 +960,6 @@ def test_attributes_precedence_and_aliases():
     assert out["class"] == "btn-alias"
     assert out["custom_data_attr"] == "custom-value"
 
-    # 2. Test explicit attributes precedence: attributes override model fields on serialization
     btn_override = Button(
         label="typed-label",
         class_name="typed-class",
@@ -824,7 +974,6 @@ def test_attributes_precedence_and_aliases():
 
 
 def test_omitted_empty_css_and_preserved_empty_payloads():
-    # Empty dict or None css must not be serialized
     b_empty_css = Button(label="B1", action="a1", css={})
     assert "css" not in b_empty_css.to_dict()
 
@@ -834,7 +983,6 @@ def test_omitted_empty_css_and_preserved_empty_payloads():
     b_with_css = Button(label="B3", action="a3", css={"padding": "4px"})
     assert b_with_css.to_dict().get("css") == {"padding": "4px"}
 
-    # Empty payload collections (e.g. empty lists / dicts) must be preserved
     sg_empty = StatGroup(items=[])
     sg_dict = sg_empty.to_dict()
     assert "items" in sg_dict
@@ -849,3 +997,40 @@ def test_omitted_empty_css_and_preserved_empty_payloads():
     btn_dict = btn_empty_payload.to_dict()
     assert "payload" in btn_dict
     assert btn_dict["payload"] == {}
+
+
+def test_scarlet_regression_matching():
+    for original in [Button(label='x', action='go'), Text(content='hi')]:
+        saved_wire = original.to_dict()
+        assert Primitive.from_dict(saved_wire).to_dict() == saved_wire
+        assert type(original).from_dict(saved_wire).to_dict() == saved_wire
+
+def test_scarlet_regression_missing():
+    saved_dictionary = {k: v for k, v in Text(content='hi').to_dict().items() if k != 'type'}
+    for cls in [Primitive, Text]:
+        with pytest.raises(ValueError):
+            cls.from_dict(saved_dictionary)
+
+def test_scarlet_regression_unknown():
+    saved_dictionary = {**Text(content='hi').to_dict(), 'type': 'unknown'}
+    with pytest.raises(ValueError):
+        Primitive.from_dict(saved_dictionary)
+    with pytest.raises(ValidationError):
+        Text.from_dict(saved_dictionary)
+
+def test_scarlet_regression_mismatched():
+    button_wire = Button(label='x', action='go').to_dict()
+    with pytest.raises(ValidationError):
+        Text.from_dict(button_wire)
+    text_wire = Text(content='hi').to_dict()
+    with pytest.raises(ValidationError):
+        Button.from_dict(text_wire)
+
+def test_scarlet_regression_nested():
+    wire = Container().add(Card(title='t', content=[Button(label='ok', action='go')])).to_dict()
+
+    primitive_restored = Primitive.from_dict(wire)
+    container_restored = Container.from_dict(wire)
+
+    assert primitive_restored.to_dict() == wire
+    assert container_restored.to_dict() == wire
