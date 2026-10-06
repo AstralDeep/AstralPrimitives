@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import os
 import re
+import shlex
 import subprocess
 from pathlib import Path
 
@@ -29,7 +30,9 @@ APPROVED_ACTIONS = {
 }
 JOB_TIMEOUT = re.compile(r"(?m)^    timeout-minutes:(.*)$")
 MAX_JOB_MINUTES = 30
-EVENT_BASE_SHA = "BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}"
+EVENT_BASE_SHA = (
+    "BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}"
+)
 
 
 def _job_ids(text: str) -> set[str]:
@@ -49,7 +52,9 @@ def _job(text: str, job_id: str) -> str:
 
 
 def _assert_actions_are_approved(text: str) -> None:
-    uses = [line.strip().removeprefix("- ") for line in text.splitlines() if "uses:" in line]
+    uses = [
+        line.strip().removeprefix("- ") for line in text.splitlines() if "uses:" in line
+    ]
     assert uses
     for use in uses:
         reference = use.partition("uses:")[2].strip()
@@ -64,7 +69,9 @@ def _assert_actions_are_approved(text: str) -> None:
 def _assert_jobs_are_time_bounded(text: str) -> None:
     for job_id in sorted(_job_ids(text)):
         values = [value.strip() for value in JOB_TIMEOUT.findall(_job(text, job_id))]
-        assert len(values) == 1, f"job {job_id!r} must declare one job-level timeout-minutes"
+        assert len(values) == 1, (
+            f"job {job_id!r} must declare one job-level timeout-minutes"
+        )
         assert values[0].isdigit() and 1 <= int(values[0]) <= MAX_JOB_MINUTES, (
             f"job {job_id!r} timeout-minutes must be an integer from 1 to {MAX_JOB_MINUTES}"
         )
@@ -98,7 +105,9 @@ def test_every_workflow_job_is_time_bounded_and_uses_only_approved_actions() -> 
         ("    timeout-minutes: ${{ inputs.minutes }}\n", "integer from 1 to 30"),
     ],
 )
-def test_missing_or_unbounded_job_timeouts_are_rejected(job_body: str, message: str) -> None:
+def test_missing_or_unbounded_job_timeouts_are_rejected(
+    job_body: str, message: str
+) -> None:
     bounded = "name: sample\njobs:\n  bounded:\n    timeout-minutes: 30\n"
     _assert_jobs_are_time_bounded(bounded)
 
@@ -106,7 +115,9 @@ def test_missing_or_unbounded_job_timeouts_are_rejected(job_body: str, message: 
         _assert_jobs_are_time_bounded(f"{bounded}  candidate:\n{job_body}")
 
 
-def test_main_and_pull_requests_run_locked_quality_compatibility_and_package_gates() -> None:
+def test_main_and_pull_requests_run_locked_quality_compatibility_and_package_gates() -> (
+    None
+):
     text = (WORKFLOWS / "ci.yml").read_text(encoding="utf-8")
 
     assert _job_ids(text) == {"quality-package", "compatibility", "gates"}
@@ -119,7 +130,7 @@ def test_main_and_pull_requests_run_locked_quality_compatibility_and_package_gat
     assert "id-token:" not in text
     assert "continue-on-error:" not in text
     assert "uv build --frozen" not in text
-    assert "version: \"0.11.26\"" in text
+    assert 'version: "0.11.26"' in text
     _assert_actions_are_approved(text)
 
     quality = _job(text, "quality-package")
@@ -142,7 +153,7 @@ def test_main_and_pull_requests_run_locked_quality_compatibility_and_package_gat
         "uv build --build-constraints tooling/python-ci/build-requirements.lock.txt --require-hashes",
         "twine check dist/*",
         'installed_version == manifest["project"]["version"]',
-        'astralprims.__version__ == installed_version',
+        "astralprims.__version__ == installed_version",
         'path.as_posix() == "astralprims/py.typed"',
         'Text(content="ci").to_dict() == {',
         '"variant": "body"',
@@ -171,9 +182,87 @@ def test_main_and_pull_requests_run_locked_quality_compatibility_and_package_gat
     assert "needs.compatibility.result" in gates
 
 
+def _assert_sdist_consumer_is_isolated_and_hash_constrained(text: str) -> None:
+    quality = _job(text, "quality-package")
+    step = re.search(
+        r"(?ms)^      - name: Clean-install package smoke \(source distribution\)\n"
+        r"        run: \|\n(.*?)(?=^      - |\Z)",
+        quality,
+    )
+    assert step, "missing independent source-distribution consumer"
+    script = step.group(1).replace("\\\n", " ")
+    commands = [
+        line.strip()
+        for line in script.splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    ]
+    build = [shlex.split(line) for line in commands if line.startswith("uv build ")]
+    assert len(build) == 1
+    arguments = build[0]
+    assert "--wheel" in arguments and "../dist/*.tar.gz" in arguments
+    assert arguments[arguments.index("--out-dir") + 1] == "dist"
+    assert arguments[arguments.index("--build-constraints") + 1] == (
+        "../tooling/python-ci/build-requirements.lock.txt"
+    )
+    assert "--require-hashes" in arguments
+    assert not {"--no-verify-hashes", "--no-build-isolation"}.intersection(arguments)
+    assert commands.index("cd .sdist-consume") < commands.index(
+        next(line for line in commands if line.startswith("uv build "))
+    )
+    assert "uv venv --python 3.11 .venv" in commands
+    assert "uv pip install --python .venv/bin/python dist/*.whl" in commands
+    assert ".venv/bin/python -I - <<'PY'" in commands
+    assert (
+        "assert Path(astralprims.__file__).resolve().is_relative_to(Path(sys.prefix).resolve())"
+        in commands
+    )
+    assert "for name in astralprims.__all__:" in commands
+    assert "getattr(astralprims, name)" in commands
+    assert 'assert installed_version == manifest["project"]["version"]' in commands
+    assert "assert astralprims.__version__ == installed_version" in commands
+    assert (
+        'path.as_posix() == "astralprims/py.typed" for path in package_files'
+        in commands
+    )
+    assert 'assert Text(content="ci-sdist").to_dict() == {' in commands
+
+
+def test_source_distribution_has_an_independent_hash_constrained_consumer() -> None:
+    _assert_sdist_consumer_is_isolated_and_hash_constrained(
+        (WORKFLOWS / "ci.yml").read_text(encoding="utf-8")
+    )
+
+
+@pytest.mark.parametrize(
+    "original, replacement",
+    [
+        ("--require-hashes", ""),
+        ("--build-constraints ../tooling/python-ci/build-requirements.lock.txt", ""),
+        ("--require-hashes", "--require-hashes --no-verify-hashes"),
+        ("--require-hashes", "--require-hashes --no-build-isolation"),
+        (".venv/bin/python dist/*.whl", ".venv/bin/python ../dist/*.whl"),
+        (".venv/bin/python -I -", ".venv/bin/python - -"),
+        ("uv build --wheel", "# uv build --wheel"),
+    ],
+)
+def test_source_distribution_consumer_rejects_build_or_import_bypasses(
+    original: str,
+    replacement: str,
+) -> None:
+    text = (WORKFLOWS / "ci.yml").read_text(encoding="utf-8")
+    with pytest.raises((AssertionError, ValueError)):
+        _assert_sdist_consumer_is_isolated_and_hash_constrained(
+            text.replace(original, replacement)
+        )
+
+
 def _base_sha_guard() -> str:
-    quality = _job((WORKFLOWS / "ci.yml").read_text(encoding="utf-8"), "quality-package")
-    guard = [line.strip() for line in quality.splitlines() if line.strip().startswith("[[ ")]
+    quality = _job(
+        (WORKFLOWS / "ci.yml").read_text(encoding="utf-8"), "quality-package"
+    )
+    guard = [
+        line.strip() for line in quality.splitlines() if line.strip().startswith("[[ ")
+    ]
     assert guard, "quality-package must validate BASE_SHA before diff-cover"
     return "\n".join(["set -euo pipefail", *guard])
 
@@ -217,13 +306,15 @@ def test_the_changed_line_step_fails_when_the_event_supplies_no_base_sha() -> No
     assert completed.returncode != 0
 
 
-def test_publication_verifies_without_oidc_before_environment_protected_upload() -> None:
+def test_publication_verifies_without_oidc_before_environment_protected_upload() -> (
+    None
+):
     text = (WORKFLOWS / "python-publish.yml").read_text(encoding="utf-8")
 
     assert _job_ids(text) == {"verify-package", "publish"}
     assert "pull_request:" not in text
     _assert_actions_are_approved(text)
-    assert "version: \"0.11.26\"" in text
+    assert 'version: "0.11.26"' in text
     assert "uv build --frozen" not in text
 
     verify = _job(text, "verify-package")
@@ -258,7 +349,7 @@ def test_same_shape_unapproved_action_sha_is_rejected() -> None:
 jobs:
   test:
     steps:
-      - uses: actions/checkout@{APPROVED_ACTIONS['actions/checkout']}
+      - uses: actions/checkout@{APPROVED_ACTIONS["actions/checkout"]}
 """
     mutated = valid_yaml.replace(APPROVED_ACTIONS["actions/checkout"], "0" * 40)
 
