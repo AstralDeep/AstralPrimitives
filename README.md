@@ -1,5 +1,7 @@
 # Astral Primitives
 
+mismatched concrete subclass discriminators raise ValidationError; valid wire round trips remain unchanged.
+
 Composable, serializable UI primitives for Python. Describe UI as plain Python
 objects, then serialize them to a `dict`/JSON for storage or for a server-driven
 UI to render.
@@ -76,6 +78,10 @@ A FastAPI endpoint can return `primitive.to_dict()` or `create_ui_response(...)`
 directly.
 
 ## Wire schema
+
+Version 0.8.0 adds the public `wire_schema()` Python API. It describes the
+existing serialized vocabulary; it does not add a primitive or change wire
+output. Consumers adopt the new package release through their own version pins.
 
 `wire_schema()` returns a JSON Schema (draft 2020-12) describing the canonical
 `to_dict()` output of every built-in primitive in this release. Each wire type
