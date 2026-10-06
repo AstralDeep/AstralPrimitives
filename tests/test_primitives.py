@@ -1034,3 +1034,15 @@ def test_scarlet_regression_nested():
 
     assert primitive_restored.to_dict() == wire
     assert container_restored.to_dict() == wire
+
+def test_rejects_untagged_child_dictionaries_in_containers():
+    import pytest
+    from astralprims import Container, Card, Grids
+    with pytest.raises(ValueError, match="missing required concrete 'type' key"):
+        Container(children=[{"content": "x"}])
+
+    with pytest.raises(ValueError, match="missing required concrete 'type' key"):
+        Card(title="Test", content=[{"untagged": "item"}])
+
+    with pytest.raises(ValueError, match="missing required concrete 'type' key"):
+        Grids(children=[{"foo": "bar"}])

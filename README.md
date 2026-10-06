@@ -65,6 +65,20 @@ spec = {"type": "button", "label": "Buy", "action": "checkout"}
 button = Primitive.from_dict(spec)   # -> Button(...)
 ```
 
+### Child dictionary compatibility in 0.7.0
+
+Every child mapping in `Container.children`, `Card.content`, `Grids.children`,
+`Collapsible.content`, `TabItem.content` and `ActionGroup.buttons` must carry a
+registered, non-empty string `type`. Missing, empty, malformed and unknown
+discriminators raise a Pydantic `ValidationError` instead of producing an empty
+generic primitive. This narrows accepted input and therefore bumps the minor version.
+
+Tagged children retain their concrete type and fields across lists, tuples, deques
+and generators, including mapping wrappers. Existing primitive instances retain
+their identity. Valid serialized wire dictionaries, aliases, defaults and trusted
+attributes precedence remain unchanged; callers using untagged child dictionaries
+must add the intended concrete `type` before upgrading.
+
 ### Shipping a response
 
 ```python
