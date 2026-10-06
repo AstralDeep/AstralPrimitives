@@ -1035,6 +1035,76 @@ def test_scarlet_regression_nested():
     assert primitive_restored.to_dict() == wire
     assert container_restored.to_dict() == wire
 
+def test_non_finite_metric_values_rejected_on_to_dict():
+    with pytest.raises(ValueError, match="at field 'value'"):
+        ProgressBar(value=float("nan")).to_dict()
+
+    with pytest.raises(ValueError, match="at field 'value'"):
+        Gauge(value=float("inf")).to_dict()
+
+    with pytest.raises(ValueError, match="at field 'value'"):
+        Rating(value=float("-inf")).to_dict()
+
+
+def test_non_finite_metric_values_rejected_on_to_json():
+    with pytest.raises(ValueError, match="at field 'value'"):
+        ProgressBar(value=float("nan")).to_json()
+
+    with pytest.raises(ValueError, match="at field 'value'"):
+        Gauge(value=float("inf")).to_json(allow_nan=False)
+
+    with pytest.raises(ValueError, match="at field 'value'"):
+        Rating(value=float("-inf")).to_json()
+
+
+def test_non_finite_attributes_rejected_on_wire_boundary():
+    badge_nan = Badge(attributes={"score": float("nan")})
+    with pytest.raises(ValueError, match=r"at field 'attributes\.score'"):
+        badge_nan.to_dict()
+
+    badge_inf = Badge(attributes={"score": float("inf")})
+    with pytest.raises(ValueError, match=r"at field 'attributes\.score'"):
+        badge_inf.to_dict()
+
+    badge_neginf = Badge(attributes={"score": float("-inf")})
+    with pytest.raises(ValueError, match=r"at field 'attributes\.score'"):
+        badge_neginf.to_json()
+
+
+def test_non_finite_chart_arrays_and_payload_dictionaries_rejected():
+    chart = BarChart(datasets=[{"data": [float("nan")]}])
+    with pytest.raises(ValueError, match=r"at field 'datasets\[0\]\.data\[0\]'"):
+        chart.to_dict()
+
+    btn = Button(label="Click", payload={"delta": float("inf")})
+    with pytest.raises(ValueError, match=r"at field 'payload\.delta'"):
+        btn.to_json()
+
+
+def test_non_finite_values_rejected_on_from_dict():
+    with pytest.raises(ValueError, match=r"at field 'wire_payload\.value'"):
+        Primitive.from_dict({"type": "progress", "value": float("nan")})
+
+    with pytest.raises(ValueError, match=r"at field 'wire_payload\.attributes\.weight'"):
+        Primitive.from_dict({"type": "badge", "attributes": {"weight": float("inf")}})
+
+
+def test_allow_nan_flag_forbidden_in_to_json():
+    btn = Button(label="OK")
+    with pytest.raises(ValueError, match="allow_nan=True is not permitted"):
+        btn.to_json(allow_nan=True)
+
+
+def test_finite_numbers_retained_in_standard_json():
+    bar = ProgressBar(value=75.5)
+    wire = bar.to_dict()
+    assert wire["value"] == 75.5
+    raw_json = bar.to_json()
+    decoded = json.loads(raw_json)
+    assert decoded["value"] == 75.5
+    assert json.loads(json.dumps(decoded, allow_nan=False)) == decoded
+
+
 def test_rejects_untagged_child_dictionaries_in_containers():
     import pytest
     from astralprims import Container, Card, Grids

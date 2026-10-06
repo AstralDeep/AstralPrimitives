@@ -79,6 +79,22 @@ their identity. Valid serialized wire dictionaries, aliases, defaults and truste
 attributes precedence remain unchanged; callers using untagged child dictionaries
 must add the intended concrete `type` before upgrading.
 
+### Finite-number compatibility in 0.9.0
+
+Wire serialization rejects `NaN`, positive infinity and negative infinity with a
+field path. The check applies to `to_dict()`, `model_dump()`, `to_json()` and
+`from_dict()`, including nested charts, payloads, trusted attributes, numeric
+mapping keys, models and dataclasses after their serializers expand them.
+`to_json(allow_nan=True)` raises
+`ValueError`; callers cannot opt into non-standard numeric tokens.
+
+This narrows accepted input and therefore bumps the minor version. Finite numbers,
+serialized defaults, aliases, omission rules and trusted attributes precedence
+retain their existing wire representation. Consumers adopting this package must
+replace non-finite values with an application-defined finite or nullable value
+before crossing the wire boundary. This policy does not introduce conversions
+for other Python objects that standard JSON cannot encode.
+
 ### Shipping a response
 
 ```python
