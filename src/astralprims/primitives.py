@@ -266,6 +266,7 @@ class FileDownload(Primitive):
 
 
 class Badge(Primitive):
+    pill: bool = False
     type: Literal["badge"] = "badge"
     label: str = ""
     variant: str = "default"
