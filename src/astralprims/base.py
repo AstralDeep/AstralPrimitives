@@ -6,9 +6,10 @@ __init__.py builds the union from the registry.
 from __future__ import annotations
 
 import json
+from collections.abc import Iterable, Mapping
 from typing import Any, Dict, Literal, Optional, get_args, get_origin
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_serializer
+from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_validator, model_serializer
 from pydantic_core import PydanticUndefined
 
 CSS = Dict[str, str]
@@ -27,13 +28,20 @@ def _dump(value: Any) -> Any:
 
 
 def _coerce_children(value: Any) -> Any:
-    if isinstance(value, list):
+    if isinstance(value, Iterable) and not isinstance(value, (str, bytes, bytearray, Mapping)):
+        try:
+            children = list(value)
+        except Exception as error:
+            raise ValueError("child collection cannot be iterated") from error
         coerced = []
-        for v in value:
-            if isinstance(v, dict):
-                if "type" not in v or not v["type"]:
-                    raise ValueError(f"child dictionary is missing required concrete 'type' key: {v!r}")
-                coerced.append(Primitive.from_dict(v))
+        for v in children:
+            if isinstance(v, Mapping):
+                type_name = v.get("type")
+                if not isinstance(type_name, str) or not type_name.strip():
+                    raise ValueError(
+                        "child dictionary is missing required concrete 'type' key (a non-empty string)"
+                    )
+                coerced.append(Primitive.from_dict(dict(v)))
             else:
                 coerced.append(v)
         return coerced
@@ -107,7 +115,9 @@ class Primitive(BaseModel):
     # check_fields=False lets one validator serve every subclass
     @field_validator("children", "content", mode="before", check_fields=False)
     @classmethod
-    def _coerce_primitive_children(cls, v: Any) -> Any:
+    def _coerce_primitive_children(cls, v: Any, info: ValidationInfo) -> Any:
+        if cls.model_fields[info.field_name].annotation is str:
+            return v
         return _coerce_children(v)
 
     @model_serializer(mode="plain")
