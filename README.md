@@ -79,6 +79,21 @@ their identity. Valid serialized wire dictionaries, aliases, defaults and truste
 attributes precedence remain unchanged; callers using untagged child dictionaries
 must add the intended concrete `type` before upgrading.
 
+### Fluent addition compatibility in 0.10.0
+
+`Container.add()`, `Card.add()` and `Grids.add()` (also `Grid.add()`) validate
+every supplied child before changing the existing collection. They accept
+primitive instances and tagged mappings, including mapping wrappers, using the
+same concrete-type validation as constructors. Invalid scalars, untagged mappings,
+malformed or unknown types, and invalid nested children raise `ValueError` without
+partially adding valid siblings or replacing the existing collection.
+
+Valid additions remain chainable, preserve existing primitive identities and
+retain serialized defaults, aliases and trusted attributes precedence. Calling
+`add()` without arguments leaves the tree unchanged. Rejecting previously accepted
+invalid children narrows the Python API and therefore bumps the minor version;
+callers must supply valid primitive instances or tagged mappings when upgrading.
+
 ### Finite-number compatibility in 0.9.0
 
 Wire serialization rejects `NaN`, positive infinity and negative infinity with a
