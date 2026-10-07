@@ -2,7 +2,10 @@
 round-trips of nested children, and primitive_adapter validation and JSON schema.
 """
 
+import base64
+from datetime import date, datetime, time
 import json
+from uuid import UUID
 
 import pytest
 from pydantic import ValidationError
@@ -653,3 +656,75 @@ def test_reload_policy_same_class_permitted_new_class_rejected():
 
 
 
+
+
+# ---------------------------------------------------------------------------
+# Issue #9: JSON-native value normalization tests
+# ---------------------------------------------------------------------------
+
+def test_dump_datetime_isoformat():
+    btn = Button(label="test", action="click", payload={"time": datetime(2026, 10, 7, 18, 0, 0)})
+    dumped = btn.to_dict()
+    assert dumped["payload"]["time"] == "2026-10-07T18:00:00"
+    assert json.loads(btn.to_json()) == dumped
+
+
+def test_dump_date_and_time():
+    btn = Button(label="test", action="click", payload={"d": date(2026, 10, 7), "t": time(12, 30, 0)})
+    dumped = btn.to_dict()
+    assert dumped["payload"]["d"] == "2026-10-07"
+    assert dumped["payload"]["t"] == "12:30:00"
+    assert json.loads(btn.to_json()) == dumped
+
+
+def test_dump_uuid():
+    uid = UUID("12345678-1234-5678-1234-567812345678")
+    btn = Button(label="test", action="click", payload={"uid": uid})
+    dumped = btn.to_dict()
+    assert dumped["payload"]["uid"] == str(uid)
+    assert json.loads(btn.to_json()) == dumped
+
+
+def test_dump_bytes_and_bytearray():
+    raw = b"binary-data"
+    expected = base64.b64encode(raw).decode("utf-8")
+    btn = Button(label="test", action="click", payload={"bytes": raw, "bytearray": bytearray(raw)})
+    dumped = btn.to_dict()
+    assert dumped["payload"]["bytes"] == expected
+    assert dumped["payload"]["bytearray"] == expected
+    assert json.loads(btn.to_json()) == dumped
+
+
+def test_dump_set_and_frozenset():
+    btn = Button(label="test", action="click", payload={"set": {3, 1, 2}, "frozenset": frozenset({"b", "a"})})
+    dumped = btn.to_dict()
+    assert dumped["payload"]["set"] == [1, 2, 3]
+    assert dumped["payload"]["frozenset"] == ["a", "b"]
+    assert json.loads(btn.to_json()) == dumped
+
+
+def test_dump_non_string_dict_keys():
+    btn = Button(label="test", action="click", payload={"data": {10: "int_key", (1, 2): "tuple_key"}})
+    dumped = btn.to_dict()
+    assert dumped["payload"]["data"]["10"] == "int_key"
+    assert dumped["payload"]["data"]["(1, 2)"] == "tuple_key"
+    assert json.loads(btn.to_json()) == dumped
+
+
+def test_dump_nested_complex_structures():
+    btn = Button(
+        label="test",
+        action="click",
+        payload={
+            "nested_list": [1, {date(2026, 1, 1)}, b"hello"],
+            "nested_dict": {"inner": {"uuid": UUID("00000000-0000-0000-0000-000000000000")}},
+        },
+        attributes={"attr_time": time(8, 0, 0)}
+    )
+    dumped = btn.to_dict()
+    assert dumped["attr_time"] == "08:00:00"
+    assert dumped["payload"]["nested_list"][0] == 1
+    assert dumped["payload"]["nested_list"][1] == ["2026-01-01"]
+    assert dumped["payload"]["nested_list"][2] == base64.b64encode(b"hello").decode("utf-8")
+    assert dumped["payload"]["nested_dict"]["inner"]["uuid"] == "00000000-0000-0000-0000-000000000000"
+    assert json.loads(btn.to_json()) == dumped

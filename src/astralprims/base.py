@@ -5,8 +5,11 @@ __init__.py builds the union from the registry.
 
 from __future__ import annotations
 
+import base64
+from datetime import date, datetime, time
 import json
 from typing import Any, Dict, Literal, Optional, get_args, get_origin
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_serializer
 from pydantic_core import PydanticUndefined
@@ -16,9 +19,6 @@ CSS = Dict[str, str]
 _REGISTRY: Dict[str, type["Primitive"]] = {}
 
 
-from datetime import date, datetime, time
-from uuid import UUID
-
 def _dump(value: Any) -> Any:
     if isinstance(value, BaseModel):
         return value.model_dump()
@@ -26,11 +26,11 @@ def _dump(value: Any) -> Any:
         return value.isoformat()
     if isinstance(value, UUID):
         return str(value)
-    if isinstance(value, bytes):
-        return base64.b64encode(value).decode("utf-8")
-    if isinstance(value, set):
-        return sorted([_dump(v) for v in value])
-    if isinstance(value, list):
+    if isinstance(value, (bytes, bytearray)):
+        return base64.b64encode(bytes(value)).decode("utf-8")
+    if isinstance(value, (set, frozenset)):
+        return sorted([_dump(v) for v in value], key=lambda x: str(x))
+    if isinstance(value, (list, tuple)):
         return [_dump(v) for v in value]
     if isinstance(value, dict):
         return {str(k): _dump(v) for k, v in value.items()}
@@ -128,7 +128,8 @@ class Primitive(BaseModel):
             if name == "css" and not value:
                 continue
             out[field.alias or name] = _dump(value)
-        out.update(self.attributes or {})
+        if self.attributes:
+            out.update({str(k): _dump(v) for k, v in self.attributes.items()})
         return out
 
     def to_dict(self) -> Dict[str, Any]:
