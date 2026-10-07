@@ -65,6 +65,51 @@ spec = {"type": "button", "label": "Buy", "action": "checkout"}
 button = Primitive.from_dict(spec)   # -> Button(...)
 ```
 
+### Child dictionary compatibility in 0.7.0
+
+Every child mapping in `Container.children`, `Card.content`, `Grids.children`,
+`Collapsible.content`, `TabItem.content` and `ActionGroup.buttons` must carry a
+registered, non-empty string `type`. Missing, empty, malformed and unknown
+discriminators raise a Pydantic `ValidationError` instead of producing an empty
+generic primitive. This narrows accepted input and therefore bumps the minor version.
+
+Tagged children retain their concrete type and fields across lists, tuples, deques
+and generators, including mapping wrappers. Existing primitive instances retain
+their identity. Valid serialized wire dictionaries, aliases, defaults and trusted
+attributes precedence remain unchanged; callers using untagged child dictionaries
+must add the intended concrete `type` before upgrading.
+
+### Fluent addition compatibility in 0.10.0
+
+`Container.add()`, `Card.add()` and `Grids.add()` (also `Grid.add()`) validate
+every supplied child before changing the existing collection. They accept
+primitive instances and tagged mappings, including mapping wrappers, using the
+same concrete-type validation as constructors. Invalid scalars, untagged mappings,
+malformed or unknown types, and invalid nested children raise `ValueError` without
+partially adding valid siblings or replacing the existing collection.
+
+Valid additions remain chainable, preserve existing primitive identities and
+retain serialized defaults, aliases and trusted attributes precedence. Calling
+`add()` without arguments leaves the tree unchanged. Rejecting previously accepted
+invalid children narrows the Python API and therefore bumps the minor version;
+callers must supply valid primitive instances or tagged mappings when upgrading.
+
+### Finite-number compatibility in 0.9.0
+
+Wire serialization rejects `NaN`, positive infinity and negative infinity with a
+field path. The check applies to `to_dict()`, `model_dump()`, `to_json()` and
+`from_dict()`, including nested charts, payloads, trusted attributes, numeric
+mapping keys, models and dataclasses after their serializers expand them.
+`to_json(allow_nan=True)` raises
+`ValueError`; callers cannot opt into non-standard numeric tokens.
+
+This narrows accepted input and therefore bumps the minor version. Finite numbers,
+serialized defaults, aliases, omission rules and trusted attributes precedence
+retain their existing wire representation. Consumers adopting this package must
+replace non-finite values with an application-defined finite or nullable value
+before crossing the wire boundary. This policy does not introduce conversions
+for other Python objects that standard JSON cannot encode.
+
 ### Shipping a response
 
 ```python
@@ -76,6 +121,39 @@ create_ui_response([Text(content="hi"), Button(label="ok", action="go")])
 
 A FastAPI endpoint can return `primitive.to_dict()` or `create_ui_response(...)`
 directly.
+
+## Wire schema
+
+Version 0.8.0 adds the public `wire_schema()` Python API. It describes the
+existing serialized vocabulary; it does not add a primitive or change wire
+output. Consumers adopt the new package release through their own version pins.
+
+`wire_schema()` returns a JSON Schema (draft 2020-12) describing the canonical
+`to_dict()` output of every built-in primitive in this release. Each wire type
+gets an entry under `$defs`, and the root schema validates any serialized
+component directly:
+
+```python
+from astralprims import wire_schema
+
+schema = wire_schema()
+schema["x-astralprims-version"]  # matches astralprims.__version__
+schema["$defs"]["button"]        # the wire shape of Button output
+```
+
+Fields set to `None` are omitted from wire output entirely, as is an empty
+`css` block, so those properties do not accept an explicit top-level `null`
+in the schema; nested values permitted by a field's own type, such as entries
+in unconstrained lists or dictionaries, may still contain `null`.
+Non-`None` defaults of declared wire properties are always emitted and appear
+as the schema `default` of their property. `attributes` is a trusted escape
+hatch merged last into the top-level object: extra keys are always accepted,
+but overriding a declared key, including `type`, may intentionally produce
+output outside this baseline schema. Validating output against this schema is
+not sanitization, and never a security boundary, because `attributes` can
+carry any trusted keys — only trusted data may enter it. Custom registered
+primitives stay supported through `Primitive.from_dict()` but are not part of
+this versioned baseline.
 
 ## Built-in primitives
 

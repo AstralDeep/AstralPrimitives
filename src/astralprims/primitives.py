@@ -9,18 +9,14 @@ from typing import Any, Dict, List, Literal, Optional, Union
 
 from pydantic import Field, field_validator
 
-from .base import SerModel, _coerce_children
-from .base import Primitive
+from .base import Primitive, SerModel, _coerce_children
+
 
 def _validate_add_items(items: tuple[Any, ...]) -> List[Primitive]:
-    validated: List[Primitive] = []
-    for item in items:
-        if isinstance(item, dict) and "type" in item:
-            validated.append(Primitive.from_dict(item))
-        elif isinstance(item, Primitive):
-            validated.append(item)
-        else:
-            raise ValueError(f"cannot add invalid non-primitive child: {item!r}")
+    validated = _coerce_children(items)
+    for item in validated:
+        if not isinstance(item, Primitive):
+            raise ValueError("cannot add a non-primitive child")
     return validated
 
 

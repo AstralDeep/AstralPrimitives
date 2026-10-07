@@ -6,33 +6,93 @@ __init__.py builds the union from the registry.
 from __future__ import annotations
 
 import json
+import math
+from collections.abc import Iterable, Mapping
+from dataclasses import is_dataclass
 from typing import Any, Dict, Literal, Optional, get_args, get_origin
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_serializer
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    TypeAdapter,
+    ValidationInfo,
+    field_validator,
+    model_serializer,
+)
 from pydantic_core import PydanticUndefined
 
 CSS = Dict[str, str]
 
 _REGISTRY: Dict[str, type["Primitive"]] = {}
+_WIRE_ADAPTER = TypeAdapter(Any)
 
 
-def _dump(value: Any) -> Any:
+def _assert_finite(value: Any, path: str = "") -> None:
+    if isinstance(value, BaseModel) or (is_dataclass(value) and not isinstance(value, type)):
+        value = _WIRE_ADAPTER.dump_python(value)
+    if isinstance(value, float):
+        if math.isnan(value):
+            target = f" at field {path!r}" if path else ""
+            raise ValueError(f"Non-finite numeric value NaN is not allowed in wire representation{target}.")
+        if math.isinf(value):
+            target = f" at field {path!r}" if path else ""
+            sign = "Infinity" if value > 0 else "-Infinity"
+            raise ValueError(f"Non-finite numeric value {sign} is not allowed in wire representation{target}.")
+    elif isinstance(value, dict):
+        _assert_finite_mapping_keys(value, path)
+        for k, v in value.items():
+            _assert_finite(v, f"{path}.{k}" if path else str(k))
+    elif isinstance(value, (list, tuple, set, frozenset)):
+        for idx, item in enumerate(value):
+            _assert_finite(item, f"{path}[{idx}]")
+
+
+def _assert_finite_mapping_keys(value: Dict[Any, Any], path: str) -> None:
+    for key in value:
+        if isinstance(key, float):
+            _assert_finite(key, f"{path}.<key>" if path else "<key>")
+
+
+def _dump(value: Any, path: str = "") -> Any:
     if isinstance(value, BaseModel):
-        return value.model_dump()
+        return _dump(value.model_dump(), path)
     if isinstance(value, list):
-        return [_dump(v) for v in value]
+        return [_dump(v, f"{path}[{idx}]") for idx, v in enumerate(value)]
     if isinstance(value, dict):
-        return {k: _dump(v) for k, v in value.items()}
+        _assert_finite_mapping_keys(value, path)
+        return {k: _dump(v, f"{path}.{k}" if path else str(k)) for k, v in value.items()}
+    value = _WIRE_ADAPTER.dump_python(value)
+    _assert_finite(value, path)
     return value
 
 
 def _coerce_children(value: Any) -> Any:
-    if isinstance(value, list):
-        return [
-            Primitive.from_dict(v) if isinstance(v, dict) and "type" in v else v
-            for v in value
-        ]
+    if isinstance(value, Iterable) and not isinstance(value, (str, bytes, bytearray, Mapping)):
+        try:
+            children = list(value)
+        except Exception as error:
+            raise ValueError("child collection cannot be iterated") from error
+        coerced = []
+        for v in children:
+            if isinstance(v, Mapping):
+                type_name = v.get("type")
+                if not isinstance(type_name, str) or not type_name.strip():
+                    raise ValueError(
+                        "child dictionary is missing required concrete 'type' key (a non-empty string)"
+                    )
+                coerced.append(Primitive.from_dict(dict(v)))
+            else:
+                coerced.append(v)
+        return coerced
     return value
+
+
+def _is_child_collection(annotation: Any) -> bool:
+    origin = get_origin(annotation)
+    if isinstance(origin, type) and issubclass(origin, Iterable):
+        return not issubclass(origin, Mapping)
+    return any(_is_child_collection(argument) for argument in get_args(annotation))
 
 
 class SerModel(BaseModel):
@@ -43,7 +103,8 @@ class SerModel(BaseModel):
             value = getattr(self, name)
             if value is None:
                 continue
-            out[field.alias or name] = _dump(value)
+            key = field.alias or name
+            out[key] = _dump(value, key)
         return out
 
 
@@ -102,7 +163,11 @@ class Primitive(BaseModel):
     # check_fields=False lets one validator serve every subclass
     @field_validator("children", "content", mode="before", check_fields=False)
     @classmethod
-    def _coerce_primitive_children(cls, v: Any) -> Any:
+    def _coerce_primitive_children(cls, v: Any, info: ValidationInfo) -> Any:
+        if not isinstance(v, list) and not _is_child_collection(
+            cls.model_fields[info.field_name].annotation
+        ):
+            return v
         return _coerce_children(v)
 
     @model_serializer(mode="plain")
@@ -116,20 +181,29 @@ class Primitive(BaseModel):
                 continue
             if name == "css" and not value:
                 continue
-            out[field.alias or name] = _dump(value)
-        out.update(self.attributes or {})
+            key = field.alias or name
+            out[key] = _dump(value, key)
+        if self.attributes:
+            attributes = _WIRE_ADAPTER.dump_python(self.attributes)
+            _assert_finite(attributes, "attributes")
+            out.update(attributes)
         return out
 
     def to_dict(self) -> Dict[str, Any]:
         return self.model_dump()
 
     def to_json(self, **kwargs: Any) -> str:
-        return json.dumps(self.model_dump(), **kwargs)
+        if kwargs.get("allow_nan"):
+            raise ValueError("allow_nan=True is not permitted: wire JSON must be strict standard-JSON")
+        kwargs["allow_nan"] = False
+        return json.dumps(self.to_dict(), **kwargs)
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "Primitive":
         if "type" not in data:
             raise ValueError("primitive dict is missing required 'type' key")
+
+        _assert_finite(data, "wire_payload")
 
         type_name = data["type"]
         target = cls if cls is not Primitive else _REGISTRY.get(type_name)
