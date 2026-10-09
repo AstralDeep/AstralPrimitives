@@ -5,10 +5,16 @@ __init__.py builds the union from the registry.
 
 from __future__ import annotations
 
+import base64
 import json
 import math
+import uuid
 from collections.abc import Iterable, Mapping
 from dataclasses import is_dataclass
+from datetime import date, datetime, time
+from decimal import Decimal
+from enum import Enum
+from pathlib import PurePath
 from typing import Any, Dict, Literal, Optional, get_args, get_origin
 
 from pydantic import (
@@ -26,6 +32,83 @@ CSS = Dict[str, str]
 
 _REGISTRY: Dict[str, type["Primitive"]] = {}
 _WIRE_ADAPTER = TypeAdapter(Any)
+
+_JSON_NATIVE_SCALAR = (str, int, float, bool, type(None))
+
+
+class PrimitiveTypeError(ValueError):
+    pass
+
+
+def _normalize_mapping_key(key: Any, path: str) -> str:
+    if isinstance(key, str):
+        return key
+    if isinstance(key, bool):
+        return "true" if key else "false"
+    if isinstance(key, (int, float, Decimal)):
+        return str(key)
+    if isinstance(key, uuid.UUID):
+        return str(key)
+    if isinstance(key, Enum):
+        return _normalize_mapping_key(key.value, path)
+    raise PrimitiveTypeError(
+        f"mapping key at {path!r} has non-JSON-native type {type(key).__name__!r}"
+    )
+
+
+def _normalize_value(value: Any, path: str = "") -> Any:
+    if isinstance(value, _JSON_NATIVE_SCALAR):
+        return value
+    if isinstance(value, BaseModel):
+        return _normalize_value(value.model_dump(), path)
+    # Convert dataclass instances to dict via the existing wire adapter before
+    # recursing. _assert_finite does the same conversion at its entrypoint;
+    # _normalize_value must agree with it, otherwise dataclass payloads raise
+    # a non-JSON-native-type error instead of being walked.
+    if is_dataclass(value) and not isinstance(value, type):
+        return _normalize_value(_WIRE_ADAPTER.dump_python(value), path)
+    if isinstance(value, (datetime, date, time)):
+        return value.isoformat()
+    if isinstance(value, uuid.UUID):
+        return str(value)
+    if isinstance(value, (bytes, bytearray, memoryview)):
+        return base64.b64encode(bytes(value)).decode("ascii")
+    if isinstance(value, Decimal):
+        return str(value)
+    if isinstance(value, PurePath):
+        return str(value)
+    if isinstance(value, Enum):
+        return _normalize_value(value.value, path)
+    if isinstance(value, (set, frozenset)):
+        try:
+            items = sorted(value)
+        except TypeError:
+            items = sorted(value, key=lambda x: str(x))
+        return [_normalize_value(v, f"{path}[{i}]") for i, v in enumerate(items)]
+    if isinstance(value, (list, tuple)):
+        return [_normalize_value(v, f"{path}[{i}]") for i, v in enumerate(value)]
+    if isinstance(value, dict):
+        # Preserve mapping keys as-is in the returned dict (existing tests
+        # pin int/float keys surviving to_dict). _assert_finite_mapping_keys
+        # has already raised on NaN/Inf float keys before _normalize_value
+        # runs. We still need to detect collisions that would otherwise be
+        # silently dropped by json.dumps — str "1" and int 1 both serialize
+        # to the JSON key "1" and one would overwrite the other.
+        out: Dict[Any, Any] = {}
+        seen: Dict[str, Any] = {}
+        for k, v in value.items():
+            nkey = _normalize_mapping_key(k, f"{path}.<key>")
+            if nkey in seen and seen[nkey] != k:
+                raise PrimitiveTypeError(
+                    f"normalized key collision at {path!r}.<key>: "
+                    f"{nkey!r} produced by {seen[nkey]!r} and {k!r}"
+                )
+            seen[nkey] = k
+            out[k] = _normalize_value(v, f"{path}.{k}" if path else str(k))
+        return out
+    raise PrimitiveTypeError(
+        f"primitive payload field at {path!r} has non-JSON-native type {type(value).__name__!r}"
+    )
 
 
 def _assert_finite(value: Any, path: str = "") -> None:
@@ -55,12 +138,16 @@ def _assert_finite_mapping_keys(value: Dict[Any, Any], path: str) -> None:
 
 
 def _dump(value: Any, path: str = "") -> Any:
+    # Check mapping keys for finite BEFORE _normalize_value converts
+    # float keys to strings (which would hide NaN/Inf in keys).
+    if isinstance(value, dict):
+        _assert_finite_mapping_keys(value, path)
+    value = _normalize_value(value, path)
     if isinstance(value, BaseModel):
         return _dump(value.model_dump(), path)
     if isinstance(value, list):
         return [_dump(v, f"{path}[{idx}]") for idx, v in enumerate(value)]
     if isinstance(value, dict):
-        _assert_finite_mapping_keys(value, path)
         return {k: _dump(v, f"{path}.{k}" if path else str(k)) for k, v in value.items()}
     value = _WIRE_ADAPTER.dump_python(value)
     _assert_finite(value, path)
