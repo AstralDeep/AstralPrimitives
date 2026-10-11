@@ -169,15 +169,12 @@ def test_expanded_non_finite_numeric_mapping_keys_are_rejected(factory, number, 
 
 
 @pytest.mark.parametrize("field", ["payload", "attributes"])
-def test_finite_numeric_mapping_keys_keep_existing_wire_representation(field):
+def test_finite_numeric_mapping_keys_are_normalized_to_wire_strings(field):
     mapping = {2: "integer", 2.5: "float", "tag": "string"}
     primitive = Button(**{field: {"nested": mapping}})
     wire = primitive.to_dict()
     nested = wire["payload"]["nested"] if field == "payload" else wire["nested"]
 
-    assert nested == mapping
-    assert [type(key) for key in nested] == [int, float, str]
+    assert nested == {"2": "integer", "2.5": "float", "tag": "string"}
     assert Primitive.from_dict(wire).to_dict() == wire
-    decoded = json.loads(primitive.to_json())
-    decoded_nested = decoded["payload"]["nested"] if field == "payload" else decoded["nested"]
-    assert decoded_nested == {"2": "integer", "2.5": "float", "tag": "string"}
+    assert json.loads(primitive.to_json()) == wire

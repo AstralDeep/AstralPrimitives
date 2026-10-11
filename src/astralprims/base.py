@@ -9,7 +9,10 @@ import json
 import math
 from collections.abc import Iterable, Mapping
 from dataclasses import is_dataclass
+from datetime import date, datetime, time
+from decimal import Decimal
 from typing import Any, Dict, Literal, Optional, get_args, get_origin
+from uuid import UUID
 
 from pydantic import (
     BaseModel,
@@ -28,43 +31,78 @@ _REGISTRY: Dict[str, type["Primitive"]] = {}
 _WIRE_ADAPTER = TypeAdapter(Any)
 
 
-def _assert_finite(value: Any, path: str = "") -> None:
-    if isinstance(value, BaseModel) or (is_dataclass(value) and not isinstance(value, type)):
-        value = _WIRE_ADAPTER.dump_python(value)
+def _wire_target(path: str) -> str:
+    return f" at field {path!r}" if path else ""
+
+
+def _assert_finite_float(value: float, path: str) -> None:
+    if math.isnan(value):
+        raise ValueError(f"Non-finite numeric value NaN is not allowed in wire representation{_wire_target(path)}.")
+    if math.isinf(value):
+        sign = "Infinity" if value > 0 else "-Infinity"
+        raise ValueError(f"Non-finite numeric value {sign} is not allowed in wire representation{_wire_target(path)}.")
+
+
+def _dump_key(key: Any, path: str) -> str:
+    if isinstance(key, str):
+        return key
+    if isinstance(key, bool):
+        return "true" if key else "false"
+    if key is None:
+        return "null"
+    if isinstance(key, int):
+        return str(key)
+    if isinstance(key, float):
+        _assert_finite_float(key, path)
+        return str(key)
+    raise ValueError(
+        f"Unsupported mapping key of type {type(key).__name__!r} is not allowed in wire representation{_wire_target(path)}."
+    )
+
+
+def _dump_scalar(value: Any, path: str) -> Any:
+    if value is None or isinstance(value, (bool, int, str)):
+        return value
     if isinstance(value, float):
-        if math.isnan(value):
-            target = f" at field {path!r}" if path else ""
-            raise ValueError(f"Non-finite numeric value NaN is not allowed in wire representation{target}.")
-        if math.isinf(value):
-            target = f" at field {path!r}" if path else ""
-            sign = "Infinity" if value > 0 else "-Infinity"
-            raise ValueError(f"Non-finite numeric value {sign} is not allowed in wire representation{target}.")
-    elif isinstance(value, dict):
-        _assert_finite_mapping_keys(value, path)
-        for k, v in value.items():
-            _assert_finite(v, f"{path}.{k}" if path else str(k))
-    elif isinstance(value, (list, tuple, set, frozenset)):
-        for idx, item in enumerate(value):
-            _assert_finite(item, f"{path}[{idx}]")
-
-
-def _assert_finite_mapping_keys(value: Dict[Any, Any], path: str) -> None:
-    for key in value:
-        if isinstance(key, float):
-            _assert_finite(key, f"{path}.<key>" if path else "<key>")
+        _assert_finite_float(value, path)
+        return value
+    if isinstance(value, datetime):
+        return value.isoformat()
+    if isinstance(value, date):
+        return value.isoformat()
+    if isinstance(value, time):
+        return value.isoformat()
+    if isinstance(value, UUID):
+        return str(value)
+    if isinstance(value, Decimal):
+        return str(value)
+    if isinstance(value, (bytes, bytearray)):
+        try:
+            return value.decode("utf-8")
+        except UnicodeDecodeError as error:
+            raise ValueError(
+                f"Non-UTF-8 bytes value is not allowed in wire representation{_wire_target(path)}; decode it to a string first."
+            ) from error
+    raise ValueError(
+        f"Unsupported value of type {type(value).__name__!r} is not allowed in wire representation{_wire_target(path)}."
+    )
 
 
 def _dump(value: Any, path: str = "") -> Any:
     if isinstance(value, BaseModel):
         return _dump(value.model_dump(), path)
-    if isinstance(value, list):
-        return [_dump(v, f"{path}[{idx}]") for idx, v in enumerate(value)]
-    if isinstance(value, dict):
-        _assert_finite_mapping_keys(value, path)
-        return {k: _dump(v, f"{path}.{k}" if path else str(k)) for k, v in value.items()}
-    value = _WIRE_ADAPTER.dump_python(value)
-    _assert_finite(value, path)
-    return value
+    if is_dataclass(value) and not isinstance(value, type):
+        return _dump(_WIRE_ADAPTER.dump_python(value), path)
+    if isinstance(value, Mapping):
+        return {
+            _dump_key(key, f"{path}.<key>" if path else "<key>"): _dump(
+                item, f"{path}.{key}" if path else str(key)
+            )
+            for key, item in value.items()
+        }
+    if isinstance(value, (list, tuple, set, frozenset)):
+        return [_dump(item, f"{path}[{idx}]") for idx, item in enumerate(value)]
+    return _dump_scalar(value, path)
 
 
 def _coerce_children(value: Any) -> Any:
@@ -184,8 +222,7 @@ class Primitive(BaseModel):
             key = field.alias or name
             out[key] = _dump(value, key)
         if self.attributes:
-            attributes = _WIRE_ADAPTER.dump_python(self.attributes)
-            _assert_finite(attributes, "attributes")
+            attributes = _dump(_WIRE_ADAPTER.dump_python(self.attributes), "attributes")
             out.update(attributes)
         return out
 
@@ -203,7 +240,7 @@ class Primitive(BaseModel):
         if "type" not in data:
             raise ValueError("primitive dict is missing required 'type' key")
 
-        _assert_finite(data, "wire_payload")
+        data = _dump(data, "wire_payload")
 
         type_name = data["type"]
         target = cls if cls is not Primitive else _REGISTRY.get(type_name)
