@@ -110,6 +110,35 @@ replace non-finite values with an application-defined finite or nullable value
 before crossing the wire boundary. This policy does not introduce conversions
 for other Python objects that standard JSON cannot encode.
 
+### JSON-native values in 0.11.0
+
+Arbitrary-valued wire slots (`payload`, `attributes`, `Table.rows`,
+`Table.source_params`, chart `datasets`, and every other `Any`-typed field) now
+serialize to plain JSON-native values, so `to_dict()` output is always
+JSON-compatible and `json.loads(to_json())` equals `to_dict()`. Accepted
+conversions: `datetime`, `date` and `time` become ISO 8601 strings, `UUID` and
+`Decimal` become strings, `bytes` and `bytearray` must decode as UTF-8 and
+become strings, and tuples, sets and frozensets become arrays in iteration
+order. Non-string mapping keys are stringified with the standard JSON encoding
+(`2` to `"2"`, `2.5` to `"2.5"`, `true` to `"true"`, `false` to `"false"`,
+`null` to `"null"`); mapping keys of any other type are rejected.
+
+Values that no conversion accepts —arbitrary objects, `complex`, `timedelta`,
+plain `Enum` members, non-UTF-8 bytes, and unsupported mapping keys —raise
+`ValueError` naming the type and field path at serialization time, the same
+contract as the finite-number policy, instead of failing in a transport encoder.
+The policy applies to `to_dict()`, `model_dump()`, `to_json()` and `from_dict()`,
+including nested primitives, models and dataclasses after their serializers
+expand them. `from_dict()` applies the same normalization to its input, and
+callers needing the previous Python objects must convert them before
+serialization or keep them outside the wire fields.
+
+Trusted `attributes` keep their merge-last precedence over declared fields, and
+accepted conversions apply to the merged values. JSON-native values, serialized
+defaults, aliases and omission rules keep their existing wire representation.
+Changing the emitted wire values for previously accepted Python objects is a
+serialization-contract change and therefore bumps the minor version.
+
 ### Shipping a response
 
 ```python
