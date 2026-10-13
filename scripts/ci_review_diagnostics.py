@@ -49,11 +49,17 @@ def inspect_change(path, before, after):
                     "count": swallowed - old_swallowed,
                 }
             )
-    if path.startswith((".github/", "scripts/", "tooling/")) or Path(path).name in {
-        "pyproject.toml",
-        ".coveragerc",
-        "pytest.ini",
-    }:
+    if (
+        path == ".specify/memory/constitution.md"
+        or path.startswith((".github/", "scripts/", "tooling/"))
+        or Path(path).name
+        in {
+            "pyproject.toml",
+            ".coveragerc",
+            "pytest.ini",
+            "uv.lock",
+        }
+    ):
         flags.append({"kind": "qualification-policy-change"})
     return [{"path": path, **flag} for flag in flags]
 
