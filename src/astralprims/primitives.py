@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Literal, Optional, Union
 
-from pydantic import Field, field_validator
+from pydantic import Field, TypeAdapter, field_validator
 
 from .base import Primitive, SerModel, _coerce_children
 
@@ -203,11 +203,21 @@ class ChartDataset(SerModel):
     color: Optional[str] = None
 
 
+_CHART_DATASET_LIST_ADAPTER = TypeAdapter(List[Any])
+
+
+def _coerce_chart_datasets(value: Any) -> List[Any]:
+    datasets = _CHART_DATASET_LIST_ADAPTER.validate_python(value)
+    return [item.model_dump() if isinstance(item, ChartDataset) else item for item in datasets]
+
+
 class BarChart(Primitive):
     type: Literal["bar_chart"] = "bar_chart"
     title: str = ""
     labels: List[str] = Field(default_factory=list)
     datasets: List[Dict[str, Any]] = Field(default_factory=list)
+
+    _coerce_datasets = field_validator("datasets", mode="before")(_coerce_chart_datasets)
 
 
 class LineChart(Primitive):
@@ -215,6 +225,8 @@ class LineChart(Primitive):
     title: str = ""
     labels: List[str] = Field(default_factory=list)
     datasets: List[Dict[str, Any]] = Field(default_factory=list)
+
+    _coerce_datasets = field_validator("datasets", mode="before")(_coerce_chart_datasets)
 
 
 class PieChart(Primitive):

@@ -413,6 +413,23 @@ the class registered for its `type`.
 
 <!-- primitive-reference:end -->
 
+`BarChart` and `LineChart` accept `ChartDataset` instances alongside dictionary
+datasets, including in tuples and other supported iterable collections. Helpers
+become plain dictionaries in the stored `datasets` list and on the wire; `None`
+helper fields are omitted. Dictionary datasets retain arbitrary keys and values
+under the JSON-native serialization rules above. Other Pydantic models are not
+accepted as direct dataset items.
+
+```python
+from astralprims import BarChart, ChartDataset
+
+chart = BarChart(datasets=(
+    ChartDataset(label="Sales", data=[10, 20]),
+    {"label": "Forecast", "data": [12, 22], "borderWidth": 2},
+))
+chart.to_dict()
+```
+
 `attributes` is never emitted as a key: its entries are merged into the top
 level last and can overwrite any field, including `type`, so it must carry only
 trusted keys, never user or model input.
