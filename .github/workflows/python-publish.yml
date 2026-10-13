@@ -28,8 +28,14 @@ jobs:
         run: uv sync --frozen --group ci
       - name: Lint
         run: uv run --frozen --group ci ruff check .
+      - name: Qualify released API and wire compatibility
+        env:
+          BASE_SHA: ${{ github.event.before }}
+        run: uv run --frozen --group ci python tooling/python-ci/check_package_compatibility.py --base-sha "$BASE_SHA"
       - name: Test
         run: uv run --frozen --group ci pytest -q -p no:cacheprovider
+      - name: Prove focused regression effectiveness
+        run: uv run --frozen --group ci python tooling/python-ci/check_regression_effectiveness.py
       - name: Build wheel and source distribution
         run: uv build --build-constraints tooling/python-ci/build-requirements.lock.txt --require-hashes
       - name: Check distribution metadata

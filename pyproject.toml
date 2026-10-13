@@ -43,4 +43,4 @@ packages = ["src/astralprims"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["tooling/python-ci"]
+pythonpath = ["tooling/python-ci", "scripts"]
