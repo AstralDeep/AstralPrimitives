@@ -50,11 +50,11 @@ jobs:
         run: uv build --build-constraints tooling/python-ci/build-requirements.lock.txt --require-hashes
       - name: Check distribution metadata
         run: uv run --frozen --group ci twine check dist/*
-      - name: Clean-install package smoke
+      - name: Clean-install package smoke (wheel)
         run: |
-          uv venv --python 3.11 .package-smoke
-          uv pip install --python .package-smoke/bin/python dist/*.whl
-          .package-smoke/bin/python - <<'PY'
+          uv venv --python 3.11 .package-smoke-whl
+          uv pip install --python .package-smoke-whl/bin/python dist/*.whl
+          .package-smoke-whl/bin/python - <<'PY'
           from importlib.metadata import files, version
           from pathlib import Path
           import tomllib
@@ -72,6 +72,41 @@ jobs:
           assert Text(content="ci").to_dict() == {
               "type": "text",
               "content": "ci",
+              "variant": "body",
+          }
+          assert astralprims.__version__ == installed_version
+          PY
+      - name: Clean-install package smoke (source distribution)
+        run: |
+          mkdir -p .sdist-consume
+          cd .sdist-consume
+          uv build --wheel ../dist/*.tar.gz --out-dir dist \
+            --build-constraints ../tooling/python-ci/build-requirements.lock.txt \
+            --require-hashes
+          uv venv --python 3.11 .venv
+          uv pip install --python .venv/bin/python dist/*.whl
+          .venv/bin/python -I - <<'PY'
+          from importlib.metadata import files, version
+          from pathlib import Path
+          import sys
+          import tomllib
+          import astralprims
+          from astralprims import Text
+
+          assert Path(astralprims.__file__).resolve().is_relative_to(Path(sys.prefix).resolve())
+          for name in astralprims.__all__:
+              getattr(astralprims, name)
+          manifest = tomllib.loads(Path("../pyproject.toml").read_text(encoding="utf-8"))
+          installed_version = version("astralprims")
+          assert installed_version == manifest["project"]["version"]
+          package_files = files("astralprims")
+          assert package_files is not None
+          assert any(
+              path.as_posix() == "astralprims/py.typed" for path in package_files
+          )
+          assert Text(content="ci-sdist").to_dict() == {
+              "type": "text",
+              "content": "ci-sdist",
               "variant": "body",
           }
           assert astralprims.__version__ == installed_version

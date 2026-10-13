@@ -7,10 +7,17 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Literal, Optional, Union
 
-from pydantic import BaseModel, Field, field_validator, field_validator
+from pydantic import Field, TypeAdapter, field_validator
 
-from .base import SerModel, _coerce_children
-from .base import Primitive
+from .base import Primitive, SerModel, _coerce_children
+
+
+def _validate_add_items(items: tuple[Any, ...]) -> List[Primitive]:
+    validated = _coerce_children(items)
+    for item in validated:
+        if not isinstance(item, Primitive):
+            raise ValueError("cannot add a non-primitive child")
+    return validated
 
 
 class Container(Primitive):
@@ -18,8 +25,9 @@ class Container(Primitive):
     children: List[Primitive] = Field(default_factory=list)
     direction: Optional[str] = None
 
-    def add(self, *children: Primitive) -> "Container":
-        self.children.extend(children)
+    def add(self, *children: Any) -> "Container":
+        validated = _validate_add_items(children)
+        self.children.extend(validated)
         return self
 
 
@@ -29,8 +37,9 @@ class Card(Primitive):
     content: List[Primitive] = Field(default_factory=list)
     variant: str = "default"
 
-    def add(self, *content: Primitive) -> "Card":
-        self.content.extend(content)
+    def add(self, *content: Any) -> "Card":
+        validated = _validate_add_items(content)
+        self.content.extend(validated)
         return self
 
 
@@ -40,8 +49,9 @@ class Grids(Primitive):
     children: List[Primitive] = Field(default_factory=list)
     gap: int = 20
 
-    def add(self, *children: Primitive) -> "Grids":
-        self.children.extend(children)
+    def add(self, *children: Any) -> "Grids":
+        validated = _validate_add_items(children)
+        self.children.extend(validated)
         return self
 
 
@@ -193,18 +203,21 @@ class ChartDataset(SerModel):
     color: Optional[str] = None
 
 
+_CHART_DATASET_LIST_ADAPTER = TypeAdapter(List[Any])
+
+
+def _coerce_chart_datasets(value: Any) -> List[Any]:
+    datasets = _CHART_DATASET_LIST_ADAPTER.validate_python(value)
+    return [item.model_dump() if isinstance(item, ChartDataset) else item for item in datasets]
+
+
 class BarChart(Primitive):
     type: Literal["bar_chart"] = "bar_chart"
     title: str = ""
     labels: List[str] = Field(default_factory=list)
     datasets: List[Dict[str, Any]] = Field(default_factory=list)
 
-    @field_validator("datasets", mode="before")
-    @classmethod
-    def _coerce_datasets(cls, v: Any) -> Any:
-        if isinstance(v, list):
-            return [item.model_dump() if isinstance(item, BaseModel) else item for item in v]
-        return v
+    _coerce_datasets = field_validator("datasets", mode="before")(_coerce_chart_datasets)
 
 
 class LineChart(Primitive):
@@ -213,12 +226,7 @@ class LineChart(Primitive):
     labels: List[str] = Field(default_factory=list)
     datasets: List[Dict[str, Any]] = Field(default_factory=list)
 
-    @field_validator("datasets", mode="before")
-    @classmethod
-    def _coerce_datasets(cls, v: Any) -> Any:
-        if isinstance(v, list):
-            return [item.model_dump() if isinstance(item, BaseModel) else item for item in v]
-        return v
+    _coerce_datasets = field_validator("datasets", mode="before")(_coerce_chart_datasets)
 
 
 class PieChart(Primitive):
