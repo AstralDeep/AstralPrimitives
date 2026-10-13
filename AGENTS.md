@@ -42,6 +42,9 @@ pytest
 
 `.github/workflows/ci.yml` qualifies pull requests with locked tooling, including
 branch and changed-line coverage, both distribution formats, and a clean-install smoke test.
+It compares shipped Python behavior and released exports with the immutable event base,
+checks independent wire fixtures, and proves focused tests catch maintained broken guards.
+The test/qualification review receipt is diagnostic evidence for maintainer review.
 `.github/workflows/python-publish.yml` runs only on push to `main`; its unprivileged job
 tests and builds before the environment-protected publisher receives OIDC and uploads the
 verified artifact. It asks PyPI whether the current `pyproject.toml` version already exists

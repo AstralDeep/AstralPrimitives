@@ -1,0 +1,9 @@
+[
+  {"input": {"type": "text"}, "expected": {"type": "text", "content": "", "variant": "body"}},
+  {"input": {"type": "button", "css": {}, "class": "primary", "id": null, "extra": {"nested": [1, null, true]}}, "expected": {"type": "button", "class": "primary", "label": "", "action": "", "payload": {}, "variant": "primary", "extra": {"nested": [1, null, true]}}},
+  {"input": {"type": "container", "children": [{"type": "card", "title": "Nested", "content": [{"type": "text", "content": "Hello"}]}]}, "expected": {"type": "container", "children": [{"type": "card", "title": "Nested", "content": [{"type": "text", "content": "Hello", "variant": "body"}], "variant": "default"}]}},
+  {"input": {"type": "bar_chart", "datasets": [{"label": "Sales", "data": [1, null], "custom": {"keep": false}}]}, "expected": {"type": "bar_chart", "title": "", "labels": [], "datasets": [{"label": "Sales", "data": [1, null], "custom": {"keep": false}}]}},
+  {"input": {"type": "grid"}, "expected": {"type": "grid", "columns": 2, "children": [], "gap": 20}},
+  {"input": {"type": "button", "label": "declared", "attributes": {"label": "trusted", "type": "trusted_type"}}, "expected": {"type": "trusted_type", "label": "trusted", "action": "", "payload": {}, "variant": "primary"}},
+  {"input": {"type": "tabs", "tabs": [{"label": "first", "content": [{"type": "text", "content": "tab"}]}]}, "expected": {"type": "tabs", "tabs": [{"label": "first", "content": [{"type": "text", "content": "tab", "variant": "body"}]}], "variant": "default"}}
+]

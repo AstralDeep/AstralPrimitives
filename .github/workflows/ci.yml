@@ -28,10 +28,27 @@ jobs:
         run: uv sync --frozen --group ci
       - name: Lint
         run: uv run --frozen --group ci ruff check .
+      - name: Qualify released API and wire compatibility
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: uv run --frozen --group ci python tooling/python-ci/check_package_compatibility.py --base-sha "$BASE_SHA"
+      - name: Record test and qualification review diagnostics
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          uv run --frozen --group ci python scripts/ci_review_diagnostics.py \
+            --base "$BASE_SHA" --head "$(git rev-parse HEAD)" --output ci-review-diagnostics.json
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: test-qualification-review
+          path: ci-review-diagnostics.json
+          if-no-files-found: error
       - name: Test with branch coverage
         run: >-
           uv run --frozen --group ci pytest -q -p no:cacheprovider
-          --cov=astralprims --cov=tooling/python-ci --cov-branch --cov-report=xml --cov-fail-under=90
+          --cov=ci_review_diagnostics --cov=astralprims --cov=tooling/python-ci --cov-branch --cov-report=xml --cov-fail-under=90
+      - name: Prove focused regression effectiveness
+        run: uv run --frozen --group ci python tooling/python-ci/check_regression_effectiveness.py
       - name: Qualify changed lines
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
@@ -57,9 +74,10 @@ jobs:
           .package-smoke-whl/bin/python - <<'PY'
           from importlib.metadata import files, version
           from pathlib import Path
+          import json
           import tomllib
           import astralprims
-          from astralprims import Text
+          from astralprims import Primitive, Text
 
           manifest = tomllib.loads(Path("pyproject.toml").read_text(encoding="utf-8"))
           installed_version = version("astralprims")
@@ -75,6 +93,10 @@ jobs:
               "variant": "body",
           }
           assert astralprims.__version__ == installed_version
+          for name in astralprims.__all__:
+              getattr(astralprims, name)
+          for case in json.loads(Path("tests/fixtures/released_wire.json").read_text(encoding="utf-8")):
+              assert Primitive.from_dict(case["input"]).to_dict() == case["expected"]
           PY
       - name: Clean-install package smoke (source distribution)
         run: |
@@ -88,10 +110,11 @@ jobs:
           .venv/bin/python -I - <<'PY'
           from importlib.metadata import files, version
           from pathlib import Path
+          import json
           import sys
           import tomllib
           import astralprims
-          from astralprims import Text
+          from astralprims import Primitive, Text
 
           assert Path(astralprims.__file__).resolve().is_relative_to(Path(sys.prefix).resolve())
           for name in astralprims.__all__:
@@ -110,6 +133,8 @@ jobs:
               "variant": "body",
           }
           assert astralprims.__version__ == installed_version
+          for case in json.loads(Path("../tests/fixtures/released_wire.json").read_text(encoding="utf-8")):
+              assert Primitive.from_dict(case["input"]).to_dict() == case["expected"]
           PY
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
