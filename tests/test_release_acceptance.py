@@ -73,14 +73,17 @@ def test_mixed_chart_helpers_have_literal_wire():
         ],
     }
     for collection in (list, tuple, iter):
-        chart = BarChart(
-            datasets=collection(
-                [
-                    ChartDataset(label="Helper", data=[1, -2.5]),
-                    {"nested": {"day": date(2026, 1, 2), "pair": (1, None)}},
-                ]
+        try:
+            chart = BarChart(
+                datasets=collection(
+                    [
+                        ChartDataset(label="Helper", data=[1, -2.5]),
+                        {"nested": {"day": date(2026, 1, 2), "pair": (1, None)}},
+                    ]
+                )
             )
-        )
+        except ValidationError:
+            pytest.fail("declared chart helpers must be accepted in mixed datasets")
         assert chart.to_dict() == expected
         assert create_ui_response([chart]) == {
             "_ui_components": [expected],
