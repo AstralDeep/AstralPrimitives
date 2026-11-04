@@ -139,6 +139,29 @@ defaults, aliases and omission rules keep their existing wire representation.
 Changing the emitted wire values for previously accepted Python objects is a
 serialization-contract change and therefore bumps the minor version.
 
+### Review primitives in 0.12.0
+
+Two primitives describe agent-made changes and structured review findings.
+`Diff` (wire type `diff`) carries `files`, each with `old_path`, `new_path`, a
+`status` of added/modified/deleted/renamed, a `binary` marker for files without
+hunks, and `hunks`. Every hunk has a required stable `id`, an old and new range,
+lines typed `context`, `add` or `delete` with optional `old_line`/`new_line`
+anchors, and optional `actions` carrying a declared action id and a payload.
+`Findings` (wire type `findings`) carries findings of `title`, `body`, `file`,
+`start_line`/`end_line`, a `priority` of P0-P3 (defaulting to P3), a `category`,
+and an optional `diff_ref` citing a hunk `id`.
+
+Counts are bounded: at most 40 files per diff, 40 hunks per file, 200 lines per
+hunk and 50 findings. Oversized input is truncated at construction with the
+matching `truncated` flag set on the diff, file, hunk or findings — never
+silently dropped. Unknown line kinds, file statuses and priorities are refused
+at construction, hunk ids must be non-empty and unique within a diff, and
+finding line ranges must satisfy `end_line >= start_line >= 0`. Renderers,
+revert actions and line comments key on the stable hunk ids and `diff_ref`
+values. This release defines and serializes the vocabulary; rendering belongs
+to AstralProjection, and `diff`/`findings` are not yet in its pinned
+`contracts/ui_protocol.json` component list.
+
 ### Shipping a response
 
 ```python
@@ -193,6 +216,7 @@ this versioned baseline.
 | Charts    | `BarChart`, `LineChart`, `PieChart`, `DonutChart`, `RadarChart`, `PlotlyChart` (+ `ChartDataset`) |
 | Media/IO  | `Audio`, `FileUpload`, `FileDownload`                                      |
 | Dashboard | `Badge`, `Hero`, `KeyValue`, `Timeline`, `Rating`, `StatGroup`, `Gauge`, `PipelineStepper`, `ChatHistory` |
+| Review    | `Diff` (+ `DiffFile`, `DiffHunk`, `DiffLine`, `DiffAction`), `Findings` (+ `Finding`) |
 | Theming   | `ColorPicker`, `ThemeApply`                                                |
 
 ### Composite readouts
@@ -230,6 +254,36 @@ ActionGroup(label="Result actions", align="end", buttons=[
 
 None of these carry a color. Variant strings name a semantic role and the
 renderer resolves it from the active theme.
+
+### Review primitives
+
+Two types carry review of agent-made changes: a multi-file diff with hunks, and
+the structured findings that point back into it.
+
+| Primitive  | Wire type  | What it carries |
+|------------|------------|-----------------|
+| `Diff`     | `diff`     | `files` of `{old_path, new_path, status: added/modified/deleted/renamed, binary?, hunks}`; each hunk has a stable `id`, `old_start`/`old_lines`/`new_start`/`new_lines`, `lines` of `{kind: context/add/delete, content, old_line?, new_line?}` and optional `actions` of `{action, payload?}`; counts are bounded with `truncated` flags on the diff, each file and each hunk |
+| `Findings` | `findings` | `findings` of `{title, body, file, start_line, end_line, priority: P0-P3, category, diff_ref?}` where `diff_ref` cites a hunk `id`; the count is bounded with a `truncated` flag |
+
+```python
+from astralprims import Diff, DiffAction, DiffFile, DiffHunk, DiffLine, Finding, Findings
+
+Diff(files=[
+    DiffFile(old_path="app.py", new_path="app.py", status="modified", hunks=[
+        DiffHunk(id="app.py:12", old_start=12, old_lines=2, new_start=12, new_lines=3, lines=[
+            DiffLine(kind="context", content="def main():", old_line=12, new_line=12),
+            DiffLine(kind="delete", content="    pass", old_line=13),
+            DiffLine(kind="add", content="    run()", new_line=13),
+        ], actions=[DiffAction(action="revert_hunk", payload={"hunk_id": "app.py:12"})]),
+    ]),
+])
+
+Findings(findings=[
+    Finding(title="Missing null check", body="config may be absent",
+            file="app.py", start_line=13, end_line=13, priority="P1",
+            category="correctness", diff_ref="app.py:12"),
+])
+```
 
 ## Primitive reference
 
@@ -391,6 +445,10 @@ the class registered for its `type`.
 |  |  | `show_value` | `bool` | `True` |
 | `ChatHistory` | `chat_history` | `title` | `Optional[str]` | `"Recent chats"` |
 |  |  | `items` | `List[Dict[str, Any]]` | `[]` |
+| `Diff` | `diff` | `files` | `List[DiffFile]` | `[]` |
+|  |  | `truncated` | `bool` | `False` |
+| `Findings` | `findings` | `findings` | `List[Finding]` | `[]` |
+|  |  | `truncated` | `bool` | `False` |
 | `ColorPicker` | `color_picker` | `label` | `str` | `""` |
 |  |  | `color_key` | `str` | `""` |
 |  |  | `value` | `str` | `"#000000"` |
@@ -410,6 +468,34 @@ the class registered for its `type`.
 | `ChartDataset` | `label` | `str` | `""` |
 |  | `data` | `List[float]` | `[]` |
 |  | `color` | `Optional[str]` | `None` |
+| `DiffLine` | `kind` | `Literal["context", "add", "delete"]` | `"context"` |
+|  | `content` | `str` | `""` |
+|  | `old_line` | `Optional[int]` | `None` |
+|  | `new_line` | `Optional[int]` | `None` |
+| `DiffAction` | `action` | `str` | `required` |
+|  | `payload` | `Dict[str, Any]` | `{}` |
+| `DiffHunk` | `id` | `str` | `required` |
+|  | `old_start` | `int` | `0` |
+|  | `old_lines` | `int` | `0` |
+|  | `new_start` | `int` | `0` |
+|  | `new_lines` | `int` | `0` |
+|  | `lines` | `List[DiffLine]` | `[]` |
+|  | `actions` | `List[DiffAction]` | `[]` |
+|  | `truncated` | `bool` | `False` |
+| `DiffFile` | `old_path` | `str` | `""` |
+|  | `new_path` | `str` | `""` |
+|  | `status` | `Literal["added", "modified", "deleted", "renamed"]` | `"modified"` |
+|  | `binary` | `bool` | `False` |
+|  | `hunks` | `List[DiffHunk]` | `[]` |
+|  | `truncated` | `bool` | `False` |
+| `Finding` | `title` | `str` | `""` |
+|  | `body` | `str` | `""` |
+|  | `file` | `str` | `""` |
+|  | `start_line` | `int` | `0` |
+|  | `end_line` | `int` | `0` |
+|  | `priority` | `Literal["P0", "P1", "P2", "P3"]` | `"P3"` |
+|  | `category` | `str` | `""` |
+|  | `diff_ref` | `Optional[str]` | `None` |
 
 <!-- primitive-reference:end -->
 
