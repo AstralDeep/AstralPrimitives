@@ -23,10 +23,17 @@ from .primitives import (
     Collapsible,
     ColorPicker,
     Container,
+    Diff,
+    DiffAction,
+    DiffFile,
+    DiffHunk,
+    DiffLine,
     Divider,
     DonutChart,
     FileDownload,
     FileUpload,
+    Finding,
+    Findings,
     Gauge,
     Grid,
     Grids,
@@ -61,7 +68,7 @@ from pydantic import Field as _Field, TypeAdapter
 
 from .base import _REGISTRY
 
-__version__ = "0.11.1"
+__version__ = "0.12.0"
 
 
 def _build_union():
@@ -128,6 +135,13 @@ __all__ = [
     "Gauge",
     "PipelineStepper",
     "ChatHistory",
+    "Diff",
+    "DiffAction",
+    "DiffFile",
+    "DiffHunk",
+    "DiffLine",
+    "Finding",
+    "Findings",
     "ColorPicker",
     "ThemeApply",
 ]

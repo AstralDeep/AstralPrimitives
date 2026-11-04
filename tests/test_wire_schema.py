@@ -62,6 +62,16 @@ def _shipped_classes() -> list:
 
 
 _SHIPPED = _shipped_classes()
+_NESTED_HELPER_DEFS = {
+    "component",
+    "tab_item",
+    "chart_dataset",
+    "diff_action",
+    "diff_file",
+    "diff_hunk",
+    "diff_line",
+    "finding",
+}
 _PRIMITIVE_MODELS = sorted(
     (cls for cls in _SHIPPED if issubclass(cls, Primitive)),
     key=lambda cls: cls.model_fields["type"].default,
@@ -110,17 +120,13 @@ def test_defs_cover_exactly_the_shipped_wire_types():
         if cls.__module__ == astralprims.primitives.__name__
     }
     assert shipped_wire_types == registered
-    assert set(schema["$defs"]) == shipped_wire_types | {
-        "component",
-        "tab_item",
-        "chart_dataset",
-    }
+    assert set(schema["$defs"]) == shipped_wire_types | _NESTED_HELPER_DEFS
 
 
 def test_component_union_references_every_wire_type():
     schema = wire_schema()
     refs = {entry["$ref"] for entry in schema["$defs"]["component"]["oneOf"]}
-    wire_types = set(schema["$defs"]) - {"component", "tab_item", "chart_dataset"}
+    wire_types = set(schema["$defs"]) - _NESTED_HELPER_DEFS
     assert refs == {f"#/$defs/{wire_type}" for wire_type in wire_types}
 
 
