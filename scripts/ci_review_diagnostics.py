@@ -50,8 +50,7 @@ def inspect_change(path, before, after):
                 }
             )
     if (
-        path == ".specify/memory/constitution.md"
-        or path.startswith((".github/", "scripts/", "tooling/"))
+        path.startswith((".github/", "scripts/", "tooling/"))
         or Path(path).name
         in {
             "pyproject.toml",
