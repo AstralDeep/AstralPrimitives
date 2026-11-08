@@ -22,7 +22,7 @@ htmlcov/
 .idea/
 .vscode/
 
-# Coding-agent local state; Spec Kit's Claude skills are installed per machine
+# Coding-agent local state
 .claude/
 
 # Local throwaway demo (delete before publishing)
