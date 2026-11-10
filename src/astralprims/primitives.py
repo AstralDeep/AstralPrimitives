@@ -1,5 +1,5 @@
 """Concrete Pydantic UI primitive models (layout, content, charts, media, dashboard,
-theming) that extend Primitive from astralprims/base.py; re-exported via
+review, theming) that extend Primitive from astralprims/base.py; re-exported via
 astralprims/__init__.py for building SDUI component trees.
 """
 
@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Literal, Optional, Union
 
-from pydantic import Field, TypeAdapter, field_validator
+from pydantic import Field, TypeAdapter, field_validator, model_validator
 
 from .base import Primitive, SerModel, _coerce_children
 
@@ -354,6 +354,112 @@ class ChatHistory(Primitive):
     type: Literal["chat_history"] = "chat_history"
     title: Optional[str] = "Recent chats"
     items: List[Dict[str, Any]] = Field(default_factory=list)
+
+
+MAX_DIFF_FILES = 40
+MAX_DIFF_HUNKS_PER_FILE = 40
+MAX_DIFF_LINES_PER_HUNK = 200
+MAX_FINDINGS = 50
+
+
+class DiffLine(SerModel):
+    kind: Literal["context", "add", "delete"] = "context"
+    content: str = ""
+    old_line: Optional[int] = None
+    new_line: Optional[int] = None
+
+
+class DiffAction(SerModel):
+    action: str = Field(min_length=1)
+    payload: Dict[str, Any] = Field(default_factory=dict)
+
+
+class DiffHunk(SerModel):
+    id: str = Field(min_length=1)
+    old_start: int = 0
+    old_lines: int = 0
+    new_start: int = 0
+    new_lines: int = 0
+    lines: List[DiffLine] = Field(default_factory=list)
+    actions: List[DiffAction] = Field(default_factory=list)
+    truncated: bool = False
+
+    @model_validator(mode="after")
+    def _bound_lines(self) -> "DiffHunk":
+        if len(self.lines) > MAX_DIFF_LINES_PER_HUNK:
+            self.lines = self.lines[:MAX_DIFF_LINES_PER_HUNK]
+            self.truncated = True
+        return self
+
+
+class DiffFile(SerModel):
+    old_path: str = ""
+    new_path: str = ""
+    status: Literal["added", "modified", "deleted", "renamed"] = "modified"
+    binary: bool = False
+    hunks: List[DiffHunk] = Field(default_factory=list)
+    truncated: bool = False
+
+    @model_validator(mode="after")
+    def _bound_hunks(self) -> "DiffFile":
+        if len(self.hunks) > MAX_DIFF_HUNKS_PER_FILE:
+            self.hunks = self.hunks[:MAX_DIFF_HUNKS_PER_FILE]
+            self.truncated = True
+        return self
+
+
+class Diff(Primitive):
+    type: Literal["diff"] = "diff"
+    files: List[DiffFile] = Field(default_factory=list)
+    truncated: bool = False
+
+    @model_validator(mode="after")
+    def _bound_files(self) -> "Diff":
+        if len(self.files) > MAX_DIFF_FILES:
+            self.files = self.files[:MAX_DIFF_FILES]
+            self.truncated = True
+        return self
+
+    @model_validator(mode="after")
+    def _require_unique_hunk_ids(self) -> "Diff":
+        seen = set()
+        for file in self.files:
+            for hunk in file.hunks:
+                if hunk.id in seen:
+                    raise ValueError(f"duplicate hunk id {hunk.id!r} in diff")
+                seen.add(hunk.id)
+        return self
+
+
+class Finding(SerModel):
+    title: str = ""
+    body: str = ""
+    file: str = ""
+    start_line: int = Field(default=0, ge=0)
+    end_line: int = Field(default=0, ge=0)
+    # P3 default keeps unstated urgency at the lowest rendered severity.
+    priority: Literal["P0", "P1", "P2", "P3"] = "P3"
+    category: str = ""
+    diff_ref: Optional[str] = None
+
+    @model_validator(mode="after")
+    def _order_line_range(self) -> "Finding":
+        if self.end_line < self.start_line:
+            raise ValueError("end_line must not be less than start_line")
+        return self
+
+
+class Findings(Primitive):
+    type: Literal["findings"] = "findings"
+    findings: List[Finding] = Field(default_factory=list)
+    truncated: bool = False
+
+    @model_validator(mode="after")
+    def _bound_findings(self) -> "Findings":
+        if len(self.findings) > MAX_FINDINGS:
+            self.findings = self.findings[:MAX_FINDINGS]
+            self.truncated = True
+        return self
 
 
 class ColorPicker(Primitive):
