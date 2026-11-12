@@ -1,0 +1,3083 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AstralPrimitives wire schema",
+  "description": "Canonical JSON output of to_dict() and model_dump() for the primitives shipped by this AstralPrimitives release. A field whose value is None is omitted entirely, as is an empty css block, so these omittable properties do not accept an explicit top-level null in this schema; nested values permitted by a field's own type, such as values inside unconstrained lists or dicts, may still contain null. attributes is a trusted escape hatch merged last into the top-level object: additional keys are always accepted, but overriding a declared key, including type, may intentionally produce output outside this baseline schema. Custom registered primitives are not part of this versioned baseline.",
+  "x-astralprims-version": "0.13.0",
+  "$ref": "#/$defs/component",
+  "$defs": {
+    "action_group": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "action_group"
+        },
+        "css": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "id": {
+          "type": "string"
+        },
+        "class": {
+          "type": "string"
+        },
+        "tooltip": {
+          "type": "string"
+        },
+        "accessible_name": {
+          "type": "string"
+        },
+        "spoken": {
+          "type": "string"
+        },
+        "compact": {
+          "type": "string"
+        },
+        "provenance": {
+          "enum": [
+            "model",
+            "tool",
+            "host",
+            "external"
+          ],
+          "type": "string"
+        },
+        "buttons": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/component"
+          },
+          "default": []
+        },
+        "align": {
+          "type": "string",
+          "default": "start"
+        },
+        "label": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "buttons",
+        "align"
+      ],
+      "additionalProperties": true
+    },
+    "alert": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "alert"
+        },
+        "css": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "id": {
+          "type": "string"
+        },
+        "class": {
+          "type": "string"
+        },
+        "tooltip": {
+          "type": "string"
+        },
+        "accessible_name": {
+          "type": "string"
+        },
+        "spoken": {
+          "type": "string"
+        },
+        "compact": {
+          "type": "string"
+        },
+        "provenance": {
+          "enum": [
+            "model",
+            "tool",
+            "host",
+            "external"
+          ],
+          "type": "string"
+        },
+        "message": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/binding"
+            }
+          ],
+          "default": ""
+        },
+        "variant": {
+          "type": "string",
+          "default": "info"
+        },
+        "title": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "message",
+        "variant"
+      ],
+      "additionalProperties": true
+    },
+    "audio": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "audio"
+        },
+        "css": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "id": {
+          "type": "string"
+        },
+        "class": {
+          "type": "string"
+        },
+        "tooltip": {
+          "type": "string"
+        },
+        "accessible_name": {
+          "type": "string"
+        },
+        "spoken": {
+          "type": "string"
+        },
+        "compact": {
+          "type": "string"
+        },
+        "provenance": {
+          "enum": [
+            "model",
+            "tool",
+            "host",
+            "external"
+          ],
+          "type": "string"
+        },
+        "src": {
+          "type": "string",
+          "default": ""
+        },
+        "source": {
+          "$ref": "#/$defs/handle"
+        },
+        "contentType": {
+          "type": "string"
+        },
+        "autoplay": {
+          "type": "boolean",
+          "default": false
+        },
+        "loop": {
+          "type": "boolean",
+          "default": false
+        },
+        "label": {
+          "type": "string"
+        },
+        "showControls": {
+          "type": "boolean",
+          "default": true
+        },
+        "description": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "src",
+        "autoplay",
+        "loop",
+        "showControls"
+      ],
+      "additionalProperties": true
+    },
+    "badge": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "badge"
+        },
+        "css": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "id": {
+          "type": "string"
+        },
+        "class": {
+          "type": "string"
+        },
+        "tooltip": {
+          "type": "string"
+        },
+        "accessible_name": {
+          "type": "string"
+        },
+        "spoken": {
+          "type": "string"
+        },
+        "compact": {
+          "type": "string"
+        },
+        "provenance": {
+          "enum": [
+            "model",
+            "tool",
+            "host",
+            "external"
+          ],
+          "type": "string"
+        },
+        "label": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/binding"
+            }
+          ],
+          "default": ""
+        },
+        "variant": {
+          "type": "string",
+          "default": "default"
+        },
+        "icon": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "label",
+        "variant"
+      ],
+      "additionalProperties": true
+    },
+    "bar_chart": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "bar_chart"
+        },
+        "css": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "id": {
+          "type": "string"
+        },
+        "class": {
+          "type": "string"
+        },
+        "tooltip": {
+          "type": "string"
+        },
+        "accessible_name": {
+          "type": "string"
+        },
+        "spoken": {
+          "type": "string"
+        },
+        "compact": {
+          "type": "string"
+        },
+        "provenance": {
+          "enum": [
+            "model",
+            "tool",
+            "host",
+            "external"
+          ],
+          "type": "string"
+        },
+        "title": {
+          "type": "string",
+          "default": ""
+        },
+        "labels": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "datasets": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "default": []
+        }
+      },
+      "required": [
+        "type",
+        "title",
+        "labels",
+        "datasets"
+      ],
+      "additionalProperties": true
+    },
+    "button": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "button"
+        },
+        "css": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "id": {
+          "type": "string"
+        },
+        "class": {
+          "type": "string"
+        },
+        "tooltip": {
+          "type": "string"
+        },
+        "accessible_name": {
+          "type": "string"
+        },
+        "spoken": {
+          "type": "string"
+        },
+        "compact": {
+          "type": "string"
+        },
+        "provenance": {
+          "enum": [
+            "model",
+            "tool",
+            "host",
+            "external"
+          ],
+          "type": "string"
+        },
+        "label": {
+          "type": "string",
+          "default": ""
+        },
+        "action": {
+          "type": "string",
+          "default": ""
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": true,
+          "default": {}
+        },
+        "variant": {
+          "type": "string",
+          "default": "primary"
+        },
+        "capability": {
+          "$ref": "#/$defs/handle"
+        }
+      },
+      "required": [
+        "type",
+        "label",
+        "action",
+        "payload",
+        "variant"
+      ],
+      "additionalProperties": true
+    },
+    "card": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "card"
+        },
+        "css": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "id": {
+          "type": "string"
+        },
+        "class": {
+          "type": "string"
+        },
+        "tooltip": {
+          "type": "string"
+        },
+        "accessible_name": {
+          "type": "string"
+        },
+        "spoken": {
+          "type": "string"
+        },
+        "compact": {
+          "type": "string"
+        },
+        "provenance": {
+          "enum": [
+            "model",
+            "tool",
+            "host",
+            "external"
+          ],
+          "type": "string"
+        },
+        "title": {
+          "type": "string",
+          "default": ""
+        },
+        "content": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/component"
+          },
+          "default": []
+        },
+        "variant": {
+          "type": "string",
+          "default": "default"
+        }
+      },
+      "required": [
+        "type",
+        "title",
+        "content",
+        "variant"
+      ],
+      "additionalProperties": true
+    },
+    "chat_history": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "chat_history"
+        },
+        "css": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "id": {
+          "type": "string"
+        },
+        "class": {
+          "type": "string"
+        },
+        "tooltip": {
+          "type": "string"
+        },
+        "accessible_name": {
+          "type": "string"
+        },
+        "spoken": {
+          "type": "string"
+        },
+        "compact": {
+          "type": "string"
+        },
+        "provenance": {
+          "enum": [
+            "model",
+            "tool",
+            "host",
+            "external"
+          ],
+          "type": "string"
+        },
+        "title": {
+          "type": "string",
+          "default": "Recent chats"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "default": []
+        }
+      },
+      "required": [
+        "type",
+        "items"
+      ],
+      "additionalProperties": true
+    },
+    "code": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "code"
+        },
+        "css": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "id": {
+          "type": "string"
+        },
+        "class": {
+          "type": "string"
+        },
+        "tooltip": {
+          "type": "string"
+        },
+        "accessible_name": {
+          "type": "string"
+        },
+        "spoken": {
+          "type": "string"
+        },
+        "compact": {
+          "type": "string"
+        },
+        "provenance": {
+          "enum": [
+            "model",
+            "tool",
+            "host",
+            "external"
+          ],
+          "type": "string"
+        },
+        "code": {
+          "type": "string",
+          "default": ""
+        },
+        "language": {
+          "type": "string",
+          "default": "text"
+        },
+        "show_line_numbers": {
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "required": [
+        "type",
+        "code",
+        "language",
+        "show_line_numbers"
+      ],
+      "additionalProperties": true
+    },
+    "collapsible": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "collapsible"
+        },
+        "css": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "id": {
+          "type": "string"
+        },
+        "class": {
+          "type": "string"
+        },
+        "tooltip": {
+          "type": "string"
+        },
+        "accessible_name": {
+          "type": "string"
+        },
+        "spoken": {
+          "type": "string"
+        },
+        "compact": {
+          "type": "string"
+        },
+        "provenance": {
+          "enum": [
+            "model",
+            "tool",
+            "host",
+            "external"
+          ],
+          "type": "string"
+        },
+        "title": {
+          "type": "string",
+          "default": ""
+        },
+        "content": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/component"
+          },
+          "default": []
+        },
+        "default_open": {
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "required": [
+        "type",
+        "title",
+        "content",
+        "default_open"
+      ],
+      "additionalProperties": true
+    },
+    "color_picker": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "color_picker"
+        },
+        "css": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "id": {
+          "type": "string"
+        },
+        "class": {
+          "type": "string"
+        },
+        "tooltip": {
+          "type": "string"
+        },
+        "accessible_name": {
+          "type": "string"
+        },
+        "spoken": {
+          "type": "string"
+        },
+        "compact": {
+          "type": "string"
+        },
+        "provenance": {
+          "enum": [
+            "model",
+            "tool",
+            "host",
+            "external"
+          ],
+          "type": "string"
+        },
+        "label": {
+          "type": "string",
+          "default": ""
+        },
+        "color_key": {
+          "type": "string",
+          "default": ""
+        },
+        "value": {
+          "type": "string",
+          "default": "#000000"
+        },
+        "capability": {
+          "$ref": "#/$defs/handle"
+        }
+      },
+      "required": [
+        "type",
+        "label",
+        "color_key",
+        "value"
+      ],
+      "additionalProperties": true
+    },
+    "container": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "container"
+        },
+        "css": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "id": {
+          "type": "string"
+        },
+        "class": {
+          "type": "string"
+        },
+        "tooltip": {
+          "type": "string"
+        },
+        "accessible_name": {
+          "type": "string"
+        },
+        "spoken": {
+          "type": "string"
+        },
+        "compact": {
+          "type": "string"
+        },
+        "provenance": {
+          "enum": [
+            "model",
+            "tool",
+            "host",
+            "external"
+          ],
+          "type": "string"
+        },
+        "children": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/component"
+          },
+          "default": []
+        },
+        "direction": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "children"
+      ],
+      "additionalProperties": true
+    },
+    "diff": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "diff"
+        },
+        "css": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "id": {
+          "type": "string"
+        },
+        "class": {
+          "type": "string"
+        },
+        "tooltip": {
+          "type": "string"
+        },
+        "accessible_name": {
+          "type": "string"
+        },
+        "spoken": {
+          "type": "string"
+        },
+        "compact": {
+          "type": "string"
+        },
+        "provenance": {
+          "enum": [
+            "model",
+            "tool",
+            "host",
+            "external"
+          ],
+          "type": "string"
+        },
+        "files": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/diff_file"
+          },
+          "default": []
+        },
+        "truncated": {
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "required": [
+        "type",
+        "files",
+        "truncated"
+      ],
+      "additionalProperties": true
+    },
+    "divider": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "divider"
+        },
+        "css": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "id": {
+          "type": "string"
+        },
+        "class": {
+          "type": "string"
+        },
+        "tooltip": {
+          "type": "string"
+        },
+        "accessible_name": {
+          "type": "string"
+        },
+        "spoken": {
+          "type": "string"
+        },
+        "compact": {
+          "type": "string"
+        },
+        "provenance": {
+          "enum": [
+            "model",
+            "tool",
+            "host",
+            "external"
+          ],
+          "type": "string"
+        },
+        "variant": {
+          "type": "string",
+          "default": "solid"
+        }
+      },
+      "required": [
+        "type",
+        "variant"
+      ],
+      "additionalProperties": true
+    },
+    "donut_chart": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "donut_chart"
+        },
+        "css": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "id": {
+          "type": "string"
+        },
+        "class": {
+          "type": "string"
+        },
+        "tooltip": {
+          "type": "string"
+        },
+        "accessible_name": {
+          "type": "string"
+        },
+        "spoken": {
+          "type": "string"
+        },
+        "compact": {
+          "type": "string"
+        },
+        "provenance": {
+          "enum": [
+            "model",
+            "tool",
+            "host",
+            "external"
+          ],
+          "type": "string"
+        },
+        "title": {
+          "type": "string",
+          "default": ""
+        },
+        "labels": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "default": []
+        },
+        "center_label": {
+          "type": "string"
+        },
+        "center_value": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/binding"
+            }
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "title",
+        "labels",
+        "data"
+      ],
+      "additionalProperties": true
+    },
+    "file_download": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "file_download"
+        },
+        "css": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "id": {
+          "type": "string"
+        },
+        "class": {
+          "type": "string"
+        },
+        "tooltip": {
+          "type": "string"
+        },
+        "accessible_name": {
+          "type": "string"
+        },
+        "spoken": {
+          "type": "string"
+        },
+        "compact": {
+          "type": "string"
+        },
+        "provenance": {
+          "enum": [
+            "model",
+            "tool",
+            "host",
+            "external"
+          ],
+          "type": "string"
+        },
+        "label": {
+          "type": "string",
+          "default": "Download File"
+        },
+        "url": {
+          "type": "string",
+          "default": ""
+        },
+        "target": {
+          "$ref": "#/$defs/handle"
+        },
+        "filename": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "label",
+        "url"
+      ],
+      "additionalProperties": true
+    },
+    "file_upload": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "file_upload"
+        },
+        "css": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "id": {
+          "type": "string"
+        },
+        "class": {
+          "type": "string"
+        },
+        "tooltip": {
+          "type": "string"
+        },
+        "accessible_name": {
+          "type": "string"
+        },
+        "spoken": {
+          "type": "string"
+        },
+        "compact": {
+          "type": "string"
+        },
+        "provenance": {
+          "enum": [
+            "model",
+            "tool",
+            "host",
+            "external"
+          ],
+          "type": "string"
+        },
+        "label": {
+          "type": "string",
+          "default": "Upload File"
+        },
+        "accept": {
+          "type": "string",
+          "default": "*/*"
+        },
+        "action": {
+          "type": "string",
+          "default": ""
+        },
+        "capability": {
+          "$ref": "#/$defs/handle"
+        }
+      },
+      "required": [
+        "type",
+        "label",
+        "accept",
+        "action"
+      ],
+      "additionalProperties": true
+    },
+    "findings": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "findings"
+        },
+        "css": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "id": {
+          "type": "string"
+        },
+        "class": {
+          "type": "string"
+        },
+        "tooltip": {
+          "type": "string"
+        },
+        "accessible_name": {
+          "type": "string"
+        },
+        "spoken": {
+          "type": "string"
+        },
+        "compact": {
+          "type": "string"
+        },
+        "provenance": {
+          "enum": [
+            "model",
+            "tool",
+            "host",
+            "external"
+          ],
+          "type": "string"
+        },
+        "findings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/finding"
+          },
+          "default": []
+        },
+        "truncated": {
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "required": [
+        "type",
+        "findings",
+        "truncated"
+      ],
+      "additionalProperties": true
+    },
+    "gauge": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "gauge"
+        },
+        "css": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "id": {
+          "type": "string"
+        },
+        "class": {
+          "type": "string"
+        },
+        "tooltip": {
+          "type": "string"
+        },
+        "accessible_name": {
+          "type": "string"
+        },
+        "spoken": {
+          "type": "string"
+        },
+        "compact": {
+          "type": "string"
+        },
+        "provenance": {
+          "enum": [
+            "model",
+            "tool",
+            "host",
+            "external"
+          ],
+          "type": "string"
+        },
+        "label": {
+          "type": "string",
+          "default": ""
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "$ref": "#/$defs/binding"
+            }
+          ],
+          "default": 0.0
+        },
+        "display_value": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/binding"
+            }
+          ]
+        },
+        "thresholds": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "default": []
+        },
+        "subtitle": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "label",
+        "value",
+        "thresholds"
+      ],
+      "additionalProperties": true
+    },
+    "grid": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "grid"
+        },
+        "css": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "id": {
+          "type": "string"
+        },
+        "class": {
+          "type": "string"
+        },
+        "tooltip": {
+          "type": "string"
+        },
+        "accessible_name": {
+          "type": "string"
+        },
+        "spoken": {
+          "type": "string"
+        },
+        "compact": {
+          "type": "string"
+        },
+        "provenance": {
+          "enum": [
+            "model",
+            "tool",
+            "host",
+            "external"
+          ],
+          "type": "string"
+        },
+        "columns": {
+          "type": "integer",
+          "default": 2
+        },
+        "children": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/component"
+          },
+          "default": []
+        },
+        "gap": {
+          "type": "integer",
+          "default": 20
+        }
+      },
+      "required": [
+        "type",
+        "columns",
+        "children",
+        "gap"
+      ],
+      "additionalProperties": true
+    },
+    "hero": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "hero"
+        },
+        "css": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "id": {
+          "type": "string"
+        },
+        "class": {
+          "type": "string"
+        },
+        "tooltip": {
+          "type": "string"
+        },
+        "accessible_name": {
+          "type": "string"
+        },
+        "spoken": {
+          "type": "string"
+        },
+        "compact": {
+          "type": "string"
+        },
+        "provenance": {
+          "enum": [
+            "model",
+            "tool",
+            "host",
+            "external"
+          ],
+          "type": "string"
+        },
+        "title": {
+          "type": "string",
+          "default": ""
+        },
+        "subtitle": {
+          "type": "string"
+        },
+        "eyebrow": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "variant": {
+          "type": "string",
+          "default": "default"
+        },
+        "badges": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        }
+      },
+      "required": [
+        "type",
+        "title",
+        "variant",
+        "badges"
+      ],
+      "additionalProperties": true
+    },
+    "image": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "image"
+        },
+        "css": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "id": {
+          "type": "string"
+        },
+        "class": {
+          "type": "string"
+        },
+        "tooltip": {
+          "type": "string"
+        },
+        "accessible_name": {
+          "type": "string"
+        },
+        "spoken": {
+          "type": "string"
+        },
+        "compact": {
+          "type": "string"
+        },
+        "provenance": {
+          "enum": [
+            "model",
+            "tool",
+            "host",
+            "external"
+          ],
+          "type": "string"
+        },
+        "url": {
+          "type": "string",
+          "default": ""
+        },
+        "source": {
+          "$ref": "#/$defs/handle"
+        },
+        "alt": {
+          "type": "string"
+        },
+        "width": {
+          "type": "string"
+        },
+        "height": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "url"
+      ],
+      "additionalProperties": true
+    },
+    "input": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "input"
+        },
+        "css": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "id": {
+          "type": "string"
+        },
+        "class": {
+          "type": "string"
+        },
+        "tooltip": {
+          "type": "string"
+        },
+        "accessible_name": {
+          "type": "string"
+        },
+        "spoken": {
+          "type": "string"
+        },
+        "compact": {
+          "type": "string"
+        },
+        "provenance": {
+          "enum": [
+            "model",
+            "tool",
+            "host",
+            "external"
+          ],
+          "type": "string"
+        },
+        "placeholder": {
+          "type": "string",
+          "default": ""
+        },
+        "name": {
+          "type": "string",
+          "default": ""
+        },
+        "value": {
+          "type": "string",
+          "default": ""
+        },
+        "capability": {
+          "$ref": "#/$defs/handle"
+        }
+      },
+      "required": [
+        "type",
+        "placeholder",
+        "name",
+        "value"
+      ],
+      "additionalProperties": true
+    },
+    "keyvalue": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "keyvalue"
+        },
+        "css": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "id": {
+          "type": "string"
+        },
+        "class": {
+          "type": "string"
+        },
+        "tooltip": {
+          "type": "string"
+        },
+        "accessible_name": {
+          "type": "string"
+        },
+        "spoken": {
+          "type": "string"
+        },
+        "compact": {
+          "type": "string"
+        },
+        "provenance": {
+          "enum": [
+            "model",
+            "tool",
+            "host",
+            "external"
+          ],
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "default": []
+        },
+        "columns": {
+          "type": "integer",
+          "default": 2
+        }
+      },
+      "required": [
+        "type",
+        "items",
+        "columns"
+      ],
+      "additionalProperties": true
+    },
+    "line_chart": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "line_chart"
+        },
+        "css": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "id": {
+          "type": "string"
+        },
+        "class": {
+          "type": "string"
+        },
+        "tooltip": {
+          "type": "string"
+        },
+        "accessible_name": {
+          "type": "string"
+        },
+        "spoken": {
+          "type": "string"
+        },
+        "compact": {
+          "type": "string"
+        },
+        "provenance": {
+          "enum": [
+            "model",
+            "tool",
+            "host",
+            "external"
+          ],
+          "type": "string"
+        },
+        "title": {
+          "type": "string",
+          "default": ""
+        },
+        "labels": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "datasets": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "default": []
+        }
+      },
+      "required": [
+        "type",
+        "title",
+        "labels",
+        "datasets"
+      ],
+      "additionalProperties": true
+    },
+    "list": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "list"
+        },
+        "css": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "id": {
+          "type": "string"
+        },
+        "class": {
+          "type": "string"
+        },
+        "tooltip": {
+          "type": "string"
+        },
+        "accessible_name": {
+          "type": "string"
+        },
+        "spoken": {
+          "type": "string"
+        },
+        "compact": {
+          "type": "string"
+        },
+        "provenance": {
+          "enum": [
+            "model",
+            "tool",
+            "host",
+            "external"
+          ],
+          "type": "string"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object",
+                "additionalProperties": true
+              }
+            ]
+          },
+          "default": []
+        },
+        "ordered": {
+          "type": "boolean",
+          "default": false
+        },
+        "variant": {
+          "type": "string",
+          "default": "default"
+        }
+      },
+      "required": [
+        "type",
+        "items",
+        "ordered",
+        "variant"
+      ],
+      "additionalProperties": true
+    },
+    "metric": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "metric"
+        },
+        "css": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "id": {
+          "type": "string"
+        },
+        "class": {
+          "type": "string"
+        },
+        "tooltip": {
+          "type": "string"
+        },
+        "accessible_name": {
+          "type": "string"
+        },
+        "spoken": {
+          "type": "string"
+        },
+        "compact": {
+          "type": "string"
+        },
+        "provenance": {
+          "enum": [
+            "model",
+            "tool",
+            "host",
+            "external"
+          ],
+          "type": "string"
+        },
+        "title": {
+          "type": "string",
+          "default": ""
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/binding"
+            }
+          ],
+          "default": ""
+        },
+        "subtitle": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "variant": {
+          "type": "string",
+          "default": "default"
+        },
+        "progress": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "type",
+        "title",
+        "value",
+        "variant"
+      ],
+      "additionalProperties": true
+    },
+    "param_picker": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "param_picker"
+        },
+        "css": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "id": {
+          "type": "string"
+        },
+        "class": {
+          "type": "string"
+        },
+        "tooltip": {
+          "type": "string"
+        },
+        "accessible_name": {
+          "type": "string"
+        },
+        "spoken": {
+          "type": "string"
+        },
+        "compact": {
+          "type": "string"
+        },
+        "provenance": {
+          "enum": [
+            "model",
+            "tool",
+            "host",
+            "external"
+          ],
+          "type": "string"
+        },
+        "title": {
+          "type": "string",
+          "default": ""
+        },
+        "description": {
+          "type": "string",
+          "default": ""
+        },
+        "fields": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "default": []
+        },
+        "submit_label": {
+          "type": "string",
+          "default": "Submit"
+        },
+        "submit_message_template": {
+          "type": "string",
+          "default": ""
+        },
+        "capability": {
+          "$ref": "#/$defs/handle"
+        }
+      },
+      "required": [
+        "type",
+        "title",
+        "description",
+        "fields",
+        "submit_label",
+        "submit_message_template"
+      ],
+      "additionalProperties": true
+    },
+    "pie_chart": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "pie_chart"
+        },
+        "css": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "id": {
+          "type": "string"
+        },
+        "class": {
+          "type": "string"
+        },
+        "tooltip": {
+          "type": "string"
+        },
+        "accessible_name": {
+          "type": "string"
+        },
+        "spoken": {
+          "type": "string"
+        },
+        "compact": {
+          "type": "string"
+        },
+        "provenance": {
+          "enum": [
+            "model",
+            "tool",
+            "host",
+            "external"
+          ],
+          "type": "string"
+        },
+        "title": {
+          "type": "string",
+          "default": ""
+        },
+        "labels": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "default": []
+        },
+        "colors": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        }
+      },
+      "required": [
+        "type",
+        "title",
+        "labels",
+        "data",
+        "colors"
+      ],
+      "additionalProperties": true
+    },
+    "pipeline_stepper": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "pipeline_stepper"
+        },
+        "css": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "id": {
+          "type": "string"
+        },
+        "class": {
+          "type": "string"
+        },
+        "tooltip": {
+          "type": "string"
+        },
+        "accessible_name": {
+          "type": "string"
+        },
+        "spoken": {
+          "type": "string"
+        },
+        "compact": {
+          "type": "string"
+        },
+        "provenance": {
+          "enum": [
+            "model",
+            "tool",
+            "host",
+            "external"
+          ],
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "steps": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "default": []
+        },
+        "orientation": {
+          "type": "string",
+          "default": "horizontal"
+        }
+      },
+      "required": [
+        "type",
+        "steps",
+        "orientation"
+      ],
+      "additionalProperties": true
+    },
+    "plotly_chart": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "plotly_chart"
+        },
+        "css": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "id": {
+          "type": "string"
+        },
+        "class": {
+          "type": "string"
+        },
+        "tooltip": {
+          "type": "string"
+        },
+        "accessible_name": {
+          "type": "string"
+        },
+        "spoken": {
+          "type": "string"
+        },
+        "compact": {
+          "type": "string"
+        },
+        "provenance": {
+          "enum": [
+            "model",
+            "tool",
+            "host",
+            "external"
+          ],
+          "type": "string"
+        },
+        "title": {
+          "type": "string",
+          "default": ""
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "default": []
+        },
+        "layout": {
+          "type": "object",
+          "additionalProperties": true,
+          "default": {}
+        },
+        "config": {
+          "type": "object",
+          "additionalProperties": true,
+          "default": {}
+        }
+      },
+      "required": [
+        "type",
+        "title",
+        "data",
+        "layout",
+        "config"
+      ],
+      "additionalProperties": true
+    },
+    "progress": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "progress"
+        },
+        "css": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "id": {
+          "type": "string"
+        },
+        "class": {
+          "type": "string"
+        },
+        "tooltip": {
+          "type": "string"
+        },
+        "accessible_name": {
+          "type": "string"
+        },
+        "spoken": {
+          "type": "string"
+        },
+        "compact": {
+          "type": "string"
+        },
+        "provenance": {
+          "enum": [
+            "model",
+            "tool",
+            "host",
+            "external"
+          ],
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "$ref": "#/$defs/binding"
+            }
+          ],
+          "default": 0.0
+        },
+        "label": {
+          "type": "string"
+        },
+        "variant": {
+          "type": "string",
+          "default": "default"
+        },
+        "show_percentage": {
+          "type": "boolean",
+          "default": true
+        }
+      },
+      "required": [
+        "type",
+        "value",
+        "variant",
+        "show_percentage"
+      ],
+      "additionalProperties": true
+    },
+    "radar_chart": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "radar_chart"
+        },
+        "css": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "id": {
+          "type": "string"
+        },
+        "class": {
+          "type": "string"
+        },
+        "tooltip": {
+          "type": "string"
+        },
+        "accessible_name": {
+          "type": "string"
+        },
+        "spoken": {
+          "type": "string"
+        },
+        "compact": {
+          "type": "string"
+        },
+        "provenance": {
+          "enum": [
+            "model",
+            "tool",
+            "host",
+            "external"
+          ],
+          "type": "string"
+        },
+        "title": {
+          "type": "string",
+          "default": ""
+        },
+        "axes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "datasets": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "default": []
+        },
+        "max_value": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "type",
+        "title",
+        "axes",
+        "datasets"
+      ],
+      "additionalProperties": true
+    },
+    "rating": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "rating"
+        },
+        "css": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "id": {
+          "type": "string"
+        },
+        "class": {
+          "type": "string"
+        },
+        "tooltip": {
+          "type": "string"
+        },
+        "accessible_name": {
+          "type": "string"
+        },
+        "spoken": {
+          "type": "string"
+        },
+        "compact": {
+          "type": "string"
+        },
+        "provenance": {
+          "enum": [
+            "model",
+            "tool",
+            "host",
+            "external"
+          ],
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "$ref": "#/$defs/binding"
+            }
+          ],
+          "default": 0.0
+        },
+        "max_value": {
+          "type": "integer",
+          "default": 5
+        },
+        "label": {
+          "type": "string"
+        },
+        "subtitle": {
+          "type": "string"
+        },
+        "show_value": {
+          "type": "boolean",
+          "default": true
+        }
+      },
+      "required": [
+        "type",
+        "value",
+        "max_value",
+        "show_value"
+      ],
+      "additionalProperties": true
+    },
+    "stat_group": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "stat_group"
+        },
+        "css": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "id": {
+          "type": "string"
+        },
+        "class": {
+          "type": "string"
+        },
+        "tooltip": {
+          "type": "string"
+        },
+        "accessible_name": {
+          "type": "string"
+        },
+        "spoken": {
+          "type": "string"
+        },
+        "compact": {
+          "type": "string"
+        },
+        "provenance": {
+          "enum": [
+            "model",
+            "tool",
+            "host",
+            "external"
+          ],
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "default": []
+        },
+        "columns": {
+          "type": "integer",
+          "default": 4
+        }
+      },
+      "required": [
+        "type",
+        "items",
+        "columns"
+      ],
+      "additionalProperties": true
+    },
+    "table": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "table"
+        },
+        "css": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "id": {
+          "type": "string"
+        },
+        "class": {
+          "type": "string"
+        },
+        "tooltip": {
+          "type": "string"
+        },
+        "accessible_name": {
+          "type": "string"
+        },
+        "spoken": {
+          "type": "string"
+        },
+        "compact": {
+          "type": "string"
+        },
+        "provenance": {
+          "enum": [
+            "model",
+            "tool",
+            "host",
+            "external"
+          ],
+          "type": "string"
+        },
+        "headers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {}
+          },
+          "default": []
+        },
+        "variant": {
+          "type": "string",
+          "default": "default"
+        },
+        "total_rows": {
+          "type": "integer"
+        },
+        "page_size": {
+          "type": "integer"
+        },
+        "page_offset": {
+          "type": "integer"
+        },
+        "page_sizes": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          },
+          "default": []
+        },
+        "source_tool": {
+          "type": "string"
+        },
+        "source_agent": {
+          "type": "string"
+        },
+        "source_params": {
+          "type": "object",
+          "additionalProperties": true,
+          "default": {}
+        }
+      },
+      "required": [
+        "type",
+        "headers",
+        "rows",
+        "variant",
+        "page_sizes",
+        "source_params"
+      ],
+      "additionalProperties": true
+    },
+    "tabs": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "tabs"
+        },
+        "css": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "id": {
+          "type": "string"
+        },
+        "class": {
+          "type": "string"
+        },
+        "tooltip": {
+          "type": "string"
+        },
+        "accessible_name": {
+          "type": "string"
+        },
+        "spoken": {
+          "type": "string"
+        },
+        "compact": {
+          "type": "string"
+        },
+        "provenance": {
+          "enum": [
+            "model",
+            "tool",
+            "host",
+            "external"
+          ],
+          "type": "string"
+        },
+        "tabs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/tab_item"
+          },
+          "default": []
+        },
+        "variant": {
+          "type": "string",
+          "default": "default"
+        }
+      },
+      "required": [
+        "type",
+        "tabs",
+        "variant"
+      ],
+      "additionalProperties": true
+    },
+    "text": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "text"
+        },
+        "css": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "id": {
+          "type": "string"
+        },
+        "class": {
+          "type": "string"
+        },
+        "tooltip": {
+          "type": "string"
+        },
+        "accessible_name": {
+          "type": "string"
+        },
+        "spoken": {
+          "type": "string"
+        },
+        "compact": {
+          "type": "string"
+        },
+        "provenance": {
+          "enum": [
+            "model",
+            "tool",
+            "host",
+            "external"
+          ],
+          "type": "string"
+        },
+        "content": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/binding"
+            }
+          ],
+          "default": ""
+        },
+        "variant": {
+          "type": "string",
+          "default": "body"
+        }
+      },
+      "required": [
+        "type",
+        "content",
+        "variant"
+      ],
+      "additionalProperties": true
+    },
+    "theme_apply": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "theme_apply"
+        },
+        "css": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "id": {
+          "type": "string"
+        },
+        "class": {
+          "type": "string"
+        },
+        "tooltip": {
+          "type": "string"
+        },
+        "accessible_name": {
+          "type": "string"
+        },
+        "spoken": {
+          "type": "string"
+        },
+        "compact": {
+          "type": "string"
+        },
+        "provenance": {
+          "enum": [
+            "model",
+            "tool",
+            "host",
+            "external"
+          ],
+          "type": "string"
+        },
+        "preset": {
+          "type": "string"
+        },
+        "colors": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "color_key": {
+          "type": "string"
+        },
+        "color_value": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string",
+          "default": ""
+        }
+      },
+      "required": [
+        "type",
+        "message"
+      ],
+      "additionalProperties": true
+    },
+    "timeline": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "timeline"
+        },
+        "css": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "id": {
+          "type": "string"
+        },
+        "class": {
+          "type": "string"
+        },
+        "tooltip": {
+          "type": "string"
+        },
+        "accessible_name": {
+          "type": "string"
+        },
+        "spoken": {
+          "type": "string"
+        },
+        "compact": {
+          "type": "string"
+        },
+        "provenance": {
+          "enum": [
+            "model",
+            "tool",
+            "host",
+            "external"
+          ],
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "default": []
+        },
+        "variant": {
+          "type": "string",
+          "default": "default"
+        }
+      },
+      "required": [
+        "type",
+        "items",
+        "variant"
+      ],
+      "additionalProperties": true
+    },
+    "binding": {
+      "type": "object",
+      "properties": {
+        "bind": {
+          "$ref": "#/$defs/binding_ref"
+        }
+      },
+      "required": [
+        "bind"
+      ],
+      "additionalProperties": false
+    },
+    "binding_ref": {
+      "type": "object",
+      "properties": {
+        "event": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string",
+          "default": ""
+        }
+      },
+      "required": [
+        "event",
+        "path"
+      ],
+      "additionalProperties": false
+    },
+    "chart_dataset": {
+      "type": "object",
+      "properties": {
+        "label": {
+          "type": "string",
+          "default": ""
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "default": []
+        },
+        "color": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "label",
+        "data"
+      ],
+      "additionalProperties": false,
+      "description": "Serialized shape of the public ChartDataset helper model. No primitive field references it, so this definition documents the helper without constraining any wire field."
+    },
+    "diff_action": {
+      "type": "object",
+      "properties": {
+        "action": {
+          "type": "string"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": true,
+          "default": {}
+        },
+        "capability": {
+          "$ref": "#/$defs/handle"
+        }
+      },
+      "required": [
+        "action",
+        "payload"
+      ],
+      "additionalProperties": false
+    },
+    "diff_file": {
+      "type": "object",
+      "properties": {
+        "old_path": {
+          "type": "string",
+          "default": ""
+        },
+        "new_path": {
+          "type": "string",
+          "default": ""
+        },
+        "status": {
+          "enum": [
+            "added",
+            "modified",
+            "deleted",
+            "renamed"
+          ],
+          "type": "string",
+          "default": "modified"
+        },
+        "binary": {
+          "type": "boolean",
+          "default": false
+        },
+        "hunks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/diff_hunk"
+          },
+          "default": []
+        },
+        "truncated": {
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "required": [
+        "old_path",
+        "new_path",
+        "status",
+        "binary",
+        "hunks",
+        "truncated"
+      ],
+      "additionalProperties": false
+    },
+    "diff_hunk": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "old_start": {
+          "type": "integer",
+          "default": 0
+        },
+        "old_lines": {
+          "type": "integer",
+          "default": 0
+        },
+        "new_start": {
+          "type": "integer",
+          "default": 0
+        },
+        "new_lines": {
+          "type": "integer",
+          "default": 0
+        },
+        "lines": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/diff_line"
+          },
+          "default": []
+        },
+        "actions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/diff_action"
+          },
+          "default": []
+        },
+        "truncated": {
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "required": [
+        "id",
+        "old_start",
+        "old_lines",
+        "new_start",
+        "new_lines",
+        "lines",
+        "actions",
+        "truncated"
+      ],
+      "additionalProperties": false
+    },
+    "diff_line": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "enum": [
+            "context",
+            "add",
+            "delete"
+          ],
+          "type": "string",
+          "default": "context"
+        },
+        "content": {
+          "type": "string",
+          "default": ""
+        },
+        "old_line": {
+          "type": "integer"
+        },
+        "new_line": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "kind",
+        "content"
+      ],
+      "additionalProperties": false
+    },
+    "finding": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "default": ""
+        },
+        "body": {
+          "type": "string",
+          "default": ""
+        },
+        "file": {
+          "type": "string",
+          "default": ""
+        },
+        "start_line": {
+          "type": "integer",
+          "default": 0
+        },
+        "end_line": {
+          "type": "integer",
+          "default": 0
+        },
+        "priority": {
+          "enum": [
+            "P0",
+            "P1",
+            "P2",
+            "P3"
+          ],
+          "type": "string",
+          "default": "P3"
+        },
+        "category": {
+          "type": "string",
+          "default": ""
+        },
+        "diff_ref": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "title",
+        "body",
+        "file",
+        "start_line",
+        "end_line",
+        "priority",
+        "category"
+      ],
+      "additionalProperties": false
+    },
+    "handle": {
+      "type": "object",
+      "properties": {
+        "handle": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "handle"
+      ],
+      "additionalProperties": false
+    },
+    "tab_item": {
+      "type": "object",
+      "properties": {
+        "label": {
+          "type": "string",
+          "default": ""
+        },
+        "content": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/component"
+          },
+          "default": []
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "label",
+        "content"
+      ],
+      "additionalProperties": false
+    },
+    "component": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/action_group"
+        },
+        {
+          "$ref": "#/$defs/alert"
+        },
+        {
+          "$ref": "#/$defs/audio"
+        },
+        {
+          "$ref": "#/$defs/badge"
+        },
+        {
+          "$ref": "#/$defs/bar_chart"
+        },
+        {
+          "$ref": "#/$defs/button"
+        },
+        {
+          "$ref": "#/$defs/card"
+        },
+        {
+          "$ref": "#/$defs/chat_history"
+        },
+        {
+          "$ref": "#/$defs/code"
+        },
+        {
+          "$ref": "#/$defs/collapsible"
+        },
+        {
+          "$ref": "#/$defs/color_picker"
+        },
+        {
+          "$ref": "#/$defs/container"
+        },
+        {
+          "$ref": "#/$defs/diff"
+        },
+        {
+          "$ref": "#/$defs/divider"
+        },
+        {
+          "$ref": "#/$defs/donut_chart"
+        },
+        {
+          "$ref": "#/$defs/file_download"
+        },
+        {
+          "$ref": "#/$defs/file_upload"
+        },
+        {
+          "$ref": "#/$defs/findings"
+        },
+        {
+          "$ref": "#/$defs/gauge"
+        },
+        {
+          "$ref": "#/$defs/grid"
+        },
+        {
+          "$ref": "#/$defs/hero"
+        },
+        {
+          "$ref": "#/$defs/image"
+        },
+        {
+          "$ref": "#/$defs/input"
+        },
+        {
+          "$ref": "#/$defs/keyvalue"
+        },
+        {
+          "$ref": "#/$defs/line_chart"
+        },
+        {
+          "$ref": "#/$defs/list"
+        },
+        {
+          "$ref": "#/$defs/metric"
+        },
+        {
+          "$ref": "#/$defs/param_picker"
+        },
+        {
+          "$ref": "#/$defs/pie_chart"
+        },
+        {
+          "$ref": "#/$defs/pipeline_stepper"
+        },
+        {
+          "$ref": "#/$defs/plotly_chart"
+        },
+        {
+          "$ref": "#/$defs/progress"
+        },
+        {
+          "$ref": "#/$defs/radar_chart"
+        },
+        {
+          "$ref": "#/$defs/rating"
+        },
+        {
+          "$ref": "#/$defs/stat_group"
+        },
+        {
+          "$ref": "#/$defs/table"
+        },
+        {
+          "$ref": "#/$defs/tabs"
+        },
+        {
+          "$ref": "#/$defs/text"
+        },
+        {
+          "$ref": "#/$defs/theme_apply"
+        },
+        {
+          "$ref": "#/$defs/timeline"
+        }
+      ]
+    }
+  }
+}

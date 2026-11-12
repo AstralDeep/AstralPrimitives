@@ -71,7 +71,7 @@ from pydantic import Field as _Field, TypeAdapter
 
 from .base import _REGISTRY
 
-__version__ = "0.12.0"
+__version__ = "0.13.0"
 
 
 def _build_union():
