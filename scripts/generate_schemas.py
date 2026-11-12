@@ -14,9 +14,12 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def targets() -> Dict[Path, Callable[[], Dict[str, Any]]]:
-    from astralprims import wire_schema
+    from astralprims import strict_schema, wire_schema
 
-    return {ROOT / "schema" / "astralprims.wire.json": wire_schema}
+    return {
+        ROOT / "schema" / "astralprims.wire.json": wire_schema,
+        ROOT / "schema" / "astralprims.generation.strict.json": strict_schema,
+    }
 
 
 def render(document: Dict[str, Any]) -> str:

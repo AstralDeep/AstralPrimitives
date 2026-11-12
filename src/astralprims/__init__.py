@@ -64,6 +64,8 @@ from .primitives import (
 )
 from .response import create_ui_response
 from .schema import wire_schema
+from .strict import strict_schema
+from .validate import GenerationError, Resolver, StaticResolver, validate_generated
 
 from typing import Annotated, Union
 
@@ -99,6 +101,11 @@ __all__ = [
     "rebuild_primitive_union",
     "create_ui_response",
     "wire_schema",
+    "strict_schema",
+    "validate_generated",
+    "GenerationError",
+    "Resolver",
+    "StaticResolver",
     "Container",
     "Card",
     "Grid",

@@ -1,0 +1,2821 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "astralprims-generation-strict",
+  "title": "AstralPrimitives strict generation profile",
+  "description": "Closed, bounded subset of the wire schema for model-generated trees. No object accepts unlisted properties, every string, list and number is bounded, images, audio and download targets are host-resolved handles, and every actionable component carries a capability handle, an accessible name, a spoken form and a compact form. Generated trees must stay within x-astralprims-limits, which a schema cannot express.",
+  "x-astralprims-version": "0.13.0",
+  "x-astralprims-limits": {
+    "max_depth": 8,
+    "max_nodes": 300
+  },
+  "x-astralprims-excluded": {
+    "chat_history": "produced by the host from stored chats",
+    "diff": "produced by tools from real file changes",
+    "findings": "produced by tools from a review",
+    "plotly_chart": "carries open-ended chart configuration",
+    "theme_apply": "changes the host theme, which a model may not do"
+  },
+  "$ref": "#/$defs/component",
+  "$defs": {
+    "action_group": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "action_group"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+        },
+        "tooltip": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 200
+        },
+        "provenance": {
+          "const": "model"
+        },
+        "accessible_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "spoken": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "compact": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "buttons": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/button"
+          },
+          "minItems": 1,
+          "maxItems": 8
+        },
+        "align": {
+          "type": "string",
+          "enum": [
+            "start",
+            "center",
+            "end",
+            "between"
+          ]
+        },
+        "label": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 80
+        }
+      },
+      "required": [
+        "type",
+        "buttons",
+        "accessible_name",
+        "spoken",
+        "compact"
+      ],
+      "additionalProperties": false
+    },
+    "alert": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "alert"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+        },
+        "tooltip": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 200
+        },
+        "provenance": {
+          "const": "model"
+        },
+        "accessible_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "spoken": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "compact": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "message": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 0,
+              "maxLength": 1000
+            },
+            {
+              "$ref": "#/$defs/binding"
+            }
+          ]
+        },
+        "variant": {
+          "type": "string",
+          "enum": [
+            "info",
+            "success",
+            "warning",
+            "error"
+          ]
+        },
+        "title": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 120
+        }
+      },
+      "required": [
+        "type",
+        "message"
+      ],
+      "additionalProperties": false
+    },
+    "audio": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "audio"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+        },
+        "tooltip": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 200
+        },
+        "provenance": {
+          "const": "model"
+        },
+        "accessible_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "spoken": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "compact": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "source": {
+          "$ref": "#/$defs/handle"
+        },
+        "label": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 80
+        },
+        "description": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 400
+        },
+        "loop": {
+          "type": "boolean"
+        },
+        "showControls": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "source",
+        "label"
+      ],
+      "additionalProperties": false
+    },
+    "badge": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "badge"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+        },
+        "tooltip": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 200
+        },
+        "provenance": {
+          "const": "model"
+        },
+        "accessible_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "spoken": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "compact": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "label": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 0,
+              "maxLength": 40
+            },
+            {
+              "$ref": "#/$defs/binding"
+            }
+          ]
+        },
+        "variant": {
+          "type": "string",
+          "enum": [
+            "default",
+            "primary",
+            "secondary",
+            "success",
+            "warning",
+            "error",
+            "info"
+          ]
+        },
+        "icon": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 40,
+          "pattern": "^[A-Za-z0-9_-]*$"
+        }
+      },
+      "required": [
+        "type",
+        "label"
+      ],
+      "additionalProperties": false
+    },
+    "bar_chart": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "bar_chart"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+        },
+        "tooltip": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 200
+        },
+        "provenance": {
+          "const": "model"
+        },
+        "accessible_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "spoken": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "compact": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "title": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 120
+        },
+        "labels": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 0,
+            "maxLength": 40
+          },
+          "minItems": 0,
+          "maxItems": 200
+        },
+        "datasets": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "label": {
+                "type": "string",
+                "minLength": 0,
+                "maxLength": 40
+              },
+              "data": {
+                "type": "array",
+                "items": {
+                  "type": "number",
+                  "minimum": -1000000000000.0,
+                  "maximum": 1000000000000.0
+                },
+                "minItems": 0,
+                "maxItems": 200
+              }
+            },
+            "required": [
+              "label",
+              "data"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 1,
+          "maxItems": 8
+        }
+      },
+      "required": [
+        "type",
+        "labels",
+        "datasets"
+      ],
+      "additionalProperties": false
+    },
+    "button": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "button"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+        },
+        "tooltip": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 200
+        },
+        "provenance": {
+          "const": "model"
+        },
+        "accessible_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "spoken": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "compact": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "variant": {
+          "type": "string",
+          "enum": [
+            "default",
+            "primary",
+            "secondary",
+            "success",
+            "warning",
+            "error",
+            "info"
+          ]
+        },
+        "capability": {
+          "$ref": "#/$defs/handle"
+        }
+      },
+      "required": [
+        "type",
+        "label",
+        "capability",
+        "accessible_name",
+        "spoken",
+        "compact"
+      ],
+      "additionalProperties": false
+    },
+    "card": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "card"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+        },
+        "tooltip": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 200
+        },
+        "provenance": {
+          "const": "model"
+        },
+        "accessible_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "spoken": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "compact": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "title": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 120
+        },
+        "content": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/component"
+          },
+          "minItems": 0,
+          "maxItems": 50
+        },
+        "variant": {
+          "type": "string",
+          "enum": [
+            "default",
+            "primary",
+            "secondary",
+            "success",
+            "warning",
+            "error",
+            "info"
+          ]
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "code": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "code"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+        },
+        "tooltip": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 200
+        },
+        "provenance": {
+          "const": "model"
+        },
+        "accessible_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "spoken": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "compact": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "code": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 8000
+        },
+        "language": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 24,
+          "pattern": "^[A-Za-z0-9_+#.-]+$"
+        },
+        "show_line_numbers": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "code"
+      ],
+      "additionalProperties": false
+    },
+    "collapsible": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "collapsible"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+        },
+        "tooltip": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 200
+        },
+        "provenance": {
+          "const": "model"
+        },
+        "accessible_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "spoken": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "compact": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "title": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 120
+        },
+        "content": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/component"
+          },
+          "minItems": 0,
+          "maxItems": 50
+        },
+        "default_open": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "color_picker": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "color_picker"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+        },
+        "tooltip": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 200
+        },
+        "provenance": {
+          "const": "model"
+        },
+        "accessible_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "spoken": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "compact": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "color_key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 48,
+          "pattern": "^[A-Za-z][A-Za-z0-9_]{0,47}$"
+        },
+        "value": {
+          "type": "string",
+          "minLength": 4,
+          "maxLength": 9,
+          "pattern": "^#[0-9A-Fa-f]{3,8}$"
+        },
+        "capability": {
+          "$ref": "#/$defs/handle"
+        }
+      },
+      "required": [
+        "type",
+        "label",
+        "color_key",
+        "capability",
+        "accessible_name",
+        "spoken",
+        "compact"
+      ],
+      "additionalProperties": false
+    },
+    "container": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "container"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+        },
+        "tooltip": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 200
+        },
+        "provenance": {
+          "const": "model"
+        },
+        "accessible_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "spoken": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "compact": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "children": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/component"
+          },
+          "minItems": 0,
+          "maxItems": 50
+        },
+        "direction": {
+          "type": "string",
+          "enum": [
+            "row",
+            "column"
+          ]
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "divider": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "divider"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+        },
+        "tooltip": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 200
+        },
+        "provenance": {
+          "const": "model"
+        },
+        "accessible_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "spoken": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "compact": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "variant": {
+          "type": "string",
+          "enum": [
+            "solid",
+            "dashed",
+            "dotted"
+          ]
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "donut_chart": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "donut_chart"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+        },
+        "tooltip": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 200
+        },
+        "provenance": {
+          "const": "model"
+        },
+        "accessible_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "spoken": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "compact": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "title": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 120
+        },
+        "labels": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 0,
+            "maxLength": 40
+          },
+          "minItems": 0,
+          "maxItems": 50
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1000000000000.0
+          },
+          "minItems": 0,
+          "maxItems": 50
+        },
+        "center_label": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 40
+        },
+        "center_value": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 0,
+              "maxLength": 40
+            },
+            {
+              "$ref": "#/$defs/binding"
+            }
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "labels",
+        "data"
+      ],
+      "additionalProperties": false
+    },
+    "file_download": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "file_download"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+        },
+        "tooltip": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 200
+        },
+        "provenance": {
+          "const": "model"
+        },
+        "accessible_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "spoken": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "compact": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "label": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 80
+        },
+        "target": {
+          "$ref": "#/$defs/handle"
+        },
+        "filename": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 120
+        }
+      },
+      "required": [
+        "type",
+        "label",
+        "target"
+      ],
+      "additionalProperties": false
+    },
+    "file_upload": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "file_upload"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+        },
+        "tooltip": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 200
+        },
+        "provenance": {
+          "const": "model"
+        },
+        "accessible_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "spoken": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "compact": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "label": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 80
+        },
+        "accept": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "pattern": "^[A-Za-z0-9*/.,+ -]+$"
+        },
+        "capability": {
+          "$ref": "#/$defs/handle"
+        }
+      },
+      "required": [
+        "type",
+        "label",
+        "capability",
+        "accessible_name",
+        "spoken",
+        "compact"
+      ],
+      "additionalProperties": false
+    },
+    "gauge": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "gauge"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+        },
+        "tooltip": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 200
+        },
+        "provenance": {
+          "const": "model"
+        },
+        "accessible_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "spoken": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "compact": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            {
+              "$ref": "#/$defs/binding"
+            }
+          ]
+        },
+        "display_value": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 0,
+              "maxLength": 40
+            },
+            {
+              "$ref": "#/$defs/binding"
+            }
+          ]
+        },
+        "thresholds": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "at": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "variant": {
+                "type": "string",
+                "enum": [
+                  "default",
+                  "primary",
+                  "secondary",
+                  "success",
+                  "warning",
+                  "error",
+                  "info"
+                ]
+              }
+            },
+            "required": [
+              "at",
+              "variant"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 0,
+          "maxItems": 6
+        },
+        "subtitle": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 80
+        }
+      },
+      "required": [
+        "type",
+        "label",
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "grid": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "grid"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+        },
+        "tooltip": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 200
+        },
+        "provenance": {
+          "const": "model"
+        },
+        "accessible_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "spoken": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "compact": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "columns": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 6
+        },
+        "children": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/component"
+          },
+          "minItems": 0,
+          "maxItems": 50
+        },
+        "gap": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 64
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "hero": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "hero"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+        },
+        "tooltip": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 200
+        },
+        "provenance": {
+          "const": "model"
+        },
+        "accessible_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "spoken": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "compact": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "title": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 120
+        },
+        "subtitle": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 240
+        },
+        "eyebrow": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 40
+        },
+        "icon": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 40,
+          "pattern": "^[A-Za-z0-9_-]*$"
+        },
+        "variant": {
+          "type": "string",
+          "enum": [
+            "default",
+            "primary",
+            "secondary",
+            "success",
+            "warning",
+            "error",
+            "info"
+          ]
+        },
+        "badges": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 0,
+            "maxLength": 40
+          },
+          "minItems": 0,
+          "maxItems": 8
+        }
+      },
+      "required": [
+        "type",
+        "title"
+      ],
+      "additionalProperties": false
+    },
+    "image": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "image"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+        },
+        "tooltip": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 200
+        },
+        "provenance": {
+          "const": "model"
+        },
+        "accessible_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "spoken": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "compact": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "source": {
+          "$ref": "#/$defs/handle"
+        },
+        "alt": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        }
+      },
+      "required": [
+        "type",
+        "source",
+        "alt"
+      ],
+      "additionalProperties": false
+    },
+    "input": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "input"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+        },
+        "tooltip": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 200
+        },
+        "provenance": {
+          "const": "model"
+        },
+        "accessible_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "spoken": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "compact": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "placeholder": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 80
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 48,
+          "pattern": "^[A-Za-z][A-Za-z0-9_]{0,47}$"
+        },
+        "value": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 500
+        },
+        "capability": {
+          "$ref": "#/$defs/handle"
+        }
+      },
+      "required": [
+        "type",
+        "name",
+        "capability",
+        "accessible_name",
+        "spoken",
+        "compact"
+      ],
+      "additionalProperties": false
+    },
+    "keyvalue": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "keyvalue"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+        },
+        "tooltip": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 200
+        },
+        "provenance": {
+          "const": "model"
+        },
+        "accessible_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "spoken": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "compact": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "title": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 120
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "label": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 80
+              },
+              "value": {
+                "type": "string",
+                "minLength": 0,
+                "maxLength": 300
+              },
+              "hint": {
+                "type": "string",
+                "minLength": 0,
+                "maxLength": 200
+              }
+            },
+            "required": [
+              "label",
+              "value"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 1,
+          "maxItems": 50
+        },
+        "columns": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4
+        }
+      },
+      "required": [
+        "type",
+        "items"
+      ],
+      "additionalProperties": false
+    },
+    "line_chart": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "line_chart"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+        },
+        "tooltip": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 200
+        },
+        "provenance": {
+          "const": "model"
+        },
+        "accessible_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "spoken": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "compact": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "title": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 120
+        },
+        "labels": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 0,
+            "maxLength": 40
+          },
+          "minItems": 0,
+          "maxItems": 200
+        },
+        "datasets": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "label": {
+                "type": "string",
+                "minLength": 0,
+                "maxLength": 40
+              },
+              "data": {
+                "type": "array",
+                "items": {
+                  "type": "number",
+                  "minimum": -1000000000000.0,
+                  "maximum": 1000000000000.0
+                },
+                "minItems": 0,
+                "maxItems": 200
+              }
+            },
+            "required": [
+              "label",
+              "data"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 1,
+          "maxItems": 8
+        }
+      },
+      "required": [
+        "type",
+        "labels",
+        "datasets"
+      ],
+      "additionalProperties": false
+    },
+    "list": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "list"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+        },
+        "tooltip": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 200
+        },
+        "provenance": {
+          "const": "model"
+        },
+        "accessible_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "spoken": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "compact": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 0,
+                "maxLength": 300
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "minLength": 0,
+                    "maxLength": 200
+                  },
+                  "subtitle": {
+                    "type": "string",
+                    "minLength": 0,
+                    "maxLength": 200
+                  },
+                  "description": {
+                    "type": "string",
+                    "minLength": 0,
+                    "maxLength": 600
+                  }
+                },
+                "required": [
+                  "title"
+                ],
+                "additionalProperties": false
+              }
+            ]
+          },
+          "minItems": 0,
+          "maxItems": 100
+        },
+        "ordered": {
+          "type": "boolean"
+        },
+        "variant": {
+          "type": "string",
+          "enum": [
+            "default",
+            "detailed"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "items"
+      ],
+      "additionalProperties": false
+    },
+    "metric": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "metric"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+        },
+        "tooltip": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 200
+        },
+        "provenance": {
+          "const": "model"
+        },
+        "accessible_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "spoken": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "compact": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "title": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 120
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 0,
+              "maxLength": 40
+            },
+            {
+              "$ref": "#/$defs/binding"
+            }
+          ]
+        },
+        "subtitle": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 80
+        },
+        "icon": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 40,
+          "pattern": "^[A-Za-z0-9_-]*$"
+        },
+        "variant": {
+          "type": "string",
+          "enum": [
+            "default",
+            "primary",
+            "secondary",
+            "success",
+            "warning",
+            "error",
+            "info"
+          ]
+        },
+        "progress": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      },
+      "required": [
+        "type",
+        "title",
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "param_picker": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "param_picker"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+        },
+        "tooltip": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 200
+        },
+        "provenance": {
+          "const": "model"
+        },
+        "accessible_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "spoken": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "compact": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "title": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 120
+        },
+        "description": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 400
+        },
+        "fields": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 48,
+                "pattern": "^[A-Za-z][A-Za-z0-9_]{0,47}$"
+              },
+              "label": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 80
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "text",
+                  "number",
+                  "select",
+                  "boolean"
+                ]
+              },
+              "options": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 80
+                },
+                "minItems": 0,
+                "maxItems": 20
+              },
+              "required": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "name",
+              "label",
+              "kind"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 1,
+          "maxItems": 12
+        },
+        "submit_label": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 40
+        },
+        "capability": {
+          "$ref": "#/$defs/handle"
+        }
+      },
+      "required": [
+        "type",
+        "fields",
+        "capability",
+        "accessible_name",
+        "spoken",
+        "compact"
+      ],
+      "additionalProperties": false
+    },
+    "pie_chart": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "pie_chart"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+        },
+        "tooltip": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 200
+        },
+        "provenance": {
+          "const": "model"
+        },
+        "accessible_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "spoken": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "compact": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "title": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 120
+        },
+        "labels": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 0,
+            "maxLength": 40
+          },
+          "minItems": 0,
+          "maxItems": 50
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1000000000000.0
+          },
+          "minItems": 0,
+          "maxItems": 50
+        }
+      },
+      "required": [
+        "type",
+        "labels",
+        "data"
+      ],
+      "additionalProperties": false
+    },
+    "pipeline_stepper": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "pipeline_stepper"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+        },
+        "tooltip": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 200
+        },
+        "provenance": {
+          "const": "model"
+        },
+        "accessible_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "spoken": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "compact": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "title": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 120
+        },
+        "steps": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "label": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 80
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "done",
+                  "active",
+                  "pending",
+                  "error"
+                ]
+              },
+              "detail": {
+                "type": "string",
+                "minLength": 0,
+                "maxLength": 200
+              }
+            },
+            "required": [
+              "label",
+              "status"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 1,
+          "maxItems": 20
+        },
+        "orientation": {
+          "type": "string",
+          "enum": [
+            "horizontal",
+            "vertical"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "steps"
+      ],
+      "additionalProperties": false
+    },
+    "progress": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "progress"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+        },
+        "tooltip": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 200
+        },
+        "provenance": {
+          "const": "model"
+        },
+        "accessible_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "spoken": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "compact": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            {
+              "$ref": "#/$defs/binding"
+            }
+          ]
+        },
+        "label": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 80
+        },
+        "variant": {
+          "type": "string",
+          "enum": [
+            "default",
+            "primary",
+            "secondary",
+            "success",
+            "warning",
+            "error",
+            "info"
+          ]
+        },
+        "show_percentage": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "radar_chart": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "radar_chart"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+        },
+        "tooltip": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 200
+        },
+        "provenance": {
+          "const": "model"
+        },
+        "accessible_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "spoken": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "compact": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "title": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 120
+        },
+        "axes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 0,
+            "maxLength": 40
+          },
+          "minItems": 3,
+          "maxItems": 12
+        },
+        "datasets": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "label": {
+                "type": "string",
+                "minLength": 0,
+                "maxLength": 40
+              },
+              "data": {
+                "type": "array",
+                "items": {
+                  "type": "number",
+                  "minimum": -1000000000000.0,
+                  "maximum": 1000000000000.0
+                },
+                "minItems": 0,
+                "maxItems": 200
+              }
+            },
+            "required": [
+              "label",
+              "data"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 1,
+          "maxItems": 6
+        },
+        "max_value": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1000000000000.0
+        }
+      },
+      "required": [
+        "type",
+        "axes",
+        "datasets"
+      ],
+      "additionalProperties": false
+    },
+    "rating": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "rating"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+        },
+        "tooltip": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 200
+        },
+        "provenance": {
+          "const": "model"
+        },
+        "accessible_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "spoken": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "compact": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 10
+            },
+            {
+              "$ref": "#/$defs/binding"
+            }
+          ]
+        },
+        "max_value": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10
+        },
+        "label": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 80
+        },
+        "subtitle": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 80
+        },
+        "show_value": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "stat_group": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "stat_group"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+        },
+        "tooltip": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 200
+        },
+        "provenance": {
+          "const": "model"
+        },
+        "accessible_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "spoken": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "compact": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "title": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 120
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "label": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 80
+              },
+              "value": {
+                "type": "string",
+                "minLength": 0,
+                "maxLength": 40
+              },
+              "delta": {
+                "type": "string",
+                "minLength": 0,
+                "maxLength": 40
+              },
+              "trend": {
+                "type": "string",
+                "enum": [
+                  "up",
+                  "down",
+                  "flat"
+                ]
+              },
+              "hint": {
+                "type": "string",
+                "minLength": 0,
+                "maxLength": 200
+              },
+              "variant": {
+                "type": "string",
+                "enum": [
+                  "default",
+                  "primary",
+                  "secondary",
+                  "success",
+                  "warning",
+                  "error",
+                  "info"
+                ]
+              }
+            },
+            "required": [
+              "label",
+              "value"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 1,
+          "maxItems": 12
+        },
+        "columns": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 6
+        }
+      },
+      "required": [
+        "type",
+        "items"
+      ],
+      "additionalProperties": false
+    },
+    "table": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "table"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+        },
+        "tooltip": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 200
+        },
+        "provenance": {
+          "const": "model"
+        },
+        "accessible_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "spoken": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "compact": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "headers": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 0,
+            "maxLength": 80
+          },
+          "minItems": 1,
+          "maxItems": 12
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 0,
+                  "maxLength": 200
+                },
+                {
+                  "type": "number",
+                  "minimum": -1000000000000.0,
+                  "maximum": 1000000000000.0
+                },
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "#/$defs/binding"
+                }
+              ]
+            },
+            "minItems": 0,
+            "maxItems": 12
+          },
+          "minItems": 0,
+          "maxItems": 100
+        },
+        "variant": {
+          "type": "string",
+          "enum": [
+            "default",
+            "primary",
+            "secondary",
+            "success",
+            "warning",
+            "error",
+            "info"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "headers",
+        "rows"
+      ],
+      "additionalProperties": false
+    },
+    "tabs": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "tabs"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+        },
+        "tooltip": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 200
+        },
+        "provenance": {
+          "const": "model"
+        },
+        "accessible_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "spoken": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "compact": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "tabs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "label": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 40
+              },
+              "value": {
+                "type": "string",
+                "minLength": 0,
+                "maxLength": 40
+              },
+              "content": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/component"
+                },
+                "minItems": 0,
+                "maxItems": 20
+              }
+            },
+            "required": [
+              "label",
+              "content"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 1,
+          "maxItems": 8
+        },
+        "variant": {
+          "type": "string",
+          "enum": [
+            "default",
+            "primary",
+            "secondary",
+            "success",
+            "warning",
+            "error",
+            "info"
+          ]
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "text": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "text"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+        },
+        "tooltip": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 200
+        },
+        "provenance": {
+          "const": "model"
+        },
+        "accessible_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "spoken": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "compact": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "content": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 0,
+              "maxLength": 4000
+            },
+            {
+              "$ref": "#/$defs/binding"
+            }
+          ]
+        },
+        "variant": {
+          "type": "string",
+          "enum": [
+            "body",
+            "h1",
+            "h2",
+            "h3",
+            "h4",
+            "h5",
+            "h6",
+            "caption",
+            "muted",
+            "label"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "content"
+      ],
+      "additionalProperties": false
+    },
+    "timeline": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "timeline"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+        },
+        "tooltip": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 200
+        },
+        "provenance": {
+          "const": "model"
+        },
+        "accessible_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "spoken": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "compact": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "title": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 120
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "title": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              },
+              "description": {
+                "type": "string",
+                "minLength": 0,
+                "maxLength": 400
+              },
+              "time": {
+                "type": "string",
+                "minLength": 0,
+                "maxLength": 40
+              },
+              "variant": {
+                "type": "string",
+                "enum": [
+                  "default",
+                  "primary",
+                  "secondary",
+                  "success",
+                  "warning",
+                  "error",
+                  "info"
+                ]
+              }
+            },
+            "required": [
+              "title"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 1,
+          "maxItems": 50
+        }
+      },
+      "required": [
+        "type",
+        "items"
+      ],
+      "additionalProperties": false
+    },
+    "handle": {
+      "type": "object",
+      "properties": {
+        "handle": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$"
+        }
+      },
+      "required": [
+        "handle"
+      ],
+      "additionalProperties": false
+    },
+    "binding": {
+      "type": "object",
+      "properties": {
+        "bind": {
+          "type": "object",
+          "properties": {
+            "event": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$"
+            },
+            "path": {
+              "type": "string",
+              "minLength": 0,
+              "maxLength": 200,
+              "pattern": "^(/[^/~]*(~[01][^/~]*)*)*$"
+            }
+          },
+          "required": [
+            "event",
+            "path"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "bind"
+      ],
+      "additionalProperties": false
+    },
+    "component": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/action_group"
+        },
+        {
+          "$ref": "#/$defs/alert"
+        },
+        {
+          "$ref": "#/$defs/audio"
+        },
+        {
+          "$ref": "#/$defs/badge"
+        },
+        {
+          "$ref": "#/$defs/bar_chart"
+        },
+        {
+          "$ref": "#/$defs/button"
+        },
+        {
+          "$ref": "#/$defs/card"
+        },
+        {
+          "$ref": "#/$defs/code"
+        },
+        {
+          "$ref": "#/$defs/collapsible"
+        },
+        {
+          "$ref": "#/$defs/color_picker"
+        },
+        {
+          "$ref": "#/$defs/container"
+        },
+        {
+          "$ref": "#/$defs/divider"
+        },
+        {
+          "$ref": "#/$defs/donut_chart"
+        },
+        {
+          "$ref": "#/$defs/file_download"
+        },
+        {
+          "$ref": "#/$defs/file_upload"
+        },
+        {
+          "$ref": "#/$defs/gauge"
+        },
+        {
+          "$ref": "#/$defs/grid"
+        },
+        {
+          "$ref": "#/$defs/hero"
+        },
+        {
+          "$ref": "#/$defs/image"
+        },
+        {
+          "$ref": "#/$defs/input"
+        },
+        {
+          "$ref": "#/$defs/keyvalue"
+        },
+        {
+          "$ref": "#/$defs/line_chart"
+        },
+        {
+          "$ref": "#/$defs/list"
+        },
+        {
+          "$ref": "#/$defs/metric"
+        },
+        {
+          "$ref": "#/$defs/param_picker"
+        },
+        {
+          "$ref": "#/$defs/pie_chart"
+        },
+        {
+          "$ref": "#/$defs/pipeline_stepper"
+        },
+        {
+          "$ref": "#/$defs/progress"
+        },
+        {
+          "$ref": "#/$defs/radar_chart"
+        },
+        {
+          "$ref": "#/$defs/rating"
+        },
+        {
+          "$ref": "#/$defs/stat_group"
+        },
+        {
+          "$ref": "#/$defs/table"
+        },
+        {
+          "$ref": "#/$defs/tabs"
+        },
+        {
+          "$ref": "#/$defs/text"
+        },
+        {
+          "$ref": "#/$defs/timeline"
+        }
+      ]
+    }
+  }
+}
