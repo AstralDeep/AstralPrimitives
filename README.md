@@ -139,6 +139,23 @@ defaults, aliases and omission rules keep their existing wire representation.
 Changing the emitted wire values for previously accepted Python objects is a
 serialization-contract change and therefore bumps the minor version.
 
+### Schemas, generation and A2UI
+
+`schema/astralprims.wire.json` is the committed, versioned wire schema. `schema/astralprims.generation.strict.json` is the strict generation profile for decoding grammars: every object is closed, every string, list and number is bounded, and images, audio and download targets are `{"handle": ...}` objects. `a2ui/catalog.json` publishes the strict vocabulary as an A2UI v1.0 catalog. Run `python scripts/generate_schemas.py` to rewrite all three. `--check` fails when one is stale.
+
+```python
+from astralprims import StaticResolver, validate_generated, strict_schema
+
+resolver = StaticResolver(events={"ev1": {"bp": 120}}, capabilities={"cap1"}, handles={"img1"})
+errors = validate_generated(tree, resolver)  # each error has path, problem and a valid example
+```
+
+`validate_generated` checks the strict profile plus these rules. A binding `{"bind": {"event", "path"}}` must resolve. An action `capability` must be one the surface created. Actionable components (`button`, `input`, `param_picker`, `file_upload`, `color_picker`) need `capability`, `accessible_name`, `spoken` and `compact`, and `action_group` needs the three forms. Text may not carry links, HTML or reference definitions. Generated nodes may only claim `provenance` of `model`, with `tool`, `host` and `external` stamped by trusted code. Trees stay within 8 levels and 300 nodes.
+
+The same fields exist on the permissive models and are omitted when unset: `accessible_name`, `spoken`, `compact`, `provenance`, `capability`, `source` (image, audio) and `target` (download). Text, alert, badge, metric, progress, gauge and rating values may be a binding.
+
+`from_a2ui(messages)` imports an A2UI v1.0 surface as primitives. Every node is marked `external`, unsupported components become muted text, and URLs, styles and capabilities are dropped. `to_a2ui(tree, surface_id, catalog="astral" | "basic")` exports a tree. The Astral export keeps only fields the catalog defines.
+
 ### Review primitives in 0.12.0
 
 Two primitives describe agent-made changes and structured review findings.

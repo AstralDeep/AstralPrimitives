@@ -11,6 +11,8 @@ from functools import lru_cache
 from dataclasses import dataclass
 from typing import Any, Dict, Iterable, List, Mapping, Optional, Protocol, Set
 
+from markdown_it import MarkdownIt
+
 from .strict import (
     HANDLE_PATTERN,
     EXCLUDED_TYPES,
@@ -29,20 +31,25 @@ _SAMPLES = {
     "^[A-Za-z0-9*/.,+ -]+$": "*/*",
     "^#[0-9A-Fa-f]{3,8}$": "#000000",
 }
-_LINK_PATTERNS = (
-    re.compile(r"^\s{0,3}\[[^\]]+\]:\s*\S", re.MULTILINE),
-    re.compile(r"\]\s*\["),
-    re.compile(r"\]\("),
-    re.compile(r"<[^>]{0,200}[:@][^>]{0,200}>"),
-    re.compile(r"(?:^|[^:/\w])//\S"),
-    re.compile(r"\b[a-z][a-z0-9+.-]{0,31}://", re.IGNORECASE),
-    re.compile(
-        r"\b(?:javascript|vbscript|data|file|mailto|tel|sms|ftp|ftps|http|https|blob|about|intent|sip|callto)"
-        r":\S",
-        re.IGNORECASE,
-    ),
-    re.compile(r"\bwww\.\S", re.IGNORECASE),
+_LINK_TOKENS = frozenset({"link_open", "image", "html_inline", "html_block"})
+_SCHEME_OR_WWW = re.compile(
+    r"\b[a-z][a-z0-9+.-]{0,31}://|\b(?:javascript|vbscript|data|file|tel|sms|blob|ftp|ftps|intent|callto):\S|\bwww\.\S", re.IGNORECASE
 )
+_MARKDOWN = MarkdownIt("commonmark", {"linkify": True, "html": True}).enable("linkify")
+_MARKDOWN.linkify.set({"fuzzy_link": False, "fuzzy_email": False})
+
+
+def _contains_link(text: str) -> bool:
+    env: Dict[str, Any] = {}
+    stack = list(_MARKDOWN.parse(text, env))
+    if env.get("references"):
+        return True
+    while stack:
+        token = stack.pop()
+        if token.type in _LINK_TOKENS:
+            return True
+        stack.extend(token.children or ())
+    return bool(_SCHEME_OR_WWW.search(text))
 
 
 class Resolver(Protocol):
@@ -164,6 +171,8 @@ class _Walker:
         self.ids: Set[str] = set()
         self.nodes = 0
         self.depth_reported = False
+        self.texts: List[str] = []
+        self.link_found = False
 
     def fail(self, path: str, problem: str, schema: Optional[Dict[str, Any]] = None) -> None:
         example = _example(schema, self.defs) if schema is not None else None
@@ -214,8 +223,12 @@ class _Walker:
             self.fail(path, f"longer than {schema['maxLength']} characters", schema)
         elif "pattern" in schema and not re.fullmatch(schema["pattern"], value):
             self.fail(path, f"does not match pattern {schema['pattern']}", schema)
-        if schema.get("pattern") != HANDLE_PATTERN and any(p.search(value) for p in _LINK_PATTERNS):
-            self.fail(path, "contains a link or URL, which a model may not write. Use a handle", schema)
+        if schema.get("pattern") == HANDLE_PATTERN and re.fullmatch(HANDLE_PATTERN, value):
+            return
+        self.texts.append(value)
+        if _contains_link(value):
+            self.link_found = True
+            self.fail(path, "contains a link, URL, HTML or reference definition, which a model may not write. Use a handle", schema)
 
     def number(self, schema: Dict[str, Any], value: Any, path: str) -> None:
         if isinstance(value, float) and not math.isfinite(value):
@@ -312,4 +325,6 @@ def validate_generated(tree: Any, resolver: Resolver) -> List[GenerationError]:
     schema = _profile()
     walker = _Walker(schema, resolver)
     walker.component(tree, "", 0)
+    if not walker.link_found and _contains_link("\n\n".join(walker.texts)):
+        walker.fail("", "free text fields combine into a link or reference definition", None)
     return walker.errors

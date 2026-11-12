@@ -172,7 +172,6 @@ LINK_BYPASSES = [
     "[x][1]\n\n[1]: http://evil.example",
     "[1]: evil.example/page",
     "   [ref]: //evil.example",
-    "text [x] [1] more",
     "<https://evil.example>",
     "<a@b.c>",
     "<mailto:a@b.c>",
@@ -188,6 +187,17 @@ LINK_BYPASSES = [
     "s3://bucket/key",
     "vbscript:x",
     "file:///etc/passwd",
+    "> [1]: https://evil.example",
+    "- [1]: https://evil.example",
+    "1. [1]: https://evil.example",
+    "> - 1. > [1]: https://evil.example",
+    "text\n\n  > [x]: //evil.example",
+    "<a href=\"https://evil.example\">x</a>",
+    "<img src=x onerror=y>",
+    "<div>block</div>",
+    "plain https://evil.example/path?q=1 inside",
+    "www.evil.com",
+    "<script>x</script>",
 ]
 PROSE_THAT_PASSES = [
     "Note: take with food",
@@ -200,6 +210,10 @@ PROSE_THAT_PASSES = [
     "a < b and c > d",
     "metadata:value",
     "Result (see table) www is not a link",
+    "Edit main.py and readme.md then run script.sh",
+    "Call 555-0100 at 9:15 [ext: 12], then (re)check",
+    "Values: x[1], y[2] and 1. first 2. second",
+    "Risk > 5% and benefit < 3%",
 ]
 
 
@@ -217,11 +231,39 @@ def test_ordinary_prose_is_not_mistaken_for_a_link(text):
 def test_link_scan_runs_on_every_free_text_field():
     for node in (
         {"type": "alert", "message": "www.evil.example"},
-        {"type": "card", "title": "[x][1]"},
+        {"type": "card", "title": "[x](http://e.example)"},
         {"type": "list", "items": [{"title": "ok", "description": "<https://a.example>"}]},
         {"type": "table", "headers": ["h"], "rows": [["tel:123"]]},
     ):
         assert any("link" in e.problem for e in validate_generated(node, RESOLVER)), node
+
+
+def test_a_definition_in_one_field_and_a_usage_in_another_cannot_combine():
+    tree = {
+        "type": "container",
+        "children": [
+            {"type": "text", "content": "see [click here][1]"},
+            {"type": "card", "title": "ok", "content": [{"type": "text", "content": "fine"}]},
+        ],
+    }
+    assert validate_generated(tree, RESOLVER) == []
+    tree["children"][1]["title"] = "[1]: x"
+    errors = validate_generated(tree, RESOLVER)
+    assert errors and all("link" in e.problem or "reference" in e.problem for e in errors)
+
+
+def test_fields_that_only_form_a_link_together_are_rejected_as_a_whole(monkeypatch):
+    from astralprims import validate
+
+    seen = []
+    real = validate._contains_link
+    monkeypatch.setattr(validate, "_contains_link", lambda text: seen.append(text) or (False if "\n\n" not in text else True))
+    errors = validate_generated(
+        {"type": "container", "children": [{"type": "text", "content": "a"}, {"type": "text", "content": "b"}]},
+        RESOLVER,
+    )
+    assert errors[0].path == "" and "combine" in errors[0].problem
+    assert seen[-1] == "a\n\nb" and real("a") is False
 
 
 def test_link_scan_also_runs_when_a_pattern_field_fails_its_pattern():
