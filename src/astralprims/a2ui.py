@@ -85,7 +85,7 @@ def a2ui_catalog() -> Dict[str, Any]:
             "description": f"AstralPrimitives {wire_type} component.",
             "properties": {"component": {"const": name}, "id": {"$ref": "#/$defs/ComponentId"}, **properties},
             "required": ["component", "id"] + [k for k in definition["required"] if k not in ("type", "id")],
-            "patternProperties": {"^@": {}},
+            "patternProperties": {"^@(accessibility|catalogId|metadata|checks)$": {}},
             "additionalProperties": False,
         }
     return {
@@ -95,7 +95,7 @@ def a2ui_catalog() -> Dict[str, Any]:
         "title": "AstralPrimitives catalog",
         "description": "The AstralPrimitives strict generation vocabulary as an A2UI catalog.",
         "catalogId": CATALOG_ID,
-        "metadata": {"astralprimsVersion": __version__},
+        "metadata": {"extensions": {"astralprimsVersion": __version__}},
         "instructions": _INSTRUCTIONS,
         "components": components,
         "$defs": {
@@ -108,6 +108,7 @@ def a2ui_catalog() -> Dict[str, Any]:
             },
             "Handle": profile["$defs"]["handle"],
             "anyComponent": {"oneOf": [{"$ref": f"#/components/{name}"} for name in components]},
+            "anyFunction": False,
         },
     }
 
@@ -421,7 +422,7 @@ class _Exporter:
         out: Dict[str, Any]
         if wire_type == "text":
             out = {"component": "Text", "text": self.dynamic(node.get("content", ""))}
-            if node.get("variant") in ("h1", "h2", "h3", "h4", "h5", "caption", "body"):
+            if node.get("variant") in ("caption", "body"):
                 out["variant"] = node["variant"]
         elif wire_type in ("container", "grid"):
             kids = [self.basic(c, self.new_id(c.get("id"))) for c in node.get("children", [])]

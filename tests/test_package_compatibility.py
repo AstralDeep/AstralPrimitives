@@ -154,7 +154,7 @@ def test_initial_fixture_is_verified_against_immutable_base(release_tree):
     _git(root, "rm", "tests/fixtures/released_wire.json")
     _git(root, "commit", "-m", "pre-fixture release")
     base = _git(root, "rev-parse", "HEAD")
-    (root / "tests/fixtures").mkdir(parents=True)
+    (root / "tests/fixtures").mkdir(parents=True, exist_ok=True)
     shutil.copy(
         ROOT / "tests/fixtures/released_wire.json",
         root / "tests/fixtures/released_wire.json",

@@ -58,7 +58,7 @@ def test_catalog_is_a_valid_schema_covering_the_strict_vocabulary():
     for name, schema in CATALOG["components"].items():
         assert schema["properties"]["component"] == {"const": name}
         assert {"component", "id"} <= set(schema["required"])
-    assert CATALOG["metadata"]["astralprimsVersion"] == astralprims.__version__
+    assert CATALOG["metadata"]["extensions"]["astralprimsVersion"] == astralprims.__version__
 
 
 def _catalog_validator(name):

@@ -156,6 +156,8 @@ The same fields exist on the permissive models and are omitted when unset: `acce
 
 `from_a2ui(messages)` imports an A2UI v1.0 surface as primitives. Every node is marked `external`, unsupported components become muted text, and URLs, styles and capabilities are dropped. `to_a2ui(tree, surface_id, catalog="astral" | "basic")` exports a tree. The Astral export keeps only fields the catalog defines.
 
+The catalog and exports are checked against the stable A2UI 1.0 schemas at upstream commit [`8bf644a`](https://github.com/a2ui-project/a2ui/tree/8bf644a37d680a227296b8c0849a7f4b328b8b73/specification/v1_0/json), following the November 11, 2026 release. The offline test fixtures retain their upstream license and source identity. Catalog metadata uses `metadata.extensions`, and `anyFunction: false` declares that this adapter exposes no RPC functions. Basic-catalog text uses its supported body and caption variants; the Astral catalog preserves richer variants.
+
 ### Review primitives in 0.12.0
 
 Two primitives describe agent-made changes and structured review findings.

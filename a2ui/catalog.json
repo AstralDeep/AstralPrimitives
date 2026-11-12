@@ -6,7 +6,9 @@
   "description": "The AstralPrimitives strict generation vocabulary as an A2UI catalog.",
   "catalogId": "urn:astralprims:a2ui:catalog:1",
   "metadata": {
-    "astralprimsVersion": "0.13.0"
+    "extensions": {
+      "astralprimsVersion": "0.13.0"
+    }
   },
   "instructions": "Every component has an id and a component name from this catalog. Children are referenced by id. Images, audio and downloads take a handle the host resolves, never a URL. Actionable components name a capability handle created with the surface and carry accessible_name, spoken and compact. A value read from a tool result is bound with an @path of /events/<event id><JSON pointer>.",
   "components": {
@@ -80,7 +82,7 @@
         "compact"
       ],
       "patternProperties": {
-        "^@": {}
+        "^@(accessibility|catalogId|metadata|checks)$": {}
       },
       "additionalProperties": false
     },
@@ -155,7 +157,7 @@
         "message"
       ],
       "patternProperties": {
-        "^@": {}
+        "^@(accessibility|catalogId|metadata|checks)$": {}
       },
       "additionalProperties": false
     },
@@ -224,7 +226,7 @@
         "label"
       ],
       "patternProperties": {
-        "^@": {}
+        "^@(accessibility|catalogId|metadata|checks)$": {}
       },
       "additionalProperties": false
     },
@@ -303,7 +305,7 @@
         "label"
       ],
       "patternProperties": {
-        "^@": {}
+        "^@(accessibility|catalogId|metadata|checks)$": {}
       },
       "additionalProperties": false
     },
@@ -398,7 +400,7 @@
         "datasets"
       ],
       "patternProperties": {
-        "^@": {}
+        "^@(accessibility|catalogId|metadata|checks)$": {}
       },
       "additionalProperties": false
     },
@@ -471,7 +473,7 @@
         "compact"
       ],
       "patternProperties": {
-        "^@": {}
+        "^@(accessibility|catalogId|metadata|checks)$": {}
       },
       "additionalProperties": false
     },
@@ -544,7 +546,7 @@
         "id"
       ],
       "patternProperties": {
-        "^@": {}
+        "^@(accessibility|catalogId|metadata|checks)$": {}
       },
       "additionalProperties": false
     },
@@ -607,7 +609,7 @@
         "code"
       ],
       "patternProperties": {
-        "^@": {}
+        "^@(accessibility|catalogId|metadata|checks)$": {}
       },
       "additionalProperties": false
     },
@@ -671,7 +673,7 @@
         "id"
       ],
       "patternProperties": {
-        "^@": {}
+        "^@(accessibility|catalogId|metadata|checks)$": {}
       },
       "additionalProperties": false
     },
@@ -745,7 +747,7 @@
         "compact"
       ],
       "patternProperties": {
-        "^@": {}
+        "^@(accessibility|catalogId|metadata|checks)$": {}
       },
       "additionalProperties": false
     },
@@ -808,7 +810,7 @@
         "id"
       ],
       "patternProperties": {
-        "^@": {}
+        "^@(accessibility|catalogId|metadata|checks)$": {}
       },
       "additionalProperties": false
     },
@@ -864,7 +866,7 @@
         "id"
       ],
       "patternProperties": {
-        "^@": {}
+        "^@(accessibility|catalogId|metadata|checks)$": {}
       },
       "additionalProperties": false
     },
@@ -956,7 +958,7 @@
         "data"
       ],
       "patternProperties": {
-        "^@": {}
+        "^@(accessibility|catalogId|metadata|checks)$": {}
       },
       "additionalProperties": false
     },
@@ -1019,7 +1021,7 @@
         "target"
       ],
       "patternProperties": {
-        "^@": {}
+        "^@(accessibility|catalogId|metadata|checks)$": {}
       },
       "additionalProperties": false
     },
@@ -1086,7 +1088,7 @@
         "compact"
       ],
       "patternProperties": {
-        "^@": {}
+        "^@(accessibility|catalogId|metadata|checks)$": {}
       },
       "additionalProperties": false
     },
@@ -1202,7 +1204,7 @@
         "value"
       ],
       "patternProperties": {
-        "^@": {}
+        "^@(accessibility|catalogId|metadata|checks)$": {}
       },
       "additionalProperties": false
     },
@@ -1268,7 +1270,7 @@
         "id"
       ],
       "patternProperties": {
-        "^@": {}
+        "^@(accessibility|catalogId|metadata|checks)$": {}
       },
       "additionalProperties": false
     },
@@ -1360,7 +1362,7 @@
         "title"
       ],
       "patternProperties": {
-        "^@": {}
+        "^@(accessibility|catalogId|metadata|checks)$": {}
       },
       "additionalProperties": false
     },
@@ -1418,7 +1420,7 @@
         "alt"
       ],
       "patternProperties": {
-        "^@": {}
+        "^@(accessibility|catalogId|metadata|checks)$": {}
       },
       "additionalProperties": false
     },
@@ -1490,7 +1492,7 @@
         "compact"
       ],
       "patternProperties": {
-        "^@": {}
+        "^@(accessibility|catalogId|metadata|checks)$": {}
       },
       "additionalProperties": false
     },
@@ -1579,7 +1581,7 @@
         "items"
       ],
       "patternProperties": {
-        "^@": {}
+        "^@(accessibility|catalogId|metadata|checks)$": {}
       },
       "additionalProperties": false
     },
@@ -1674,7 +1676,7 @@
         "datasets"
       ],
       "patternProperties": {
-        "^@": {}
+        "^@(accessibility|catalogId|metadata|checks)$": {}
       },
       "additionalProperties": false
     },
@@ -1771,7 +1773,7 @@
         "items"
       ],
       "patternProperties": {
-        "^@": {}
+        "^@(accessibility|catalogId|metadata|checks)$": {}
       },
       "additionalProperties": false
     },
@@ -1866,7 +1868,7 @@
         "value"
       ],
       "patternProperties": {
-        "^@": {}
+        "^@(accessibility|catalogId|metadata|checks)$": {}
       },
       "additionalProperties": false
     },
@@ -1986,7 +1988,7 @@
         "compact"
       ],
       "patternProperties": {
-        "^@": {}
+        "^@(accessibility|catalogId|metadata|checks)$": {}
       },
       "additionalProperties": false
     },
@@ -2061,7 +2063,7 @@
         "data"
       ],
       "patternProperties": {
-        "^@": {}
+        "^@(accessibility|catalogId|metadata|checks)$": {}
       },
       "additionalProperties": false
     },
@@ -2156,7 +2158,7 @@
         "steps"
       ],
       "patternProperties": {
-        "^@": {}
+        "^@(accessibility|catalogId|metadata|checks)$": {}
       },
       "additionalProperties": false
     },
@@ -2237,7 +2239,7 @@
         "value"
       ],
       "patternProperties": {
-        "^@": {}
+        "^@(accessibility|catalogId|metadata|checks)$": {}
       },
       "additionalProperties": false
     },
@@ -2337,7 +2339,7 @@
         "datasets"
       ],
       "patternProperties": {
-        "^@": {}
+        "^@(accessibility|catalogId|metadata|checks)$": {}
       },
       "additionalProperties": false
     },
@@ -2416,7 +2418,7 @@
         "value"
       ],
       "patternProperties": {
-        "^@": {}
+        "^@(accessibility|catalogId|metadata|checks)$": {}
       },
       "additionalProperties": false
     },
@@ -2530,7 +2532,7 @@
         "items"
       ],
       "patternProperties": {
-        "^@": {}
+        "^@(accessibility|catalogId|metadata|checks)$": {}
       },
       "additionalProperties": false
     },
@@ -2632,7 +2634,7 @@
         "rows"
       ],
       "patternProperties": {
-        "^@": {}
+        "^@(accessibility|catalogId|metadata|checks)$": {}
       },
       "additionalProperties": false
     },
@@ -2725,7 +2727,7 @@
         "id"
       ],
       "patternProperties": {
-        "^@": {}
+        "^@(accessibility|catalogId|metadata|checks)$": {}
       },
       "additionalProperties": false
     },
@@ -2801,7 +2803,7 @@
         "content"
       ],
       "patternProperties": {
-        "^@": {}
+        "^@(accessibility|catalogId|metadata|checks)$": {}
       },
       "additionalProperties": false
     },
@@ -2896,7 +2898,7 @@
         "items"
       ],
       "patternProperties": {
-        "^@": {}
+        "^@(accessibility|catalogId|metadata|checks)$": {}
       },
       "additionalProperties": false
     }
@@ -3044,6 +3046,7 @@
           "$ref": "#/components/AstralTimeline"
         }
       ]
-    }
+    },
+    "anyFunction": false
   }
 }
