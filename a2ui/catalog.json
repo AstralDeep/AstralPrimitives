@@ -1,0 +1,3049 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:astralprims:a2ui:catalog:1",
+  "protocolVersion": "1.0",
+  "title": "AstralPrimitives catalog",
+  "description": "The AstralPrimitives strict generation vocabulary as an A2UI catalog.",
+  "catalogId": "urn:astralprims:a2ui:catalog:1",
+  "metadata": {
+    "astralprimsVersion": "0.13.0"
+  },
+  "instructions": "Every component has an id and a component name from this catalog. Children are referenced by id. Images, audio and downloads take a handle the host resolves, never a URL. Actionable components name a capability handle created with the surface and carry accessible_name, spoken and compact. A value read from a tool result is bound with an @path of /events/<event id><JSON pointer>.",
+  "components": {
+    "AstralActionGroup": {
+      "type": "object",
+      "description": "AstralPrimitives action_group component.",
+      "properties": {
+        "component": {
+          "const": "AstralActionGroup"
+        },
+        "id": {
+          "$ref": "#/$defs/ComponentId"
+        },
+        "tooltip": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 200
+        },
+        "provenance": {
+          "enum": [
+            "model",
+            "tool",
+            "host",
+            "external"
+          ]
+        },
+        "accessible_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "spoken": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "compact": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "buttons": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ComponentId"
+          },
+          "minItems": 1,
+          "maxItems": 8
+        },
+        "align": {
+          "type": "string",
+          "enum": [
+            "start",
+            "center",
+            "end",
+            "between"
+          ]
+        },
+        "label": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 80
+        }
+      },
+      "required": [
+        "component",
+        "id",
+        "buttons",
+        "accessible_name",
+        "spoken",
+        "compact"
+      ],
+      "patternProperties": {
+        "^@": {}
+      },
+      "additionalProperties": false
+    },
+    "AstralAlert": {
+      "type": "object",
+      "description": "AstralPrimitives alert component.",
+      "properties": {
+        "component": {
+          "const": "AstralAlert"
+        },
+        "id": {
+          "$ref": "#/$defs/ComponentId"
+        },
+        "tooltip": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 200
+        },
+        "provenance": {
+          "enum": [
+            "model",
+            "tool",
+            "host",
+            "external"
+          ]
+        },
+        "accessible_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "spoken": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "compact": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "message": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 0,
+              "maxLength": 1000
+            },
+            {
+              "$ref": "#/$defs/Binding"
+            }
+          ]
+        },
+        "variant": {
+          "type": "string",
+          "enum": [
+            "info",
+            "success",
+            "warning",
+            "error"
+          ]
+        },
+        "title": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 120
+        }
+      },
+      "required": [
+        "component",
+        "id",
+        "message"
+      ],
+      "patternProperties": {
+        "^@": {}
+      },
+      "additionalProperties": false
+    },
+    "AstralAudio": {
+      "type": "object",
+      "description": "AstralPrimitives audio component.",
+      "properties": {
+        "component": {
+          "const": "AstralAudio"
+        },
+        "id": {
+          "$ref": "#/$defs/ComponentId"
+        },
+        "tooltip": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 200
+        },
+        "provenance": {
+          "enum": [
+            "model",
+            "tool",
+            "host",
+            "external"
+          ]
+        },
+        "accessible_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "spoken": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "compact": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "source": {
+          "$ref": "#/$defs/Handle"
+        },
+        "label": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 80
+        },
+        "description": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 400
+        },
+        "loop": {
+          "type": "boolean"
+        },
+        "showControls": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "component",
+        "id",
+        "source",
+        "label"
+      ],
+      "patternProperties": {
+        "^@": {}
+      },
+      "additionalProperties": false
+    },
+    "AstralBadge": {
+      "type": "object",
+      "description": "AstralPrimitives badge component.",
+      "properties": {
+        "component": {
+          "const": "AstralBadge"
+        },
+        "id": {
+          "$ref": "#/$defs/ComponentId"
+        },
+        "tooltip": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 200
+        },
+        "provenance": {
+          "enum": [
+            "model",
+            "tool",
+            "host",
+            "external"
+          ]
+        },
+        "accessible_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "spoken": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "compact": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "label": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 0,
+              "maxLength": 40
+            },
+            {
+              "$ref": "#/$defs/Binding"
+            }
+          ]
+        },
+        "variant": {
+          "type": "string",
+          "enum": [
+            "default",
+            "primary",
+            "secondary",
+            "success",
+            "warning",
+            "error",
+            "info"
+          ]
+        },
+        "icon": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 40,
+          "pattern": "^[A-Za-z0-9_-]*$"
+        }
+      },
+      "required": [
+        "component",
+        "id",
+        "label"
+      ],
+      "patternProperties": {
+        "^@": {}
+      },
+      "additionalProperties": false
+    },
+    "AstralBarChart": {
+      "type": "object",
+      "description": "AstralPrimitives bar_chart component.",
+      "properties": {
+        "component": {
+          "const": "AstralBarChart"
+        },
+        "id": {
+          "$ref": "#/$defs/ComponentId"
+        },
+        "tooltip": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 200
+        },
+        "provenance": {
+          "enum": [
+            "model",
+            "tool",
+            "host",
+            "external"
+          ]
+        },
+        "accessible_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "spoken": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "compact": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "title": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 120
+        },
+        "labels": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 0,
+            "maxLength": 40
+          },
+          "minItems": 0,
+          "maxItems": 200
+        },
+        "datasets": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "label": {
+                "type": "string",
+                "minLength": 0,
+                "maxLength": 40
+              },
+              "data": {
+                "type": "array",
+                "items": {
+                  "type": "number",
+                  "minimum": -1000000000000.0,
+                  "maximum": 1000000000000.0
+                },
+                "minItems": 0,
+                "maxItems": 200
+              }
+            },
+            "required": [
+              "label",
+              "data"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 1,
+          "maxItems": 8
+        }
+      },
+      "required": [
+        "component",
+        "id",
+        "labels",
+        "datasets"
+      ],
+      "patternProperties": {
+        "^@": {}
+      },
+      "additionalProperties": false
+    },
+    "AstralButton": {
+      "type": "object",
+      "description": "AstralPrimitives button component.",
+      "properties": {
+        "component": {
+          "const": "AstralButton"
+        },
+        "id": {
+          "$ref": "#/$defs/ComponentId"
+        },
+        "tooltip": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 200
+        },
+        "provenance": {
+          "enum": [
+            "model",
+            "tool",
+            "host",
+            "external"
+          ]
+        },
+        "accessible_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "spoken": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "compact": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "variant": {
+          "type": "string",
+          "enum": [
+            "default",
+            "primary",
+            "secondary",
+            "success",
+            "warning",
+            "error",
+            "info"
+          ]
+        },
+        "capability": {
+          "$ref": "#/$defs/Handle"
+        }
+      },
+      "required": [
+        "component",
+        "id",
+        "label",
+        "capability",
+        "accessible_name",
+        "spoken",
+        "compact"
+      ],
+      "patternProperties": {
+        "^@": {}
+      },
+      "additionalProperties": false
+    },
+    "AstralCard": {
+      "type": "object",
+      "description": "AstralPrimitives card component.",
+      "properties": {
+        "component": {
+          "const": "AstralCard"
+        },
+        "id": {
+          "$ref": "#/$defs/ComponentId"
+        },
+        "tooltip": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 200
+        },
+        "provenance": {
+          "enum": [
+            "model",
+            "tool",
+            "host",
+            "external"
+          ]
+        },
+        "accessible_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "spoken": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "compact": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "title": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 120
+        },
+        "content": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ComponentId"
+          },
+          "minItems": 0,
+          "maxItems": 50
+        },
+        "variant": {
+          "type": "string",
+          "enum": [
+            "default",
+            "primary",
+            "secondary",
+            "success",
+            "warning",
+            "error",
+            "info"
+          ]
+        }
+      },
+      "required": [
+        "component",
+        "id"
+      ],
+      "patternProperties": {
+        "^@": {}
+      },
+      "additionalProperties": false
+    },
+    "AstralCode": {
+      "type": "object",
+      "description": "AstralPrimitives code component.",
+      "properties": {
+        "component": {
+          "const": "AstralCode"
+        },
+        "id": {
+          "$ref": "#/$defs/ComponentId"
+        },
+        "tooltip": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 200
+        },
+        "provenance": {
+          "enum": [
+            "model",
+            "tool",
+            "host",
+            "external"
+          ]
+        },
+        "accessible_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "spoken": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "compact": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "code": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 8000
+        },
+        "language": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 24,
+          "pattern": "^[A-Za-z0-9_+#.-]+$"
+        },
+        "show_line_numbers": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "component",
+        "id",
+        "code"
+      ],
+      "patternProperties": {
+        "^@": {}
+      },
+      "additionalProperties": false
+    },
+    "AstralCollapsible": {
+      "type": "object",
+      "description": "AstralPrimitives collapsible component.",
+      "properties": {
+        "component": {
+          "const": "AstralCollapsible"
+        },
+        "id": {
+          "$ref": "#/$defs/ComponentId"
+        },
+        "tooltip": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 200
+        },
+        "provenance": {
+          "enum": [
+            "model",
+            "tool",
+            "host",
+            "external"
+          ]
+        },
+        "accessible_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "spoken": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "compact": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "title": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 120
+        },
+        "content": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ComponentId"
+          },
+          "minItems": 0,
+          "maxItems": 50
+        },
+        "default_open": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "component",
+        "id"
+      ],
+      "patternProperties": {
+        "^@": {}
+      },
+      "additionalProperties": false
+    },
+    "AstralColorPicker": {
+      "type": "object",
+      "description": "AstralPrimitives color_picker component.",
+      "properties": {
+        "component": {
+          "const": "AstralColorPicker"
+        },
+        "id": {
+          "$ref": "#/$defs/ComponentId"
+        },
+        "tooltip": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 200
+        },
+        "provenance": {
+          "enum": [
+            "model",
+            "tool",
+            "host",
+            "external"
+          ]
+        },
+        "accessible_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "spoken": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "compact": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "color_key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 48,
+          "pattern": "^[A-Za-z][A-Za-z0-9_]{0,47}$"
+        },
+        "value": {
+          "type": "string",
+          "minLength": 4,
+          "maxLength": 9,
+          "pattern": "^#[0-9A-Fa-f]{3,8}$"
+        },
+        "capability": {
+          "$ref": "#/$defs/Handle"
+        }
+      },
+      "required": [
+        "component",
+        "id",
+        "label",
+        "color_key",
+        "capability",
+        "accessible_name",
+        "spoken",
+        "compact"
+      ],
+      "patternProperties": {
+        "^@": {}
+      },
+      "additionalProperties": false
+    },
+    "AstralContainer": {
+      "type": "object",
+      "description": "AstralPrimitives container component.",
+      "properties": {
+        "component": {
+          "const": "AstralContainer"
+        },
+        "id": {
+          "$ref": "#/$defs/ComponentId"
+        },
+        "tooltip": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 200
+        },
+        "provenance": {
+          "enum": [
+            "model",
+            "tool",
+            "host",
+            "external"
+          ]
+        },
+        "accessible_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "spoken": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "compact": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "children": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ComponentId"
+          },
+          "minItems": 0,
+          "maxItems": 50
+        },
+        "direction": {
+          "type": "string",
+          "enum": [
+            "row",
+            "column"
+          ]
+        }
+      },
+      "required": [
+        "component",
+        "id"
+      ],
+      "patternProperties": {
+        "^@": {}
+      },
+      "additionalProperties": false
+    },
+    "AstralDivider": {
+      "type": "object",
+      "description": "AstralPrimitives divider component.",
+      "properties": {
+        "component": {
+          "const": "AstralDivider"
+        },
+        "id": {
+          "$ref": "#/$defs/ComponentId"
+        },
+        "tooltip": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 200
+        },
+        "provenance": {
+          "enum": [
+            "model",
+            "tool",
+            "host",
+            "external"
+          ]
+        },
+        "accessible_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "spoken": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "compact": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "variant": {
+          "type": "string",
+          "enum": [
+            "solid",
+            "dashed",
+            "dotted"
+          ]
+        }
+      },
+      "required": [
+        "component",
+        "id"
+      ],
+      "patternProperties": {
+        "^@": {}
+      },
+      "additionalProperties": false
+    },
+    "AstralDonutChart": {
+      "type": "object",
+      "description": "AstralPrimitives donut_chart component.",
+      "properties": {
+        "component": {
+          "const": "AstralDonutChart"
+        },
+        "id": {
+          "$ref": "#/$defs/ComponentId"
+        },
+        "tooltip": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 200
+        },
+        "provenance": {
+          "enum": [
+            "model",
+            "tool",
+            "host",
+            "external"
+          ]
+        },
+        "accessible_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "spoken": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "compact": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "title": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 120
+        },
+        "labels": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 0,
+            "maxLength": 40
+          },
+          "minItems": 0,
+          "maxItems": 50
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1000000000000.0
+          },
+          "minItems": 0,
+          "maxItems": 50
+        },
+        "center_label": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 40
+        },
+        "center_value": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 0,
+              "maxLength": 40
+            },
+            {
+              "$ref": "#/$defs/Binding"
+            }
+          ]
+        }
+      },
+      "required": [
+        "component",
+        "id",
+        "labels",
+        "data"
+      ],
+      "patternProperties": {
+        "^@": {}
+      },
+      "additionalProperties": false
+    },
+    "AstralFileDownload": {
+      "type": "object",
+      "description": "AstralPrimitives file_download component.",
+      "properties": {
+        "component": {
+          "const": "AstralFileDownload"
+        },
+        "id": {
+          "$ref": "#/$defs/ComponentId"
+        },
+        "tooltip": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 200
+        },
+        "provenance": {
+          "enum": [
+            "model",
+            "tool",
+            "host",
+            "external"
+          ]
+        },
+        "accessible_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "spoken": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "compact": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "label": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 80
+        },
+        "target": {
+          "$ref": "#/$defs/Handle"
+        },
+        "filename": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 120
+        }
+      },
+      "required": [
+        "component",
+        "id",
+        "label",
+        "target"
+      ],
+      "patternProperties": {
+        "^@": {}
+      },
+      "additionalProperties": false
+    },
+    "AstralFileUpload": {
+      "type": "object",
+      "description": "AstralPrimitives file_upload component.",
+      "properties": {
+        "component": {
+          "const": "AstralFileUpload"
+        },
+        "id": {
+          "$ref": "#/$defs/ComponentId"
+        },
+        "tooltip": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 200
+        },
+        "provenance": {
+          "enum": [
+            "model",
+            "tool",
+            "host",
+            "external"
+          ]
+        },
+        "accessible_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "spoken": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "compact": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "label": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 80
+        },
+        "accept": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "pattern": "^[A-Za-z0-9*/.,+ -]+$"
+        },
+        "capability": {
+          "$ref": "#/$defs/Handle"
+        }
+      },
+      "required": [
+        "component",
+        "id",
+        "label",
+        "capability",
+        "accessible_name",
+        "spoken",
+        "compact"
+      ],
+      "patternProperties": {
+        "^@": {}
+      },
+      "additionalProperties": false
+    },
+    "AstralGauge": {
+      "type": "object",
+      "description": "AstralPrimitives gauge component.",
+      "properties": {
+        "component": {
+          "const": "AstralGauge"
+        },
+        "id": {
+          "$ref": "#/$defs/ComponentId"
+        },
+        "tooltip": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 200
+        },
+        "provenance": {
+          "enum": [
+            "model",
+            "tool",
+            "host",
+            "external"
+          ]
+        },
+        "accessible_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "spoken": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "compact": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            {
+              "$ref": "#/$defs/Binding"
+            }
+          ]
+        },
+        "display_value": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 0,
+              "maxLength": 40
+            },
+            {
+              "$ref": "#/$defs/Binding"
+            }
+          ]
+        },
+        "thresholds": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "at": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "variant": {
+                "type": "string",
+                "enum": [
+                  "default",
+                  "primary",
+                  "secondary",
+                  "success",
+                  "warning",
+                  "error",
+                  "info"
+                ]
+              }
+            },
+            "required": [
+              "at",
+              "variant"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 0,
+          "maxItems": 6
+        },
+        "subtitle": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 80
+        }
+      },
+      "required": [
+        "component",
+        "id",
+        "label",
+        "value"
+      ],
+      "patternProperties": {
+        "^@": {}
+      },
+      "additionalProperties": false
+    },
+    "AstralGrid": {
+      "type": "object",
+      "description": "AstralPrimitives grid component.",
+      "properties": {
+        "component": {
+          "const": "AstralGrid"
+        },
+        "id": {
+          "$ref": "#/$defs/ComponentId"
+        },
+        "tooltip": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 200
+        },
+        "provenance": {
+          "enum": [
+            "model",
+            "tool",
+            "host",
+            "external"
+          ]
+        },
+        "accessible_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "spoken": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "compact": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "columns": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 6
+        },
+        "children": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ComponentId"
+          },
+          "minItems": 0,
+          "maxItems": 50
+        },
+        "gap": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 64
+        }
+      },
+      "required": [
+        "component",
+        "id"
+      ],
+      "patternProperties": {
+        "^@": {}
+      },
+      "additionalProperties": false
+    },
+    "AstralHero": {
+      "type": "object",
+      "description": "AstralPrimitives hero component.",
+      "properties": {
+        "component": {
+          "const": "AstralHero"
+        },
+        "id": {
+          "$ref": "#/$defs/ComponentId"
+        },
+        "tooltip": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 200
+        },
+        "provenance": {
+          "enum": [
+            "model",
+            "tool",
+            "host",
+            "external"
+          ]
+        },
+        "accessible_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "spoken": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "compact": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "title": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 120
+        },
+        "subtitle": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 240
+        },
+        "eyebrow": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 40
+        },
+        "icon": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 40,
+          "pattern": "^[A-Za-z0-9_-]*$"
+        },
+        "variant": {
+          "type": "string",
+          "enum": [
+            "default",
+            "primary",
+            "secondary",
+            "success",
+            "warning",
+            "error",
+            "info"
+          ]
+        },
+        "badges": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 0,
+            "maxLength": 40
+          },
+          "minItems": 0,
+          "maxItems": 8
+        }
+      },
+      "required": [
+        "component",
+        "id",
+        "title"
+      ],
+      "patternProperties": {
+        "^@": {}
+      },
+      "additionalProperties": false
+    },
+    "AstralImage": {
+      "type": "object",
+      "description": "AstralPrimitives image component.",
+      "properties": {
+        "component": {
+          "const": "AstralImage"
+        },
+        "id": {
+          "$ref": "#/$defs/ComponentId"
+        },
+        "tooltip": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 200
+        },
+        "provenance": {
+          "enum": [
+            "model",
+            "tool",
+            "host",
+            "external"
+          ]
+        },
+        "accessible_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "spoken": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "compact": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "source": {
+          "$ref": "#/$defs/Handle"
+        },
+        "alt": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        }
+      },
+      "required": [
+        "component",
+        "id",
+        "source",
+        "alt"
+      ],
+      "patternProperties": {
+        "^@": {}
+      },
+      "additionalProperties": false
+    },
+    "AstralInput": {
+      "type": "object",
+      "description": "AstralPrimitives input component.",
+      "properties": {
+        "component": {
+          "const": "AstralInput"
+        },
+        "id": {
+          "$ref": "#/$defs/ComponentId"
+        },
+        "tooltip": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 200
+        },
+        "provenance": {
+          "enum": [
+            "model",
+            "tool",
+            "host",
+            "external"
+          ]
+        },
+        "accessible_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "spoken": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "compact": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "placeholder": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 80
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 48,
+          "pattern": "^[A-Za-z][A-Za-z0-9_]{0,47}$"
+        },
+        "value": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 500
+        },
+        "capability": {
+          "$ref": "#/$defs/Handle"
+        }
+      },
+      "required": [
+        "component",
+        "id",
+        "name",
+        "capability",
+        "accessible_name",
+        "spoken",
+        "compact"
+      ],
+      "patternProperties": {
+        "^@": {}
+      },
+      "additionalProperties": false
+    },
+    "AstralKeyvalue": {
+      "type": "object",
+      "description": "AstralPrimitives keyvalue component.",
+      "properties": {
+        "component": {
+          "const": "AstralKeyvalue"
+        },
+        "id": {
+          "$ref": "#/$defs/ComponentId"
+        },
+        "tooltip": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 200
+        },
+        "provenance": {
+          "enum": [
+            "model",
+            "tool",
+            "host",
+            "external"
+          ]
+        },
+        "accessible_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "spoken": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "compact": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "title": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 120
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "label": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 80
+              },
+              "value": {
+                "type": "string",
+                "minLength": 0,
+                "maxLength": 300
+              },
+              "hint": {
+                "type": "string",
+                "minLength": 0,
+                "maxLength": 200
+              }
+            },
+            "required": [
+              "label",
+              "value"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 1,
+          "maxItems": 50
+        },
+        "columns": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4
+        }
+      },
+      "required": [
+        "component",
+        "id",
+        "items"
+      ],
+      "patternProperties": {
+        "^@": {}
+      },
+      "additionalProperties": false
+    },
+    "AstralLineChart": {
+      "type": "object",
+      "description": "AstralPrimitives line_chart component.",
+      "properties": {
+        "component": {
+          "const": "AstralLineChart"
+        },
+        "id": {
+          "$ref": "#/$defs/ComponentId"
+        },
+        "tooltip": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 200
+        },
+        "provenance": {
+          "enum": [
+            "model",
+            "tool",
+            "host",
+            "external"
+          ]
+        },
+        "accessible_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "spoken": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "compact": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "title": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 120
+        },
+        "labels": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 0,
+            "maxLength": 40
+          },
+          "minItems": 0,
+          "maxItems": 200
+        },
+        "datasets": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "label": {
+                "type": "string",
+                "minLength": 0,
+                "maxLength": 40
+              },
+              "data": {
+                "type": "array",
+                "items": {
+                  "type": "number",
+                  "minimum": -1000000000000.0,
+                  "maximum": 1000000000000.0
+                },
+                "minItems": 0,
+                "maxItems": 200
+              }
+            },
+            "required": [
+              "label",
+              "data"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 1,
+          "maxItems": 8
+        }
+      },
+      "required": [
+        "component",
+        "id",
+        "labels",
+        "datasets"
+      ],
+      "patternProperties": {
+        "^@": {}
+      },
+      "additionalProperties": false
+    },
+    "AstralList": {
+      "type": "object",
+      "description": "AstralPrimitives list component.",
+      "properties": {
+        "component": {
+          "const": "AstralList"
+        },
+        "id": {
+          "$ref": "#/$defs/ComponentId"
+        },
+        "tooltip": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 200
+        },
+        "provenance": {
+          "enum": [
+            "model",
+            "tool",
+            "host",
+            "external"
+          ]
+        },
+        "accessible_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "spoken": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "compact": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 0,
+                "maxLength": 300
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "minLength": 0,
+                    "maxLength": 200
+                  },
+                  "subtitle": {
+                    "type": "string",
+                    "minLength": 0,
+                    "maxLength": 200
+                  },
+                  "description": {
+                    "type": "string",
+                    "minLength": 0,
+                    "maxLength": 600
+                  }
+                },
+                "required": [
+                  "title"
+                ],
+                "additionalProperties": false
+              }
+            ]
+          },
+          "minItems": 0,
+          "maxItems": 100
+        },
+        "ordered": {
+          "type": "boolean"
+        },
+        "variant": {
+          "type": "string",
+          "enum": [
+            "default",
+            "detailed"
+          ]
+        }
+      },
+      "required": [
+        "component",
+        "id",
+        "items"
+      ],
+      "patternProperties": {
+        "^@": {}
+      },
+      "additionalProperties": false
+    },
+    "AstralMetric": {
+      "type": "object",
+      "description": "AstralPrimitives metric component.",
+      "properties": {
+        "component": {
+          "const": "AstralMetric"
+        },
+        "id": {
+          "$ref": "#/$defs/ComponentId"
+        },
+        "tooltip": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 200
+        },
+        "provenance": {
+          "enum": [
+            "model",
+            "tool",
+            "host",
+            "external"
+          ]
+        },
+        "accessible_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "spoken": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "compact": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "title": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 120
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 0,
+              "maxLength": 40
+            },
+            {
+              "$ref": "#/$defs/Binding"
+            }
+          ]
+        },
+        "subtitle": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 80
+        },
+        "icon": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 40,
+          "pattern": "^[A-Za-z0-9_-]*$"
+        },
+        "variant": {
+          "type": "string",
+          "enum": [
+            "default",
+            "primary",
+            "secondary",
+            "success",
+            "warning",
+            "error",
+            "info"
+          ]
+        },
+        "progress": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      },
+      "required": [
+        "component",
+        "id",
+        "title",
+        "value"
+      ],
+      "patternProperties": {
+        "^@": {}
+      },
+      "additionalProperties": false
+    },
+    "AstralParamPicker": {
+      "type": "object",
+      "description": "AstralPrimitives param_picker component.",
+      "properties": {
+        "component": {
+          "const": "AstralParamPicker"
+        },
+        "id": {
+          "$ref": "#/$defs/ComponentId"
+        },
+        "tooltip": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 200
+        },
+        "provenance": {
+          "enum": [
+            "model",
+            "tool",
+            "host",
+            "external"
+          ]
+        },
+        "accessible_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "spoken": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "compact": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "title": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 120
+        },
+        "description": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 400
+        },
+        "fields": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 48,
+                "pattern": "^[A-Za-z][A-Za-z0-9_]{0,47}$"
+              },
+              "label": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 80
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "text",
+                  "number",
+                  "select",
+                  "boolean"
+                ]
+              },
+              "options": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 80
+                },
+                "minItems": 0,
+                "maxItems": 20
+              },
+              "required": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "name",
+              "label",
+              "kind"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 1,
+          "maxItems": 12
+        },
+        "submit_label": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 40
+        },
+        "capability": {
+          "$ref": "#/$defs/Handle"
+        }
+      },
+      "required": [
+        "component",
+        "id",
+        "fields",
+        "capability",
+        "accessible_name",
+        "spoken",
+        "compact"
+      ],
+      "patternProperties": {
+        "^@": {}
+      },
+      "additionalProperties": false
+    },
+    "AstralPieChart": {
+      "type": "object",
+      "description": "AstralPrimitives pie_chart component.",
+      "properties": {
+        "component": {
+          "const": "AstralPieChart"
+        },
+        "id": {
+          "$ref": "#/$defs/ComponentId"
+        },
+        "tooltip": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 200
+        },
+        "provenance": {
+          "enum": [
+            "model",
+            "tool",
+            "host",
+            "external"
+          ]
+        },
+        "accessible_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "spoken": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "compact": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "title": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 120
+        },
+        "labels": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 0,
+            "maxLength": 40
+          },
+          "minItems": 0,
+          "maxItems": 50
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1000000000000.0
+          },
+          "minItems": 0,
+          "maxItems": 50
+        }
+      },
+      "required": [
+        "component",
+        "id",
+        "labels",
+        "data"
+      ],
+      "patternProperties": {
+        "^@": {}
+      },
+      "additionalProperties": false
+    },
+    "AstralPipelineStepper": {
+      "type": "object",
+      "description": "AstralPrimitives pipeline_stepper component.",
+      "properties": {
+        "component": {
+          "const": "AstralPipelineStepper"
+        },
+        "id": {
+          "$ref": "#/$defs/ComponentId"
+        },
+        "tooltip": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 200
+        },
+        "provenance": {
+          "enum": [
+            "model",
+            "tool",
+            "host",
+            "external"
+          ]
+        },
+        "accessible_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "spoken": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "compact": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "title": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 120
+        },
+        "steps": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "label": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 80
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "done",
+                  "active",
+                  "pending",
+                  "error"
+                ]
+              },
+              "detail": {
+                "type": "string",
+                "minLength": 0,
+                "maxLength": 200
+              }
+            },
+            "required": [
+              "label",
+              "status"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 1,
+          "maxItems": 20
+        },
+        "orientation": {
+          "type": "string",
+          "enum": [
+            "horizontal",
+            "vertical"
+          ]
+        }
+      },
+      "required": [
+        "component",
+        "id",
+        "steps"
+      ],
+      "patternProperties": {
+        "^@": {}
+      },
+      "additionalProperties": false
+    },
+    "AstralProgress": {
+      "type": "object",
+      "description": "AstralPrimitives progress component.",
+      "properties": {
+        "component": {
+          "const": "AstralProgress"
+        },
+        "id": {
+          "$ref": "#/$defs/ComponentId"
+        },
+        "tooltip": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 200
+        },
+        "provenance": {
+          "enum": [
+            "model",
+            "tool",
+            "host",
+            "external"
+          ]
+        },
+        "accessible_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "spoken": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "compact": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            {
+              "$ref": "#/$defs/Binding"
+            }
+          ]
+        },
+        "label": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 80
+        },
+        "variant": {
+          "type": "string",
+          "enum": [
+            "default",
+            "primary",
+            "secondary",
+            "success",
+            "warning",
+            "error",
+            "info"
+          ]
+        },
+        "show_percentage": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "component",
+        "id",
+        "value"
+      ],
+      "patternProperties": {
+        "^@": {}
+      },
+      "additionalProperties": false
+    },
+    "AstralRadarChart": {
+      "type": "object",
+      "description": "AstralPrimitives radar_chart component.",
+      "properties": {
+        "component": {
+          "const": "AstralRadarChart"
+        },
+        "id": {
+          "$ref": "#/$defs/ComponentId"
+        },
+        "tooltip": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 200
+        },
+        "provenance": {
+          "enum": [
+            "model",
+            "tool",
+            "host",
+            "external"
+          ]
+        },
+        "accessible_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "spoken": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "compact": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "title": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 120
+        },
+        "axes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 0,
+            "maxLength": 40
+          },
+          "minItems": 3,
+          "maxItems": 12
+        },
+        "datasets": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "label": {
+                "type": "string",
+                "minLength": 0,
+                "maxLength": 40
+              },
+              "data": {
+                "type": "array",
+                "items": {
+                  "type": "number",
+                  "minimum": -1000000000000.0,
+                  "maximum": 1000000000000.0
+                },
+                "minItems": 0,
+                "maxItems": 200
+              }
+            },
+            "required": [
+              "label",
+              "data"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 1,
+          "maxItems": 6
+        },
+        "max_value": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1000000000000.0
+        }
+      },
+      "required": [
+        "component",
+        "id",
+        "axes",
+        "datasets"
+      ],
+      "patternProperties": {
+        "^@": {}
+      },
+      "additionalProperties": false
+    },
+    "AstralRating": {
+      "type": "object",
+      "description": "AstralPrimitives rating component.",
+      "properties": {
+        "component": {
+          "const": "AstralRating"
+        },
+        "id": {
+          "$ref": "#/$defs/ComponentId"
+        },
+        "tooltip": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 200
+        },
+        "provenance": {
+          "enum": [
+            "model",
+            "tool",
+            "host",
+            "external"
+          ]
+        },
+        "accessible_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "spoken": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "compact": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 10
+            },
+            {
+              "$ref": "#/$defs/Binding"
+            }
+          ]
+        },
+        "max_value": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10
+        },
+        "label": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 80
+        },
+        "subtitle": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 80
+        },
+        "show_value": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "component",
+        "id",
+        "value"
+      ],
+      "patternProperties": {
+        "^@": {}
+      },
+      "additionalProperties": false
+    },
+    "AstralStatGroup": {
+      "type": "object",
+      "description": "AstralPrimitives stat_group component.",
+      "properties": {
+        "component": {
+          "const": "AstralStatGroup"
+        },
+        "id": {
+          "$ref": "#/$defs/ComponentId"
+        },
+        "tooltip": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 200
+        },
+        "provenance": {
+          "enum": [
+            "model",
+            "tool",
+            "host",
+            "external"
+          ]
+        },
+        "accessible_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "spoken": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "compact": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "title": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 120
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "label": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 80
+              },
+              "value": {
+                "type": "string",
+                "minLength": 0,
+                "maxLength": 40
+              },
+              "delta": {
+                "type": "string",
+                "minLength": 0,
+                "maxLength": 40
+              },
+              "trend": {
+                "type": "string",
+                "enum": [
+                  "up",
+                  "down",
+                  "flat"
+                ]
+              },
+              "hint": {
+                "type": "string",
+                "minLength": 0,
+                "maxLength": 200
+              },
+              "variant": {
+                "type": "string",
+                "enum": [
+                  "default",
+                  "primary",
+                  "secondary",
+                  "success",
+                  "warning",
+                  "error",
+                  "info"
+                ]
+              }
+            },
+            "required": [
+              "label",
+              "value"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 1,
+          "maxItems": 12
+        },
+        "columns": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 6
+        }
+      },
+      "required": [
+        "component",
+        "id",
+        "items"
+      ],
+      "patternProperties": {
+        "^@": {}
+      },
+      "additionalProperties": false
+    },
+    "AstralTable": {
+      "type": "object",
+      "description": "AstralPrimitives table component.",
+      "properties": {
+        "component": {
+          "const": "AstralTable"
+        },
+        "id": {
+          "$ref": "#/$defs/ComponentId"
+        },
+        "tooltip": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 200
+        },
+        "provenance": {
+          "enum": [
+            "model",
+            "tool",
+            "host",
+            "external"
+          ]
+        },
+        "accessible_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "spoken": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "compact": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "headers": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 0,
+            "maxLength": 80
+          },
+          "minItems": 1,
+          "maxItems": 12
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 0,
+                  "maxLength": 200
+                },
+                {
+                  "type": "number",
+                  "minimum": -1000000000000.0,
+                  "maximum": 1000000000000.0
+                },
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "#/$defs/Binding"
+                }
+              ]
+            },
+            "minItems": 0,
+            "maxItems": 12
+          },
+          "minItems": 0,
+          "maxItems": 100
+        },
+        "variant": {
+          "type": "string",
+          "enum": [
+            "default",
+            "primary",
+            "secondary",
+            "success",
+            "warning",
+            "error",
+            "info"
+          ]
+        }
+      },
+      "required": [
+        "component",
+        "id",
+        "headers",
+        "rows"
+      ],
+      "patternProperties": {
+        "^@": {}
+      },
+      "additionalProperties": false
+    },
+    "AstralTabs": {
+      "type": "object",
+      "description": "AstralPrimitives tabs component.",
+      "properties": {
+        "component": {
+          "const": "AstralTabs"
+        },
+        "id": {
+          "$ref": "#/$defs/ComponentId"
+        },
+        "tooltip": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 200
+        },
+        "provenance": {
+          "enum": [
+            "model",
+            "tool",
+            "host",
+            "external"
+          ]
+        },
+        "accessible_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "spoken": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "compact": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "tabs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "label": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 40
+              },
+              "value": {
+                "type": "string",
+                "minLength": 0,
+                "maxLength": 40
+              },
+              "content": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/ComponentId"
+                },
+                "minItems": 0,
+                "maxItems": 20
+              }
+            },
+            "required": [
+              "label",
+              "content"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 1,
+          "maxItems": 8
+        },
+        "variant": {
+          "type": "string",
+          "enum": [
+            "default",
+            "primary",
+            "secondary",
+            "success",
+            "warning",
+            "error",
+            "info"
+          ]
+        }
+      },
+      "required": [
+        "component",
+        "id"
+      ],
+      "patternProperties": {
+        "^@": {}
+      },
+      "additionalProperties": false
+    },
+    "AstralText": {
+      "type": "object",
+      "description": "AstralPrimitives text component.",
+      "properties": {
+        "component": {
+          "const": "AstralText"
+        },
+        "id": {
+          "$ref": "#/$defs/ComponentId"
+        },
+        "tooltip": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 200
+        },
+        "provenance": {
+          "enum": [
+            "model",
+            "tool",
+            "host",
+            "external"
+          ]
+        },
+        "accessible_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "spoken": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "compact": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "content": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 0,
+              "maxLength": 4000
+            },
+            {
+              "$ref": "#/$defs/Binding"
+            }
+          ]
+        },
+        "variant": {
+          "type": "string",
+          "enum": [
+            "body",
+            "h1",
+            "h2",
+            "h3",
+            "h4",
+            "h5",
+            "h6",
+            "caption",
+            "muted",
+            "label"
+          ]
+        }
+      },
+      "required": [
+        "component",
+        "id",
+        "content"
+      ],
+      "patternProperties": {
+        "^@": {}
+      },
+      "additionalProperties": false
+    },
+    "AstralTimeline": {
+      "type": "object",
+      "description": "AstralPrimitives timeline component.",
+      "properties": {
+        "component": {
+          "const": "AstralTimeline"
+        },
+        "id": {
+          "$ref": "#/$defs/ComponentId"
+        },
+        "tooltip": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 200
+        },
+        "provenance": {
+          "enum": [
+            "model",
+            "tool",
+            "host",
+            "external"
+          ]
+        },
+        "accessible_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "spoken": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "compact": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "title": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 120
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "title": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              },
+              "description": {
+                "type": "string",
+                "minLength": 0,
+                "maxLength": 400
+              },
+              "time": {
+                "type": "string",
+                "minLength": 0,
+                "maxLength": 40
+              },
+              "variant": {
+                "type": "string",
+                "enum": [
+                  "default",
+                  "primary",
+                  "secondary",
+                  "success",
+                  "warning",
+                  "error",
+                  "info"
+                ]
+              }
+            },
+            "required": [
+              "title"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 1,
+          "maxItems": 50
+        }
+      },
+      "required": [
+        "component",
+        "id",
+        "items"
+      ],
+      "patternProperties": {
+        "^@": {}
+      },
+      "additionalProperties": false
+    }
+  },
+  "$defs": {
+    "ComponentId": {
+      "type": "string",
+      "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+      "maxLength": 64
+    },
+    "Binding": {
+      "type": "object",
+      "properties": {
+        "@path": {
+          "type": "string",
+          "pattern": "^(/[^/~]*(~[01][^/~]*)*)*$",
+          "maxLength": 330
+        }
+      },
+      "required": [
+        "@path"
+      ],
+      "additionalProperties": false
+    },
+    "Handle": {
+      "type": "object",
+      "properties": {
+        "handle": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$"
+        }
+      },
+      "required": [
+        "handle"
+      ],
+      "additionalProperties": false
+    },
+    "anyComponent": {
+      "oneOf": [
+        {
+          "$ref": "#/components/AstralActionGroup"
+        },
+        {
+          "$ref": "#/components/AstralAlert"
+        },
+        {
+          "$ref": "#/components/AstralAudio"
+        },
+        {
+          "$ref": "#/components/AstralBadge"
+        },
+        {
+          "$ref": "#/components/AstralBarChart"
+        },
+        {
+          "$ref": "#/components/AstralButton"
+        },
+        {
+          "$ref": "#/components/AstralCard"
+        },
+        {
+          "$ref": "#/components/AstralCode"
+        },
+        {
+          "$ref": "#/components/AstralCollapsible"
+        },
+        {
+          "$ref": "#/components/AstralColorPicker"
+        },
+        {
+          "$ref": "#/components/AstralContainer"
+        },
+        {
+          "$ref": "#/components/AstralDivider"
+        },
+        {
+          "$ref": "#/components/AstralDonutChart"
+        },
+        {
+          "$ref": "#/components/AstralFileDownload"
+        },
+        {
+          "$ref": "#/components/AstralFileUpload"
+        },
+        {
+          "$ref": "#/components/AstralGauge"
+        },
+        {
+          "$ref": "#/components/AstralGrid"
+        },
+        {
+          "$ref": "#/components/AstralHero"
+        },
+        {
+          "$ref": "#/components/AstralImage"
+        },
+        {
+          "$ref": "#/components/AstralInput"
+        },
+        {
+          "$ref": "#/components/AstralKeyvalue"
+        },
+        {
+          "$ref": "#/components/AstralLineChart"
+        },
+        {
+          "$ref": "#/components/AstralList"
+        },
+        {
+          "$ref": "#/components/AstralMetric"
+        },
+        {
+          "$ref": "#/components/AstralParamPicker"
+        },
+        {
+          "$ref": "#/components/AstralPieChart"
+        },
+        {
+          "$ref": "#/components/AstralPipelineStepper"
+        },
+        {
+          "$ref": "#/components/AstralProgress"
+        },
+        {
+          "$ref": "#/components/AstralRadarChart"
+        },
+        {
+          "$ref": "#/components/AstralRating"
+        },
+        {
+          "$ref": "#/components/AstralStatGroup"
+        },
+        {
+          "$ref": "#/components/AstralTable"
+        },
+        {
+          "$ref": "#/components/AstralTabs"
+        },
+        {
+          "$ref": "#/components/AstralText"
+        },
+        {
+          "$ref": "#/components/AstralTimeline"
+        }
+      ]
+    }
+  }
+}

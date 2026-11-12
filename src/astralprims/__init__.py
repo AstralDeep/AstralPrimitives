@@ -63,6 +63,7 @@ from .primitives import (
     Timeline,
 )
 from .response import create_ui_response
+from .a2ui import A2UIError, ImportedSurface, a2ui_catalog, from_a2ui, to_a2ui
 from .schema import wire_schema
 from .strict import strict_schema
 from .validate import GenerationError, Resolver, StaticResolver, validate_generated
@@ -101,6 +102,11 @@ __all__ = [
     "rebuild_primitive_union",
     "create_ui_response",
     "wire_schema",
+    "a2ui_catalog",
+    "from_a2ui",
+    "to_a2ui",
+    "A2UIError",
+    "ImportedSurface",
     "strict_schema",
     "validate_generated",
     "GenerationError",
