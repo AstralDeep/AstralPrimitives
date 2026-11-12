@@ -12,6 +12,7 @@ from dataclasses import dataclass
 from typing import Any, Dict, Iterable, List, Mapping, Optional, Protocol, Set
 
 from .strict import (
+    HANDLE_PATTERN,
     EXCLUDED_TYPES,
     MAX_DEPTH,
     MAX_NODES,
@@ -28,7 +29,20 @@ _SAMPLES = {
     "^[A-Za-z0-9*/.,+ -]+$": "*/*",
     "^#[0-9A-Fa-f]{3,8}$": "#000000",
 }
-_LINK_MARKERS = ("://", "](", "mailto:")
+_LINK_PATTERNS = (
+    re.compile(r"^\s{0,3}\[[^\]]+\]:\s*\S", re.MULTILINE),
+    re.compile(r"\]\s*\["),
+    re.compile(r"\]\("),
+    re.compile(r"<[^>]{0,200}[:@][^>]{0,200}>"),
+    re.compile(r"(?:^|[^:/\w])//\S"),
+    re.compile(r"\b[a-z][a-z0-9+.-]{0,31}://", re.IGNORECASE),
+    re.compile(
+        r"\b(?:javascript|vbscript|data|file|mailto|tel|sms|ftp|ftps|http|https|blob|about|intent|sip|callto)"
+        r":\S",
+        re.IGNORECASE,
+    ),
+    re.compile(r"\bwww\.\S", re.IGNORECASE),
+)
 
 
 class Resolver(Protocol):
@@ -198,10 +212,9 @@ class _Walker:
             self.fail(path, f"shorter than {schema['minLength']} characters", schema)
         elif len(value) > schema["maxLength"]:
             self.fail(path, f"longer than {schema['maxLength']} characters", schema)
-        elif "pattern" in schema:
-            if not re.search(schema["pattern"], value):
-                self.fail(path, f"does not match pattern {schema['pattern']}", schema)
-        elif any(marker in value for marker in _LINK_MARKERS):
+        elif "pattern" in schema and not re.fullmatch(schema["pattern"], value):
+            self.fail(path, f"does not match pattern {schema['pattern']}", schema)
+        if schema.get("pattern") != HANDLE_PATTERN and any(p.search(value) for p in _LINK_PATTERNS):
             self.fail(path, "contains a link or URL, which a model may not write. Use a handle", schema)
 
     def number(self, schema: Dict[str, Any], value: Any, path: str) -> None:

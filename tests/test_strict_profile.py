@@ -164,10 +164,76 @@ def test_images_and_links_must_be_resolvable_handles():
     assert "expected object" in error.problem
 
 
-@pytest.mark.parametrize("text", ["see https://evil.example/x?d=1", "[click](javascript:x)", "mailto:a@b.c"])
+LINK_BYPASSES = [
+    "see https://evil.example/x?d=1",
+    "[click](javascript:x)",
+    "![img](a.png)",
+    "mailto:a@b.c",
+    "[x][1]\n\n[1]: http://evil.example",
+    "[1]: evil.example/page",
+    "   [ref]: //evil.example",
+    "text [x] [1] more",
+    "<https://evil.example>",
+    "<a@b.c>",
+    "<mailto:a@b.c>",
+    "go to //evil.example/path",
+    "(//evil.example)",
+    "visit www.evil.example",
+    "data:text/html;base64,AAAA",
+    "javascript:alert(1)",
+    "JAVASCRIPT:alert(1)",
+    "tel:+15555550100",
+    "ftp://host/file",
+    "see ftp:files",
+    "s3://bucket/key",
+    "vbscript:x",
+    "file:///etc/passwd",
+]
+PROSE_THAT_PASSES = [
+    "Note: take with food",
+    "Meeting at 10:30 and 11:45",
+    "Ratio 3:1 and a/b or and/or",
+    "Data: 5 samples, Time: now",
+    "Dose is 5 mg [see label] daily",
+    "Use a // comment in code",
+    "Items: [a], [b]",
+    "a < b and c > d",
+    "metadata:value",
+    "Result (see table) www is not a link",
+]
+
+
+@pytest.mark.parametrize("text", LINK_BYPASSES)
 def test_text_may_not_carry_links(text):
     (error,) = validate_generated({"type": "text", "content": text}, RESOLVER)
     assert "link" in error.problem
+
+
+@pytest.mark.parametrize("text", PROSE_THAT_PASSES)
+def test_ordinary_prose_is_not_mistaken_for_a_link(text):
+    assert validate_generated({"type": "text", "content": text}, RESOLVER) == []
+
+
+def test_link_scan_runs_on_every_free_text_field():
+    for node in (
+        {"type": "alert", "message": "www.evil.example"},
+        {"type": "card", "title": "[x][1]"},
+        {"type": "list", "items": [{"title": "ok", "description": "<https://a.example>"}]},
+        {"type": "table", "headers": ["h"], "rows": [["tel:123"]]},
+    ):
+        assert any("link" in e.problem for e in validate_generated(node, RESOLVER)), node
+
+
+def test_link_scan_also_runs_when_a_pattern_field_fails_its_pattern():
+    errors = validate_generated({"type": "text", "content": "x", "id": "bad id https://e.example"}, RESOLVER)
+    assert errors
+
+
+def test_a_trailing_newline_cannot_pass_an_anchored_pattern():
+    assert validate_generated({"type": "text", "content": "x", "id": "ok\n"}, RESOLVER)
+    assert validate_generated({"type": "input", "name": "field\n"}, RESOLVER)
+    ok = {"type": "image", "source": {"handle": "handle1\n"}, "alt": "a"}
+    assert validate_generated(ok, RESOLVER)
 
 
 def test_provenance_can_only_claim_model():
