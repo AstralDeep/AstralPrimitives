@@ -162,6 +162,10 @@ class Primitive(BaseModel):
     id: Optional[str] = None
     class_name: Optional[str] = Field(default=None, alias="class")
     tooltip: Optional[str] = None
+    accessible_name: Optional[str] = None
+    spoken: Optional[str] = None
+    compact: Optional[str] = None
+    provenance: Optional[Literal["model", "tool", "host", "external"]] = None
     attributes: Dict[str, Any] = Field(default_factory=dict)
 
     @classmethod

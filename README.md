@@ -306,6 +306,10 @@ the class registered for its `type`.
 | `id` | `Optional[str]` | `None` |
 | `class_name` (wire `class`) | `Optional[str]` | `None` |
 | `tooltip` | `Optional[str]` | `None` |
+| `accessible_name` | `Optional[str]` | `None` |
+| `spoken` | `Optional[str]` | `None` |
+| `compact` | `Optional[str]` | `None` |
+| `provenance` | `Optional[Literal["model", "tool", "host", "external"]]` | `None` |
 | `attributes` | `Dict[str, Any]` | `{}` |
 
 ### Primitives
@@ -326,39 +330,43 @@ the class registered for its `type`.
 |  |  | `content` | `List[Primitive]` | `[]` |
 |  |  | `default_open` | `bool` | `False` |
 | `Divider` | `divider` | `variant` | `str` | `"solid"` |
-| `Text` | `text` | `content` | `str` | `""` |
+| `Text` | `text` | `content` | `Union[str, Binding]` | `""` |
 |  |  | `variant` | `str` | `"body"` |
 | `Button` | `button` | `label` | `str` | `""` |
 |  |  | `action` | `str` | `""` |
 |  |  | `payload` | `Dict[str, Any]` | `{}` |
 |  |  | `variant` | `str` | `"primary"` |
+|  |  | `capability` | `Optional[Handle]` | `None` |
 | `ActionGroup` | `action_group` | `buttons` | `List[Primitive]` | `[]` |
 |  |  | `align` | `str` | `"start"` |
 |  |  | `label` | `Optional[str]` | `None` |
 | `Input` | `input` | `placeholder` | `str` | `""` |
 |  |  | `name` | `str` | `""` |
 |  |  | `value` | `str` | `""` |
+|  |  | `capability` | `Optional[Handle]` | `None` |
 | `ParamPicker` | `param_picker` | `title` | `str` | `""` |
 |  |  | `description` | `str` | `""` |
 |  |  | `fields` | `List[Dict[str, Any]]` | `[]` |
 |  |  | `submit_label` | `str` | `"Submit"` |
 |  |  | `submit_message_template` | `str` | `""` |
+|  |  | `capability` | `Optional[Handle]` | `None` |
 | `Image` | `image` | `url` | `str` | `""` |
+|  |  | `source` | `Optional[Handle]` | `None` |
 |  |  | `alt` | `Optional[str]` | `None` |
 |  |  | `width` | `Optional[str]` | `None` |
 |  |  | `height` | `Optional[str]` | `None` |
 | `CodeBlock` | `code` | `code` | `str` | `""` |
 |  |  | `language` | `str` | `"text"` |
 |  |  | `show_line_numbers` | `bool` | `False` |
-| `Alert` | `alert` | `message` | `str` | `""` |
+| `Alert` | `alert` | `message` | `Union[str, Binding]` | `""` |
 |  |  | `variant` | `str` | `"info"` |
 |  |  | `title` | `Optional[str]` | `None` |
-| `ProgressBar` | `progress` | `value` | `float` | `0.0` |
+| `ProgressBar` | `progress` | `value` | `Union[float, Binding]` | `0.0` |
 |  |  | `label` | `Optional[str]` | `None` |
 |  |  | `variant` | `str` | `"default"` |
 |  |  | `show_percentage` | `bool` | `True` |
 | `MetricCard` | `metric` | `title` | `str` | `""` |
-|  |  | `value` | `str` | `""` |
+|  |  | `value` | `Union[str, Binding]` | `""` |
 |  |  | `subtitle` | `Optional[str]` | `None` |
 |  |  | `icon` | `Optional[str]` | `None` |
 |  |  | `variant` | `str` | `"default"` |
@@ -390,7 +398,7 @@ the class registered for its `type`.
 |  |  | `labels` | `List[str]` | `[]` |
 |  |  | `data` | `List[float]` | `[]` |
 |  |  | `center_label` | `Optional[str]` | `None` |
-|  |  | `center_value` | `Optional[str]` | `None` |
+|  |  | `center_value` | `Union[str, Binding, None]` | `None` |
 | `RadarChart` | `radar_chart` | `title` | `str` | `""` |
 |  |  | `axes` | `List[str]` | `[]` |
 |  |  | `datasets` | `List[Dict[str, Any]]` | `[]` |
@@ -400,6 +408,7 @@ the class registered for its `type`.
 |  |  | `layout` | `Dict[str, Any]` | `{}` |
 |  |  | `config` | `Dict[str, Any]` | `{}` |
 | `Audio` | `audio` | `src` | `str` | `""` |
+|  |  | `source` | `Optional[Handle]` | `None` |
 |  |  | `contentType` | `Optional[str]` | `None` |
 |  |  | `autoplay` | `bool` | `False` |
 |  |  | `loop` | `bool` | `False` |
@@ -409,10 +418,12 @@ the class registered for its `type`.
 | `FileUpload` | `file_upload` | `label` | `str` | `"Upload File"` |
 |  |  | `accept` | `str` | `"*/*"` |
 |  |  | `action` | `str` | `""` |
+|  |  | `capability` | `Optional[Handle]` | `None` |
 | `FileDownload` | `file_download` | `label` | `str` | `"Download File"` |
 |  |  | `url` | `str` | `""` |
+|  |  | `target` | `Optional[Handle]` | `None` |
 |  |  | `filename` | `Optional[str]` | `None` |
-| `Badge` | `badge` | `label` | `str` | `""` |
+| `Badge` | `badge` | `label` | `Union[str, Binding]` | `""` |
 |  |  | `variant` | `str` | `"default"` |
 |  |  | `icon` | `Optional[str]` | `None` |
 | `Hero` | `hero` | `title` | `str` | `""` |
@@ -431,14 +442,14 @@ the class registered for its `type`.
 |  |  | `items` | `List[Dict[str, Any]]` | `[]` |
 |  |  | `columns` | `int` | `4` |
 | `Gauge` | `gauge` | `label` | `str` | `""` |
-|  |  | `value` | `float` | `0.0` |
-|  |  | `display_value` | `Optional[str]` | `None` |
+|  |  | `value` | `Union[float, Binding]` | `0.0` |
+|  |  | `display_value` | `Union[str, Binding, None]` | `None` |
 |  |  | `thresholds` | `List[Dict[str, Any]]` | `[]` |
 |  |  | `subtitle` | `Optional[str]` | `None` |
 | `PipelineStepper` | `pipeline_stepper` | `title` | `Optional[str]` | `None` |
 |  |  | `steps` | `List[Dict[str, Any]]` | `[]` |
 |  |  | `orientation` | `str` | `"horizontal"` |
-| `Rating` | `rating` | `value` | `float` | `0.0` |
+| `Rating` | `rating` | `value` | `Union[float, Binding]` | `0.0` |
 |  |  | `max_value` | `int` | `5` |
 |  |  | `label` | `Optional[str]` | `None` |
 |  |  | `subtitle` | `Optional[str]` | `None` |
@@ -452,6 +463,7 @@ the class registered for its `type`.
 | `ColorPicker` | `color_picker` | `label` | `str` | `""` |
 |  |  | `color_key` | `str` | `""` |
 |  |  | `value` | `str` | `"#000000"` |
+|  |  | `capability` | `Optional[Handle]` | `None` |
 | `ThemeApply` | `theme_apply` | `preset` | `Optional[str]` | `None` |
 |  |  | `colors` | `Optional[Dict[str, str]]` | `None` |
 |  |  | `color_key` | `Optional[str]` | `None` |
@@ -462,6 +474,10 @@ the class registered for its `type`.
 
 | Class | Field | Type | Default |
 | --- | --- | --- | --- |
+| `BindingRef` | `event` | `str` | `required` |
+|  | `path` | `str` | `""` |
+| `Binding` | `bind` | `BindingRef` | `required` |
+| `Handle` | `handle` | `str` | `required` |
 | `TabItem` | `label` | `str` | `""` |
 |  | `content` | `List[Primitive]` | `[]` |
 |  | `value` | `Optional[str]` | `None` |
@@ -474,6 +490,7 @@ the class registered for its `type`.
 |  | `new_line` | `Optional[int]` | `None` |
 | `DiffAction` | `action` | `str` | `required` |
 |  | `payload` | `Dict[str, Any]` | `{}` |
+|  | `capability` | `Optional[Handle]` | `None` |
 | `DiffHunk` | `id` | `str` | `required` |
 |  | `old_start` | `int` | `0` |
 |  | `old_lines` | `int` | `0` |

@@ -71,6 +71,9 @@ _NESTED_HELPER_DEFS = {
     "diff_hunk",
     "diff_line",
     "finding",
+    "binding",
+    "binding_ref",
+    "handle",
 }
 _PRIMITIVE_MODELS = sorted(
     (cls for cls in _SHIPPED if issubclass(cls, Primitive)),
@@ -83,6 +86,19 @@ _NULLABLE_CASES = [
     for name, field in model.model_fields.items()
     if name not in ("type", "attributes") and _nullable(field.annotation)
 ]
+
+
+def _build(model, **overrides):
+    required = {
+        name: "x"
+        for name, field in model.model_fields.items()
+        if field.is_required() and name not in overrides
+    }
+    return model(**required, **overrides)
+
+
+def _with_defs(schema, definition):
+    return {**definition, "$defs": schema["$defs"]}
 
 
 def _definition_name(model: type) -> str:
@@ -135,7 +151,7 @@ def test_default_payload_validates_against_root_and_type_definition(model):
     schema = wire_schema()
     payload = model().to_dict()
     Draft202012Validator(schema).validate(payload)
-    Draft202012Validator(schema["$defs"][_definition_name(model)]).validate(payload)
+    Draft202012Validator(_with_defs(schema, schema["$defs"][_definition_name(model)])).validate(payload)
 
 
 def test_every_field_is_described_according_to_the_serializer():
@@ -219,10 +235,10 @@ def test_empty_css_is_omitted_and_css_is_never_required():
 )
 def test_nullable_field_omitted_from_wire_still_validates(model, name):
     schema = wire_schema()
-    payload = model(**{name: None}).model_dump()
+    payload = _build(model, **{name: None}).model_dump()
     wire_key = model.model_fields[name].alias or name
     assert wire_key not in payload
-    Draft202012Validator(schema["$defs"][_definition_name(model)]).validate(payload)
+    Draft202012Validator(_with_defs(schema, schema["$defs"][_definition_name(model)])).validate(payload)
     if issubclass(model, Primitive):
         Draft202012Validator(schema).validate(payload)
 
@@ -232,12 +248,12 @@ def test_nullable_field_omitted_from_wire_still_validates(model, name):
 )
 def test_explicit_null_for_omittable_fields_is_rejected(model, name):
     schema = wire_schema()
-    payload = model(**{name: None}).model_dump()
+    payload = _build(model, **{name: None}).model_dump()
     wire_key = model.model_fields[name].alias or name
     payload[wire_key] = None
     definition = schema["$defs"][_definition_name(model)]
     with pytest.raises(ValidationError):
-        Draft202012Validator(definition).validate(payload)
+        Draft202012Validator(_with_defs(schema, definition)).validate(payload)
     if issubclass(model, Primitive):
         with pytest.raises(ValidationError):
             Draft202012Validator(schema).validate(payload)

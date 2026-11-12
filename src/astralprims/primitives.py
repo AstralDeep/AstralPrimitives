@@ -20,6 +20,23 @@ def _validate_add_items(items: tuple[Any, ...]) -> List[Primitive]:
     return validated
 
 
+class BindingRef(SerModel):
+    event: str = Field(min_length=1)
+    path: str = ""
+
+
+class Binding(SerModel):
+    bind: BindingRef
+
+
+class Handle(SerModel):
+    handle: str = Field(min_length=1)
+
+
+BoundStr = Union[str, Binding]
+BoundNum = Union[float, Binding]
+
+
 class Container(Primitive):
     type: Literal["container"] = "container"
     children: List[Primitive] = Field(default_factory=list)
@@ -96,7 +113,7 @@ class Divider(Primitive):
 
 class Text(Primitive):
     type: Literal["text"] = "text"
-    content: str = ""
+    content: BoundStr = ""
     variant: str = "body"
 
 
@@ -106,6 +123,7 @@ class Button(Primitive):
     action: str = ""
     payload: Dict[str, Any] = Field(default_factory=dict)
     variant: str = "primary"
+    capability: Optional[Handle] = None
 
 
 class ActionGroup(Primitive):
@@ -125,6 +143,7 @@ class Input(Primitive):
     placeholder: str = ""
     name: str = ""
     value: str = ""
+    capability: Optional[Handle] = None
 
 
 class ParamPicker(Primitive):
@@ -134,11 +153,13 @@ class ParamPicker(Primitive):
     fields: List[Dict[str, Any]] = Field(default_factory=list)
     submit_label: str = "Submit"
     submit_message_template: str = ""
+    capability: Optional[Handle] = None
 
 
 class Image(Primitive):
     type: Literal["image"] = "image"
     url: str = ""
+    source: Optional[Handle] = None
     alt: Optional[str] = None
     width: Optional[str] = None
     height: Optional[str] = None
@@ -153,14 +174,14 @@ class CodeBlock(Primitive):
 
 class Alert(Primitive):
     type: Literal["alert"] = "alert"
-    message: str = ""
+    message: BoundStr = ""
     variant: str = "info"
     title: Optional[str] = None
 
 
 class ProgressBar(Primitive):
     type: Literal["progress"] = "progress"
-    value: float = 0.0
+    value: BoundNum = 0.0
     label: Optional[str] = None
     variant: str = "default"
     show_percentage: bool = True
@@ -169,7 +190,7 @@ class ProgressBar(Primitive):
 class MetricCard(Primitive):
     type: Literal["metric"] = "metric"
     title: str = ""
-    value: str = ""
+    value: BoundStr = ""
     subtitle: Optional[str] = None
     icon: Optional[str] = None
     variant: str = "default"
@@ -243,7 +264,7 @@ class DonutChart(Primitive):
     labels: List[str] = Field(default_factory=list)
     data: List[float] = Field(default_factory=list)
     center_label: Optional[str] = None
-    center_value: Optional[str] = None
+    center_value: Optional[BoundStr] = None
 
 
 class RadarChart(Primitive):
@@ -265,6 +286,7 @@ class PlotlyChart(Primitive):
 class Audio(Primitive):
     type: Literal["audio"] = "audio"
     src: str = ""
+    source: Optional[Handle] = None
     contentType: Optional[str] = None
     autoplay: bool = False
     loop: bool = False
@@ -278,18 +300,20 @@ class FileUpload(Primitive):
     label: str = "Upload File"
     accept: str = "*/*"
     action: str = ""
+    capability: Optional[Handle] = None
 
 
 class FileDownload(Primitive):
     type: Literal["file_download"] = "file_download"
     label: str = "Download File"
     url: str = ""
+    target: Optional[Handle] = None
     filename: Optional[str] = None
 
 
 class Badge(Primitive):
     type: Literal["badge"] = "badge"
-    label: str = ""
+    label: BoundStr = ""
     variant: str = "default"
     icon: Optional[str] = None
 
@@ -328,8 +352,8 @@ class StatGroup(Primitive):
 class Gauge(Primitive):
     type: Literal["gauge"] = "gauge"
     label: str = ""
-    value: float = 0.0
-    display_value: Optional[str] = None
+    value: BoundNum = 0.0
+    display_value: Optional[BoundStr] = None
     thresholds: List[Dict[str, Any]] = Field(default_factory=list)
     subtitle: Optional[str] = None
 
@@ -343,7 +367,7 @@ class PipelineStepper(Primitive):
 
 class Rating(Primitive):
     type: Literal["rating"] = "rating"
-    value: float = 0.0
+    value: BoundNum = 0.0
     max_value: int = 5
     label: Optional[str] = None
     subtitle: Optional[str] = None
@@ -372,6 +396,7 @@ class DiffLine(SerModel):
 class DiffAction(SerModel):
     action: str = Field(min_length=1)
     payload: Dict[str, Any] = Field(default_factory=dict)
+    capability: Optional[Handle] = None
 
 
 class DiffHunk(SerModel):
@@ -467,6 +492,7 @@ class ColorPicker(Primitive):
     label: str = ""
     color_key: str = ""
     value: str = "#000000"
+    capability: Optional[Handle] = None
 
 
 class ThemeApply(Primitive):
